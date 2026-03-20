@@ -10,6 +10,9 @@ func setup(dmg: float, spd: float, dir: Vector2) -> void:
 	damage = dmg
 	speed = spd
 	_direction = dir.normalized()
+func _ready() -> void:
+	add_to_group("enemies")
+	add_to_group("enemy_projectiles")
 	rotation = _direction.angle()
 	body_entered.connect(_on_body_entered)
 

@@ -1,7 +1,7 @@
 extends CharacterBody2D
 ## Interceptor - extremely fast elite enemy spawning in Final Wave.
 
-const SPEED := 180.0 # 3x faster than drone
+const SPEED := 140.0 # Reduced from 180
 const HP := 12.0 # Fragile
 const DAMAGE := 5.0 # Repeat damage every 0.5s makes it deadly
 const XP_VALUE := 2

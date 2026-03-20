@@ -54,16 +54,20 @@ func _draw() -> void:
 		var dot_pos: Vector2 = center + offset
 		draw_circle(dot_pos, 2.0, Color.YELLOW)
 	
-	# Draw boss (magenta, larger)
+	# Draw boss (magenta, larger & pulsating)
 	var bosses := get_tree().get_nodes_in_group("boss")
 	for boss in bosses:
 		if not is_instance_valid(boss) or not boss is Node2D:
 			continue
 		var offset: Vector2 = (boss.global_position - player_pos) * scale_factor
 		if abs(offset.x) > MAP_SIZE / 2.0 or abs(offset.y) > MAP_SIZE / 2.0:
-			continue
+			# For boss, draw at edge if off-screen
+			offset = offset.limit_length(MAP_SIZE / 2.0 - 2.0)
+		
 		var dot_pos: Vector2 = center + offset
-		draw_circle(dot_pos, 3.0, Color.MAGENTA)
+		var pulse: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.01)
+		draw_circle(dot_pos, 5.0, Color(1.0, 0.0, 1.0, 0.5 + 0.5 * pulse))
+		draw_circle(dot_pos, 2.0, Color.MAGENTA)
 
 
 func _process(_delta: float) -> void:

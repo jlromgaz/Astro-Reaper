@@ -201,6 +201,7 @@ func _show_upgrade_selection() -> void:
 		{"name": "+Laser", "type": "weapon_laser", "is_weapon": true},
 		{"name": "+Missiles", "type": "weapon_missiles", "is_weapon": true},
 		{"name": "+Shield System", "type": "shield", "is_weapon": true},
+		{"name": "+Anti-Missile", "type": "weapon_anti_missile", "is_weapon": true},
 		{"name": "+1 Projectile", "type": "projectile", "is_weapon": false},
 		{"name": "+10% Damage", "type": "stat_damage", "is_weapon": false},
 		{"name": "+10% Fire Rate", "type": "stat_fire_rate", "is_weapon": false},
@@ -240,6 +241,8 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 			_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
 		"weapon_missiles": 
 			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
+		"weapon_anti_missile":
+			_player.add_weapon(load("res://scripts/weapons/weapon_anti_missile.gd"))
 		"shield":
 			_player.add_shield()
 		"projectile":
@@ -294,4 +297,3 @@ func _update_stats() -> void:
 
 func _on_share_log() -> void:
 	DebugLog.share_log()
-

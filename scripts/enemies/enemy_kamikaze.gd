@@ -45,6 +45,7 @@ func _on_body_entered(body: Node) -> void:
 		if _damage_timer <= 0:
 			_player.take_damage(DAMAGE, self)
 			_damage_timer = 0.5
+			_die() # Explode on contact
 
 func _on_body_exited(body: Node) -> void:
 	if body.is_in_group("player"):
