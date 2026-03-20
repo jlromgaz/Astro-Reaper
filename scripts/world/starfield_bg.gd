@@ -36,6 +36,9 @@ func _draw() -> void:
 		return
 	var cam_pos: Vector2 = _camera.global_position
 	
+	# Draw background fill based on Stitch 'surface' color
+	draw_rect(Rect2(cam_pos - Vector2(FIELD_SIZE, FIELD_SIZE), Vector2(FIELD_SIZE * 2, FIELD_SIZE * 2)), Color("#17111b"))
+	
 	for star in _stars:
 		# Apply parallax: stars closer to camera (lower parallax) move less
 		var world_pos: Vector2 = star.offset + cam_pos * (1.0 - star.parallax)
@@ -45,6 +48,8 @@ func _draw() -> void:
 		rel.y = fmod(rel.y + FIELD_SIZE, FIELD_SIZE * 2.0) - FIELD_SIZE
 		var draw_pos: Vector2 = rel + cam_pos - global_position
 		
+		# Primarily Cyan stars (#00dddd) with rare Pink (#ffabf3)
+		var base_color := Color("#00dddd") if randf() > 0.1 else Color("#ffabf3")
 		var alpha: float = star.brightness
-		var color := Color(0.7, 0.8, 1.0, alpha)
+		var color := Color(base_color.r, base_color.g, base_color.b, alpha)
 		draw_circle(draw_pos, star.size, color)
