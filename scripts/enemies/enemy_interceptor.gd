@@ -1,12 +1,10 @@
 extends CharacterBody2D
-## Ranged shooter - fires projectiles at player. 2 XP.
+## Interceptor - extremely fast elite enemy spawning in Final Wave.
 
-const SPEED := 40.0
-const HP := 30.0
-const DAMAGE := 4.0
+const SPEED := 180.0 # 3x faster than drone
+const HP := 12.0 # Fragile
+const DAMAGE := 5.0 # Repeat damage every 0.5s makes it deadly
 const XP_VALUE := 2
-const ATTACK_COOLDOWN := 1.2
-const BULLET_SPEED := 180.0
 
 var current_hp: float = HP
 var max_hp: float = HP
@@ -14,22 +12,16 @@ var _player: Node2D
 var _damage_timer := 0.0
 var _player_in_contact := false
 
-
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
-	DebugLog.log_info("ENEMY", "Ranged scaled to %.1f HP" % max_hp)
-var _attack_timer: float = 0.0
-var _bullet_scene: PackedScene
-
 
 func _ready() -> void:
 	add_to_group("enemies")
-	_bullet_scene = preload("res://scenes/bullets/bullet_enemy.tscn")
 	call_deferred("_find_player")
-	_setup_contact_damage()
+	_setup_damage_area()
 
-func _setup_contact_damage() -> void:
+func _setup_damage_area() -> void:
 	var area := Area2D.new()
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
@@ -56,12 +48,8 @@ func _on_body_exited(body: Node) -> void:
 		_player_in_contact = false
 		_damage_timer = 0.0
 
-
 func _find_player() -> void:
 	_player = get_tree().get_first_node_in_group("player")
-	if not _player:
-		_player = get_parent().get_node_or_null("Player")
-
 
 func _physics_process(delta: float) -> void:
 	if not _player or not GameManager.is_playing():
@@ -77,24 +65,6 @@ func _physics_process(delta: float) -> void:
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * SPEED
 	move_and_slide()
-	_try_shoot(delta)
-
-
-func _try_shoot(delta: float) -> void:
-	_attack_timer += delta
-	if _attack_timer >= ATTACK_COOLDOWN:
-		_attack_timer = 0.0
-		_shoot()
-
-
-func _shoot() -> void:
-	var bullet: Node = _bullet_scene.instantiate()
-	var dir: Vector2 = (_player.global_position - global_position).normalized()
-	bullet.global_position = global_position + dir * 20
-	if bullet.has_method("setup"):
-		bullet.setup(DAMAGE, BULLET_SPEED, dir)
-	get_parent().add_child(bullet)
-
 
 func take_damage(amount: float) -> void:
 	current_hp -= amount
@@ -102,22 +72,18 @@ func take_damage(amount: float) -> void:
 	if current_hp <= 0:
 		_die()
 
-
 func _die() -> void:
 	if randf() < 0.02:
 		_spawn_health()
 	call_deferred("_spawn_xp")
-	DebugLog.log_info("COMBAT", "Ranged enemy killed at %s" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
 	queue_free()
-
 
 func _spawn_health() -> void:
 	var hp_scene = load("res://scenes/pickups/pickup_health.tscn")
 	var hp = hp_scene.instantiate()
 	hp.global_position = global_position
 	get_parent().add_child(hp)
-
 
 func _spawn_xp() -> void:
 	var xp_scene: PackedScene = preload("res://scenes/pickups/xp_pickup.tscn")
@@ -126,4 +92,3 @@ func _spawn_xp() -> void:
 	if xp.has_method("set_value"):
 		xp.set_value(XP_VALUE)
 	get_parent().add_child(xp)
-	EventBus.xp_dropped.emit(global_position, XP_VALUE)

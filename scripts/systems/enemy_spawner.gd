@@ -15,6 +15,7 @@ var _enemy_drone: PackedScene
 var _enemy_kamikaze: PackedScene
 var _enemy_tank: PackedScene
 var _enemy_ranged: PackedScene
+var _enemy_interceptor: PackedScene
 var _enemy_boss: PackedScene
 
 
@@ -23,6 +24,7 @@ func _ready() -> void:
 	_enemy_kamikaze = preload("res://scenes/enemies/enemy_kamikaze.tscn")
 	_enemy_tank = preload("res://scenes/enemies/enemy_tank.tscn")
 	_enemy_ranged = preload("res://scenes/enemies/enemy_ranged.tscn")
+	_enemy_interceptor = preload("res://scenes/enemies/enemy_interceptor.tscn")
 	_enemy_boss = preload("res://scenes/enemies/enemy_boss.tscn")
 
 
@@ -38,7 +40,9 @@ func _get_spawn_interval() -> float:
 	var progress: float = GameManager.run_time / SURVIVAL_TIME
 	# After survival time, we enter extra time (progress > 1.0)
 	var scale_factor: float = 1.0 - progress * 0.7 
-	scale_factor = clampf(scale_factor, 0.2, 1.0)
+	if progress > 1.0:
+		scale_factor *= 0.5 # Double speed in survival
+	scale_factor = clampf(scale_factor, 0.1, 1.0)
 	# Difficulty upgrades make it even faster
 	return clampf((BASE_SPAWN_INTERVAL * scale_factor) / global_difficulty_mult, MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL)
 
@@ -59,10 +63,11 @@ func _get_enemy_scene() -> PackedScene:
 		elif roll < 0.85: return _enemy_ranged
 		else: return _enemy_tank
 	else:
-		if roll < 0.2: return _enemy_drone
-		elif roll < 0.4: return _enemy_kamikaze
-		elif roll < 0.7: return _enemy_ranged
-		else: return _enemy_tank
+		if roll < 0.1: return _enemy_drone
+		elif roll < 0.2: return _enemy_kamikaze
+		elif roll < 0.5: return _enemy_ranged
+		elif roll < 0.7: return _enemy_tank
+		else: return _enemy_interceptor
 
 
 func _process(delta: float) -> void:
