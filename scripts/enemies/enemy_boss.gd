@@ -83,6 +83,10 @@ func _check_charge_collision() -> void:
 
 func take_damage(amount: float) -> void:
 	current_hp -= amount
+	if health_bar:
+		health_bar.value = current_hp
+	if hp_label:
+		hp_label.text = "%d/%d" % [int(max(current_hp, 0)), int(max_hp)]
 	EventBus.enemy_damaged.emit(self, amount)
 	if current_hp <= 0:
 		_die()

@@ -48,34 +48,36 @@ func _get_spawn_interval() -> float:
 
 
 func _get_enemy_scene() -> PackedScene:
-	var level: int = GameManager.run_level
+	var t: float = GameManager.run_time
 	var roll: float = randf()
 	
-	# Levels 1-2: Mostly drones, few kamikazes
-	if level <= 2:
+	# 0-30s: Mostly drones, some kamikazes
+	if t < 30.0:
 		return _enemy_drone if roll < 0.8 else _enemy_kamikaze
-	# Levels 3-4: Drones fade, kamikazes + ranged appear
-	elif level <= 4:
-		if roll < 0.3: return _enemy_drone
-		elif roll < 0.6: return _enemy_kamikaze
+	# 30-60s: Drones fade, ranged appear
+	elif t < 60.0:
+		if roll < 0.40: return _enemy_drone
+		elif roll < 0.70: return _enemy_kamikaze
 		else: return _enemy_ranged
-	# Levels 5-6: Drones rare, tanks appear
-	elif level <= 6:
-		if roll < 0.15: return _enemy_drone
-		elif roll < 0.35: return _enemy_kamikaze
-		elif roll < 0.65: return _enemy_ranged
+	# 60-90s: Drones rare, tanks appear
+	elif t < 90.0:
+		if roll < 0.20: return _enemy_drone
+		elif roll < 0.45: return _enemy_kamikaze
+		elif roll < 0.80: return _enemy_ranged
 		else: return _enemy_tank
-	# Levels 7-8: No more drones, interceptors join
-	elif level <= 8:
-		if roll < 0.15: return _enemy_kamikaze
-		elif roll < 0.40: return _enemy_ranged
-		elif roll < 0.65: return _enemy_tank
+	# 90-120s: Interceptors join, mix of everything
+	elif t < 120.0:
+		if roll < 0.10: return _enemy_drone
+		elif roll < 0.30: return _enemy_kamikaze
+		elif roll < 0.60: return _enemy_ranged
+		elif roll < 0.85: return _enemy_tank
 		else: return _enemy_interceptor
-	# Level 9+: Elite composition, heavy enemies only
+	# 120s+ (boss wave): Elite composition, drones minimal
 	else:
-		if roll < 0.05: return _enemy_kamikaze
-		elif roll < 0.30: return _enemy_ranged
-		elif roll < 0.60: return _enemy_tank
+		if roll < 0.05: return _enemy_drone
+		elif roll < 0.20: return _enemy_kamikaze
+		elif roll < 0.45: return _enemy_ranged
+		elif roll < 0.65: return _enemy_tank
 		else: return _enemy_interceptor
 
 
