@@ -5,7 +5,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_health"]
 size = Vector2(10, 10)
 
-[node name="PickupHealth" type="Area2D" groups=["pickups"]]
+[node name="PickupHealth" type="Area2D" groups=["pickups", "health_pickups"]]
 collision_layer = 16
 collision_mask = 1
 script = ExtResource("1_script")

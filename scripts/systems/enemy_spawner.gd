@@ -11,6 +11,13 @@ const SURVIVAL_TIME := 120.0 # 2 minutes
 const BOSS_LEVEL_THRESHOLD := 10
 var _boss_spawned: bool = false
 
+# Comet spawning
+var _comet_timer: float = 0.0
+var _comet_interval: float = 30.0
+const COMET_MIN_INTERVAL := 20.0
+const COMET_MAX_INTERVAL := 40.0
+var _comet_scene: PackedScene
+
 var _enemy_drone: PackedScene
 var _enemy_kamikaze: PackedScene
 var _enemy_tank: PackedScene
@@ -26,6 +33,8 @@ func _ready() -> void:
 	_enemy_ranged = preload("res://scenes/enemies/enemy_ranged.tscn")
 	_enemy_interceptor = preload("res://scenes/enemies/enemy_interceptor.tscn")
 	_enemy_boss = preload("res://scenes/enemies/enemy_boss.tscn")
+	_comet_scene = preload("res://scenes/world/comet.tscn")
+	_comet_interval = randf_range(COMET_MIN_INTERVAL, COMET_MAX_INTERVAL)
 
 
 func set_player(p: Node2D) -> void:
@@ -85,11 +94,35 @@ func _process(delta: float) -> void:
 	if not GameManager.is_playing() or not _player:
 		return
 	_try_spawn_boss()
+	_try_spawn_comet(delta)
 	_spawn_timer += delta
 	var interval: float = _get_spawn_interval()
 	if _spawn_timer >= interval:
 		_spawn_timer = 0.0
 		_spawn_enemy()
+
+
+func _try_spawn_comet(delta: float) -> void:
+	_comet_timer += delta
+	if _comet_timer >= _comet_interval:
+		_comet_timer = 0.0
+		_comet_interval = randf_range(COMET_MIN_INTERVAL, COMET_MAX_INTERVAL)
+		_spawn_comet()
+
+
+func _spawn_comet() -> void:
+	if not _world or not _player:
+		return
+	var comet = _comet_scene.instantiate()
+	# Spawn at edge, fly diagonally across
+	var angle := randf() * TAU
+	var spawn_offset := Vector2(300, 0).rotated(angle)
+	comet.global_position = _player.global_position + spawn_offset
+	var fly_dir := -spawn_offset.normalized().rotated(randf_range(-0.5, 0.5))
+	if comet.has_method("setup"):
+		comet.setup(fly_dir)
+	_world.add_child(comet)
+	DebugLog.log_info("SPAWN", "Comet spawned at %s" % comet.global_position)
 
 
 func _try_spawn_boss() -> void:

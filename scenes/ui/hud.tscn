@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="2_minimap"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0, 0.6, 1, 1)
@@ -70,13 +71,16 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="WeaponListLabel" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 20.0
-offset_top = 65.0
-offset_right = 200.0
-offset_bottom = 80.0
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+offset_top = -30.0
+offset_right = 300.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(0.7, 0.85, 1.0, 1)
 theme_override_font_sizes/font_size = 10
-text = "Weapons: Blaster"
+text = "Weapons: Blaster Lv.1"
 vertical_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="."]
@@ -91,6 +95,16 @@ theme_override_font_sizes/font_size = 20
 text = "0:00"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="Minimap" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -100.0
+offset_top = 55.0
+offset_right = -20.0
+offset_bottom = 135.0
+script = ExtResource("2_minimap")
 
 [node name="LevelUpPanel" type="PanelContainer" parent="."]
 visible = false
@@ -184,3 +198,4 @@ theme_override_font_sizes/font_size = 12
 text = "Stats: ..."
 horizontal_alignment = 2
 vertical_alignment = 2
+
