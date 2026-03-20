@@ -4,10 +4,11 @@ extends Node
 var _player: Node2D
 var _world: Node2D
 var _spawn_timer: float = 0.0
+var global_difficulty_mult: float = 1.0
 const BASE_SPAWN_INTERVAL := 2.0
-const MIN_SPAWN_INTERVAL := 0.8
-const BOSS_TIME_THRESHOLD := 180.0
-const BOSS_LEVEL_THRESHOLD := 5
+const MIN_SPAWN_INTERVAL := 0.3 # Even faster in survival
+const SURVIVAL_TIME := 120.0 # 2 minutes
+const BOSS_LEVEL_THRESHOLD := 10
 var _boss_spawned: bool = false
 
 var _enemy_drone: PackedScene
@@ -34,35 +35,34 @@ func set_world(w: Node2D) -> void:
 
 
 func _get_spawn_interval() -> float:
-	var run_minutes: float = GameManager.run_time / 60.0
-	var scale_factor: float = 1.0 - run_minutes * 0.04
-	scale_factor = clampf(scale_factor, 0.4, 1.0)
-	return clampf(BASE_SPAWN_INTERVAL * scale_factor, MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL)
+	var progress: float = GameManager.run_time / SURVIVAL_TIME
+	# After survival time, we enter extra time (progress > 1.0)
+	var scale_factor: float = 1.0 - progress * 0.7 
+	scale_factor = clampf(scale_factor, 0.2, 1.0)
+	# Difficulty upgrades make it even faster
+	return clampf((BASE_SPAWN_INTERVAL * scale_factor) / global_difficulty_mult, MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL)
 
 
 func _get_enemy_scene() -> PackedScene:
-	var run_time: float = GameManager.run_time
+	var level: int = GameManager.run_level
 	var roll: float = randf()
-	if run_time < 30.0:
-		return _enemy_drone if roll < 0.6 else _enemy_kamikaze
-	elif run_time < 60.0:
-		if roll < 0.35:
-			return _enemy_drone
-		elif roll < 0.7:
-			return _enemy_kamikaze
-		elif roll < 0.85:
-			return _enemy_ranged
-		else:
-			return _enemy_tank
+	
+	if level <= 2:
+		return _enemy_drone if roll < 0.8 else _enemy_kamikaze
+	elif level <= 4:
+		if roll < 0.4: return _enemy_drone
+		elif roll < 0.8: return _enemy_kamikaze
+		else: return _enemy_ranged
+	elif level <= 6:
+		if roll < 0.3: return _enemy_drone
+		elif roll < 0.6: return _enemy_kamikaze
+		elif roll < 0.85: return _enemy_ranged
+		else: return _enemy_tank
 	else:
-		if roll < 0.25:
-			return _enemy_drone
-		elif roll < 0.5:
-			return _enemy_kamikaze
-		elif roll < 0.75:
-			return _enemy_ranged
-		else:
-			return _enemy_tank
+		if roll < 0.2: return _enemy_drone
+		elif roll < 0.4: return _enemy_kamikaze
+		elif roll < 0.7: return _enemy_ranged
+		else: return _enemy_tank
 
 
 func _process(delta: float) -> void:
@@ -79,7 +79,7 @@ func _process(delta: float) -> void:
 func _try_spawn_boss() -> void:
 	if _boss_spawned:
 		return
-	if GameManager.run_time < BOSS_TIME_THRESHOLD and GameManager.run_level < BOSS_LEVEL_THRESHOLD:
+	if GameManager.run_time < 120.0:
 		return
 	_boss_spawned = true
 	if not _world or not _player:
@@ -100,6 +100,18 @@ func _spawn_enemy() -> void:
 		return
 	var scene: PackedScene = _get_enemy_scene()
 	var enemy: CharacterBody2D = scene.instantiate() as CharacterBody2D
+	
+	# Scale stats based on time-progress (0.0 to 1.0 and beyond)
+	var progress: float = GameManager.run_time / SURVIVAL_TIME
+	var time_scale = 1.0 + progress * 0.5 # 50% stronger at 2 min
+	var total_scale = time_scale * global_difficulty_mult
+	
+	if enemy.has_method("apply_difficulty_scale"):
+		enemy.apply_difficulty_scale(total_scale)
+	elif "max_hp" in enemy:
+		enemy.max_hp *= total_scale
+		if "current_hp" in enemy: enemy.current_hp = enemy.max_hp
+	
 	var offset: Vector2 = Vector2(randf_range(200, 350), randf_range(-150, 150))
 	if randi() % 2 == 0:
 		offset.x = -offset.x

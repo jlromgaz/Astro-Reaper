@@ -11,6 +11,7 @@ signal player_spawned(player: Node2D)
 signal player_damaged(amount: float, source: Node)
 signal player_died
 signal player_healed(amount: float)
+signal player_hp_changed(current: float, max: float)
 
 signal enemy_spawned(enemy: Node2D)
 signal enemy_killed(enemy: Node2D, position: Vector2)

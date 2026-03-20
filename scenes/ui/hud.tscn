@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0, 0.6, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -12,6 +19,17 @@ offset_right = 200.0
 offset_bottom = 35.0
 max_value = 100.0
 value = 100.0
+show_percentage = false
+
+[node name="ShieldBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = 20.0
+offset_top = 37.0
+offset_right = 200.0
+offset_bottom = 42.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_1")
+max_value = 20.0
+value = 20.0
 show_percentage = false
 
 [node name="HPLabel" type="Label" parent="."]
@@ -49,6 +67,16 @@ offset_right = 200.0
 offset_bottom = 60.0
 text = "Level 1 | XP: 0/5"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WeaponListLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 65.0
+offset_right = 200.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+text = "Weapons: Blaster"
 vertical_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="."]
@@ -124,3 +152,35 @@ offset_bottom = 60.0
 [node name="ShareLogBtn" type="Button" parent="DebugPanel"]
 layout_mode = 2
 text = "Share Log"
+
+[node name="MessageLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 80.0
+offset_right = 150.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(1, 0.9, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "FINAL WAVE INCOMING"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -60.0
+offset_right = -20.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 12
+text = "Stats: ..."
+horizontal_alignment = 2
+vertical_alignment = 2

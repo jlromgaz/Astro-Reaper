@@ -8,8 +8,15 @@ const XP_VALUE := 2
 const ATTACK_COOLDOWN := 1.2
 const BULLET_SPEED := 180.0
 
-var hp: float = HP
+var current_hp: float = HP
+var max_hp: float = HP
 var _player: Node2D
+
+
+func apply_difficulty_scale(p_scale: float) -> void:
+	max_hp = HP * p_scale
+	current_hp = max_hp
+	DebugLog.log_info("ENEMY", "Ranged scaled to %.1f HP" % max_hp)
 var _attack_timer: float = 0.0
 var _bullet_scene: PackedScene
 
@@ -18,6 +25,24 @@ func _ready() -> void:
 	add_to_group("enemies")
 	_bullet_scene = preload("res://scenes/bullets/bullet_enemy.tscn")
 	call_deferred("_find_player")
+	_setup_contact_damage()
+
+func _setup_contact_damage() -> void:
+	var area := Area2D.new()
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 12.0
+	shape.shape = circle
+	area.add_child(shape)
+	add_child(area)
+	area.collision_layer = 0
+	area.collision_mask = 1
+	area.body_entered.connect(_on_body_entered)
+	collision_mask &= ~1
+
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("player"):
+		body.take_damage(DAMAGE, self)
 
 
 func _find_player() -> void:
@@ -52,17 +77,26 @@ func _shoot() -> void:
 
 
 func take_damage(amount: float) -> void:
-	hp -= amount
+	current_hp -= amount
 	EventBus.enemy_damaged.emit(self, amount)
-	if hp <= 0:
+	if current_hp <= 0:
 		_die()
 
 
 func _die() -> void:
-	_spawn_xp()
+	if randf() < 0.1:
+		_spawn_health()
+	call_deferred("_spawn_xp")
 	DebugLog.log_info("COMBAT", "Ranged enemy killed at %s" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
 	queue_free()
+
+
+func _spawn_health() -> void:
+	var hp_scene = load("res://scenes/pickups/pickup_health.tscn")
+	var hp = hp_scene.instantiate()
+	hp.global_position = global_position
+	get_parent().add_child(hp)
 
 
 func _spawn_xp() -> void:

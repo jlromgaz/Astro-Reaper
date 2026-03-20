@@ -6,13 +6,38 @@ const HP := 80.0
 const DAMAGE := 6.0
 const XP_VALUE := 3
 
-var hp: float = HP
+var current_hp: float = HP
+var max_hp: float = HP
 var _player: Node2D
+
+
+func apply_difficulty_scale(p_scale: float) -> void:
+	max_hp = HP * p_scale
+	current_hp = max_hp
+	DebugLog.log_info("ENEMY", "Tank scaled to %.1f HP" % max_hp)
 
 
 func _ready() -> void:
 	add_to_group("enemies")
 	call_deferred("_find_player")
+	_setup_damage_area()
+
+func _setup_damage_area() -> void:
+	var area := Area2D.new()
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 20.0 # Larger for tank
+	shape.shape = circle
+	area.add_child(shape)
+	add_child(area)
+	area.collision_layer = 0
+	area.collision_mask = 1
+	area.body_entered.connect(_on_body_entered)
+	collision_mask &= ~1
+
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("player"):
+		body.take_damage(DAMAGE, self)
 
 
 func _find_player() -> void:
@@ -21,27 +46,23 @@ func _find_player() -> void:
 		_player = get_parent().get_node_or_null("Player")
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not _player or not GameManager.is_playing():
 		return
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * SPEED
 	move_and_slide()
-	if get_slide_collision_count() > 0:
-		var col: KinematicCollision2D = get_slide_collision(0)
-		if col.get_collider().is_in_group("player"):
-			col.get_collider().take_damage(DAMAGE, self)
 
 
 func take_damage(amount: float) -> void:
-	hp -= amount
+	current_hp -= amount
 	EventBus.enemy_damaged.emit(self, amount)
-	if hp <= 0:
+	if current_hp <= 0:
 		_die()
 
 
 func _die() -> void:
-	_spawn_xp()
+	call_deferred("_spawn_xp")
 	DebugLog.log_info("COMBAT", "Tank killed at %s" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
 	queue_free()

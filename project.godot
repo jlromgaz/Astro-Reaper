@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.6")
 EventBus="*res://scripts/core/event_bus.gd"
 GameManager="*res://scripts/core/game_manager.gd"
 DebugLog="*res://scripts/core/debug_log.gd"
+SoundManager="*res://scripts/core/sound_manager.gd"
 
 [debug]
 
@@ -27,13 +28,13 @@ file_logging/max_log_files=3
 
 [display]
 
-window/size/viewport_width=480
-window/size/viewport_height=270
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
-window/size/test_width=0
-window/size/test_height=0
+window/size/test_width=1280
+window/size/test_height=720
 
 [input]
 

@@ -1,13 +1,16 @@
 extends Area2D
 ## Homing missile - seeks nearest enemy and damages on hit.
 
-var damage: float = 15.0
+var damage: float = 35.0
 var speed: float = 180.0
-var _owner_ship: Node2D
+var _target: Node2D = null
+var _target_search_timer: float = 0.0
+const TARGET_TIMEOUT := 2.0
 var _velocity := Vector2.ZERO
 const HOMING_STRENGTH := 4.0
 const LIFETIME := 4.0
 var _lifetime_left: float = LIFETIME
+var _owner_ship: Node2D
 
 
 func setup(dmg: float, spd: float, owner_ship: Node2D) -> void:
@@ -24,10 +27,28 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
-	var target: Node2D = _find_nearest_enemy()
-	if target:
-		var to_target: Vector2 = (target.global_position - global_position).normalized()
+	# Search for target if we don't have one yet (only once)
+	if not _target and _lifetime_left > LIFETIME - 0.1: # Only search at the very start
+		_target = _find_nearest_enemy()
+		if _target:
+			# Bind signal to die if target leaves tree (dies)
+			_target.tree_exiting.connect(queue_free)
+		
+	# Check if target is still valid (double check)
+	if _target and (not is_instance_valid(_target) or _target.is_queued_for_deletion()):
+		queue_free()
+		return
+		
+	# Move towards target if we have one
+	if _target:
+		var target_pos: Vector2 = _target.global_position
+		var to_target: Vector2 = (target_pos - global_position).normalized()
 		_velocity = _velocity.lerp(to_target * speed, HOMING_STRENGTH * delta).limit_length(speed)
+	else:
+		# If no target found after 2 seconds of existance, disappears
+		if LIFETIME - _lifetime_left >= TARGET_TIMEOUT:
+			queue_free()
+			return
 
 	position += _velocity * delta
 	rotation = _velocity.angle()

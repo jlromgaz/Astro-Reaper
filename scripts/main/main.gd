@@ -3,7 +3,7 @@ extends Node2D
 
 @onready var game_world: Node2D = $GameWorld
 @onready var player: CharacterBody2D = $GameWorld/Player
-@onready var joystick: Control = $VirtualJoystick
+@onready var joystick: Control = get_node_or_null("VirtualJoystick")
 @onready var spawner: Node2D = $GameWorld/EnemySpawner
 
 var _spawner_script: Node
@@ -11,7 +11,14 @@ var _spawner_script: Node
 
 func _ready() -> void:
 	_setup_input_actions()
-	joystick.input_changed.connect(_on_joystick_input)
+	
+	# Robuster Joystick discovery (fallbacks if moved/renamed)
+	if not joystick:
+		joystick = find_child("VirtualJoystick*", true, false)
+	
+	if joystick and joystick.has_signal("input_changed"):
+		joystick.input_changed.connect(_on_joystick_input)
+	
 	$GameWorld/Camera2D.make_current()
 	$GameWorld/Camera2D.position_smoothing_enabled = true
 	_add_spawner_script()

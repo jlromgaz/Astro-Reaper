@@ -7,8 +7,22 @@ const HP := 500.0
 const DAMAGE := 12.0
 const XP_VALUE := 20
 
-var hp: float = HP
+var current_hp: float = HP
+var max_hp: float = HP
 var _player: Node2D
+
+@onready var health_bar: ProgressBar = $HealthBar
+@onready var hp_label: Label = $HealthBar/HPLabel
+
+
+func apply_difficulty_scale(p_scale: float) -> void:
+	max_hp = HP * p_scale
+	current_hp = max_hp
+	if is_inside_tree() and health_bar:
+		health_bar.max_value = max_hp
+		health_bar.value = current_hp
+		hp_label.text = "%d/%d" % [int(current_hp), int(max_hp)]
+	DebugLog.log_info("ENEMY", "Boss scaled to %.1f HP" % max_hp)
 var _telegraph_timer: float = 0.0
 const TELEGRAPH_DURATION := 1.2
 const CHARGE_DURATION := 0.5
@@ -20,6 +34,9 @@ func _ready() -> void:
 	add_to_group("enemies")
 	add_to_group("boss")
 	call_deferred("_find_player")
+	health_bar.max_value = max_hp
+	health_bar.value = current_hp
+	hp_label.text = "%d/%d" % [int(current_hp), int(max_hp)]
 
 
 func _find_player() -> void:
@@ -65,9 +82,9 @@ func _check_charge_collision() -> void:
 
 
 func take_damage(amount: float) -> void:
-	hp -= amount
+	current_hp -= amount
 	EventBus.enemy_damaged.emit(self, amount)
-	if hp <= 0:
+	if current_hp <= 0:
 		_die()
 
 
@@ -75,7 +92,7 @@ func _die() -> void:
 	_spawn_xp()
 	DebugLog.log_info("COMBAT", "Boss killed at %s" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
-	GameManager.end_game("victory")
+	# No victory - the game continues in survival mode until death
 	queue_free()
 
 
