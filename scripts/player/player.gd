@@ -11,15 +11,14 @@ var fire_rate_mult: float = 1.0
 var pickup_radius: float = 40.0
 
 var _move_input := Vector2.ZERO
-var _weapon_scene: PackedScene
-var _weapon_instance: Node2D
+var _weapons: Array[Node2D] = []
 var _fire_timer: float = 0.0
 var _fire_interval: float = 0.5  # 2 shots/sec base
 
 
 func _ready() -> void:
 	DebugLog.log_info("PLAYER", "Player spawned")
-	_add_weapon_blaster()
+	_add_weapon(preload("res://scripts/weapons/weapon_blaster.gd"))
 	EventBus.player_spawned.emit(self)
 	EventBus.game_started.connect(_on_game_started)
 
@@ -40,10 +39,29 @@ func set_move_input(direction: Vector2) -> void:
 	_move_input = direction.clamp_length(1.0)
 
 
-func _add_weapon_blaster() -> void:
-	var blaster := preload("res://scripts/weapons/weapon_blaster.gd")
-	_weapon_instance = blaster.new()
-	add_child(_weapon_instance)
+func _add_weapon(script: GDScript) -> void:
+	var w := script.new() as Node2D
+	add_child(w)
+	_weapons.append(w)
+
+
+func add_weapon_laser() -> void:
+	if _has_weapon("weapon_laser"):
+		return
+	_add_weapon(preload("res://scripts/weapons/weapon_laser.gd") as GDScript)
+
+
+func add_weapon_missiles() -> void:
+	if _has_weapon("weapon_missiles"):
+		return
+	_add_weapon(preload("res://scripts/weapons/weapon_missiles.gd") as GDScript)
+
+
+func _has_weapon(name_prefix: String) -> bool:
+	for w in _weapons:
+		if w.get_script() and name_prefix in w.get_script().resource_path:
+			return true
+	return false
 
 
 func _try_fire(delta: float) -> void:
@@ -51,8 +69,9 @@ func _try_fire(delta: float) -> void:
 	var interval := _fire_interval / fire_rate_mult
 	if _fire_timer >= interval:
 		_fire_timer = 0.0
-		if _weapon_instance and _weapon_instance.has_method("fire"):
-			_weapon_instance.fire(self, damage_mult)
+		for w in _weapons:
+			if w and w.has_method("fire"):
+				w.fire(self, damage_mult)
 
 
 func take_damage(amount: float, _source: Node = null) -> void:

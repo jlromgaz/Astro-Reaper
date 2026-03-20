@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var level_up_panel: PanelContainer = $LevelUpPanel
 @onready var upgrade_buttons: HBoxContainer = $LevelUpPanel/VBox/UpgradeButtons
 @onready var game_over_panel: PanelContainer = $GameOverPanel
+@onready var game_over_title: Label = $GameOverPanel/VBox/Title
 @onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
 @onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
 @onready var debug_panel: HBoxContainer = $DebugPanel
@@ -105,7 +106,9 @@ func _show_upgrade_choices() -> void:
 
 
 func _get_upgrade_choices() -> Array[String]:
-	return ["+10% Damage", "+10% Fire Rate", "+20 Max HP"]
+	var pool := ["+10% Damage", "+10% Fire Rate", "+20 Max HP", "+Laser Weapon", "+Missiles Weapon"]
+	pool.shuffle()
+	return pool.slice(0, 3)
 
 
 func _on_upgrade_btn_pressed(choice: String) -> void:
@@ -124,18 +127,23 @@ func _apply_upgrade(choice: String) -> void:
 	elif choice == "+20 Max HP":
 		_player.max_hp += 20
 		_player.current_hp += 20
+	elif choice == "+Laser Weapon":
+		_player.add_weapon_laser()
+	elif choice == "+Missiles Weapon":
+		_player.add_weapon_missiles()
 
 
 func _on_upgrade_selected(_data: Resource) -> void:
 	level_up_panel.visible = false
 
 
-func _on_game_ended(_reason: String) -> void:
-	_show_game_over()
+func _on_game_ended(reason: String) -> void:
+	_show_game_over(reason)
 
 
-func _show_game_over() -> void:
+func _show_game_over(reason: String = "death") -> void:
 	game_over_panel.visible = true
+	game_over_title.text = "VICTORY" if reason == "victory" else "GAME OVER"
 	var mins := int(GameManager.run_time) / 60
 	var secs := int(GameManager.run_time) % 60
 	game_over_summary.text = "Time: %d:%02d | Level: %d" % [mins, secs, _level]

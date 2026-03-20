@@ -1,0 +1,14 @@
+---
+description: Android Release — touch, export, build
+globs: export_presets.cfg, project.godot, **/android*
+alwaysApply: false
+---
+
+# Android Release
+
+Adopt when configuring Android export, touch input, or build.
+
+**Export:** min_sdk 24, target_sdk 34, landscape, immersive_mode, viewport 480×270.
+**Joystick:** Bottom-left 25%, radius ~60px, dead zone 10%, semi-transparent.
+**Targets:** FPS 60, RAM <200MB, APK <50MB, load <3s.
+**Pre-release:** Signed, tested on 2 devices, 5 runs no crash, joystick comfortable.

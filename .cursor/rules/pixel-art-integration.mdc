@@ -1,0 +1,14 @@
+---
+description: Pixel Art Integration — sprites, import, layers
+globs: assets/**/*.png, assets/**/*.import
+alwaysApply: false
+---
+
+# Pixel Art Integration
+
+Adopt when importing or configuring visual assets.
+
+**Import (pixel art):** filter=false, compress=lossless, mipmaps=false.
+**Naming:** `[category]_[name]_[variant].png` → `assets/art/[category]/`
+**Pipeline:** Receive → Name → Place → Import → Slice → Pivot → Z-order → Test at 320×180
+**Readability:** Player >16px, distinct silhouettes, player vs enemy bullets different colors.

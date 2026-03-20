@@ -1,0 +1,14 @@
+---
+description: QA Playtest — test checklists, bug validation
+globs: tests/**/*, **/test*.gd, **/test*.tscn
+alwaysApply: false
+---
+
+# QA Playtest
+
+Adopt when testing, validating builds, or documenting bugs.
+
+**Core loop test:** Player move, auto-fire, enemy spawn, damage, XP drop, collect, level-up, upgrade popup, HUD, game over.
+**Performance:** FPS >30 with 50+ entities, no memory leaks, no orphan nodes.
+**Mobile:** Joystick zone, no dead zones, tappable UI, readable on 6".
+**Bug template:** Severity, steps, expected, actual, console errors.
