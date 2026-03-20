@@ -1,0 +1,33 @@
+# Godot 4 specific ignores
+.godot/
+*.uid
+
+# Godot-specific ignores
+*.translation
+
+# Imported textures, models and other content
+.import/
+
+# Export presets / templates
+export_presets.cfg
+*.export
+
+# Builds
+*.apk
+*.aab
+builds/
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Antigravity brain (conversation-specific, not project files)
+# .agents/ IS tracked (project config)
