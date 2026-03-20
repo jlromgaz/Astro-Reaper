@@ -92,7 +92,7 @@ func _die() -> void:
 	_spawn_xp()
 	DebugLog.log_info("COMBAT", "Boss killed at %s" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
-	# No victory - the game continues in survival mode until death
+	EventBus.boss_defeated.emit()
 	queue_free()
 
 

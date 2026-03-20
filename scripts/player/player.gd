@@ -1,12 +1,12 @@
 extends CharacterBody2D
 ## Player ship. Movement via virtual joystick, auto-fire.
+## Stats are initialized from a ShipResource.
 
-const BASE_SPEED := 120.0
-const BASE_HP := 150.0
+var ship_data: ShipResource
 
-var move_speed: float = BASE_SPEED
-var max_hp: float = BASE_HP
-var current_hp: float = BASE_HP
+var move_speed: float = 120.0
+var max_hp: float = 150.0
+var current_hp: float = 150.0
 var damage_mult: float = 1.0
 var fire_rate_mult: float = 1.0
 var pickup_radius: float = 40.0
@@ -15,8 +15,8 @@ var enemies_killed := 0
 var _move_input := Vector2.ZERO
 var _weapons: Array[Node2D] = []
 var _fire_timer: float = 0.0
-var _fire_interval: float = 1.2  # Reduced fire rate (was 0.5)
-const INVINCIBILITY_TIME := 0.8  # Seconds immune after taking damage
+var _fire_interval: float = 1.2
+const INVINCIBILITY_TIME := 0.8
 var _invincibility_timer: float = 0.0
 
 
@@ -24,18 +24,41 @@ func _ready() -> void:
 	add_to_group("player")
 	call_deferred("_emit_spawned")
 	EventBus.game_started.connect(_on_game_started)
-	# Listen for kills to track stats
 	EventBus.enemy_killed.connect(func(_e, _p): enemies_killed += 1)
+
+
+func initialize_ship(data: ShipResource) -> void:
+	ship_data = data
+	max_hp = data.base_hp
+	current_hp = data.base_hp
+	move_speed = data.base_speed
+	damage_mult = data.base_damage_mult
+	fire_rate_mult = data.base_fire_rate_mult
+	pickup_radius = data.base_pickup_radius
+	# Apply visual color
+	var sprite = get_node_or_null("Sprite")
+	if sprite and sprite is ColorRect:
+		sprite.color = data.color
+	DebugLog.log_info("PLAYER", "Ship initialized: %s (HP:%.0f SPD:%.0f DMG:x%.1f FR:x%.1f)" % [
+		data.ship_name, max_hp, move_speed, damage_mult, fire_rate_mult
+	])
 
 
 func _emit_spawned() -> void:
 	DebugLog.log_info("PLAYER", "Player spawned (ID: %d)" % get_instance_id())
-	add_weapon(preload("res://scripts/weapons/weapon_blaster.gd"))
+	# Use starting weapon from ship data, or fallback to blaster
+	var weapon_path: String = "res://scripts/weapons/weapon_blaster.gd"
+	if ship_data and ship_data.starting_weapon_path != "":
+		weapon_path = ship_data.starting_weapon_path
+	add_weapon(load(weapon_path) as GDScript)
 	EventBus.player_spawned.emit(self)
 
 
 func _on_game_started() -> void:
-	current_hp = max_hp
+	if ship_data:
+		current_hp = ship_data.base_hp
+	else:
+		current_hp = max_hp
 	_invincibility_timer = 0.0
 	enemies_killed = 0
 
@@ -97,7 +120,6 @@ func _has_weapon(name_prefix: String) -> bool:
 
 
 func _try_fire(delta: float) -> void:
-	# Only cycle timer and fire if there are REAL enemies in the scene
 	var enemies = get_tree().get_nodes_in_group("enemies").filter(
 		func(e): return is_instance_valid(e) and not e.is_queued_for_deletion() and e.is_inside_tree()
 	)
@@ -126,8 +148,8 @@ func add_shield() -> void:
 func get_weapons_short_list() -> String:
 	var list = []
 	for w in _weapons:
-		var name = w.get_script().resource_path.get_file().replace("weapon_", "").replace(".gd", "").capitalize()
-		list.append(name)
+		var wname = w.get_script().resource_path.get_file().replace("weapon_", "").replace(".gd", "").capitalize()
+		list.append(wname)
 	if has_shield and shield_hp > 0:
 		list.append("Shield")
 	return ", ".join(list)
@@ -139,16 +161,14 @@ func take_damage(amount: float, _source: Node) -> void:
 	
 	var remaining_dmg = amount
 	if has_shield and shield_hp > 0:
-		# Distinguish between contact and projectiles
-		if _source is Area2D: # Projectiles
+		if _source is Area2D:
 			var absorbed = min(shield_hp, remaining_dmg)
 			shield_hp -= absorbed
 			remaining_dmg -= absorbed
 			DebugLog.log_info("PLAYER", "Shield absorbed %.1f damage. Remaining: %.1f" % [absorbed, shield_hp])
 			if shield_hp <= 0:
 				DebugLog.log_info("PLAYER", "Shield broken!")
-		else: # Contact damage (CharacterBody2D/PhysicsBody2D)
-			# Do not use shield for contact damage per user request
+		else:
 			pass
 	
 	if remaining_dmg <= 0:
@@ -165,7 +185,6 @@ func take_damage(amount: float, _source: Node) -> void:
 
 
 func has_weapon(weapon_type: String) -> bool:
-	# Convert type from HUD (weapon_blaster) to script name (weapon_blaster.gd)
 	var script_name = weapon_type + ".gd"
 	for w in _weapons:
 		if w.get_script() and script_name in w.get_script().resource_path:

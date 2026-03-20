@@ -264,7 +264,7 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 
 func _on_game_ended(reason: String) -> void:
 	game_over_panel.show()
-	game_over_title.text = "VICTORY" if reason == "victory" else "GAME OVER"
+	game_over_title.text = "VICTORY!" if reason == "victory" else "GAME OVER"
 	var mins: int = int(GameManager.run_time) / 60
 	var secs: int = int(GameManager.run_time) % 60
 	var kills = 0
@@ -282,7 +282,8 @@ func _show_game_over(reason: String = "death") -> void:
 
 
 func _on_restart() -> void:
-	get_tree().reload_current_scene()
+	GameManager.go_to_menu()
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 
 func _update_stats() -> void:

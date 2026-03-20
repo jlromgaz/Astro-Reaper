@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ShipResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/ship_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+ship_id = "vanguard"
+ship_name = "Vanguard"
+description = "Heavy assault cruiser. High HP and armor, slower but tough."
+color = Color(0.3, 0.5, 1.0, 1.0)
+base_hp = 200.0
+base_speed = 90.0
+base_damage_mult = 0.9
+base_fire_rate_mult = 0.9
+base_pickup_radius = 35.0
+starting_weapon_path = "res://scripts/weapons/weapon_blaster.gd"
+passive_name = "Fortified Hull"
+passive_description = "+50% HP, reduced speed"

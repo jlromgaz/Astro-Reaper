@@ -28,3 +28,5 @@ signal upgrade_selected(upgrade_data: Resource)
 signal wave_started(wave: int)
 signal wave_ended(wave: int)
 signal boss_spawned(boss: Node2D)
+signal boss_defeated
+signal victory

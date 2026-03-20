@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ShipResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/ship_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+ship_id = "phantom"
+ship_name = "Phantom"
+description = "Precision striker. High damage, low fire rate. Every shot counts."
+color = Color(0.8, 0.2, 1.0, 1.0)
+base_hp = 100.0
+base_speed = 110.0
+base_damage_mult = 1.5
+base_fire_rate_mult = 0.7
+base_pickup_radius = 35.0
+starting_weapon_path = "res://scripts/weapons/weapon_laser.gd"
+passive_name = "Critical Focus"
+passive_description = "+50% damage, slower fire rate"

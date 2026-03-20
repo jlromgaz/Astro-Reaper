@@ -1,12 +1,14 @@
 extends Node
-## Manages game state: menu, playing, paused, game_over.
+## Manages game state: menu, playing, paused, game_over, victory.
 ## Tracks run timer. Coordinates pause on level-up.
+## Holds selected ship data for the current run.
 
-enum State { MENU, PLAYING, PAUSED_LEVEL_UP, GAME_OVER }
+enum State { MENU, PLAYING, PAUSED_LEVEL_UP, GAME_OVER, VICTORY }
 
 var current_state: State = State.MENU
 var run_time: float = 0.0
 var run_level: int = 1
+var selected_ship: ShipResource = null
 
 
 func _ready() -> void:
@@ -14,6 +16,12 @@ func _ready() -> void:
 	EventBus.game_ended.connect(_on_game_ended)
 	EventBus.player_leveled_up.connect(_on_player_leveled_up)
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
+	EventBus.boss_defeated.connect(_on_boss_defeated)
+
+
+func select_ship(ship: ShipResource) -> void:
+	selected_ship = ship
+	DebugLog.log_info("GAME", "Ship selected: %s" % ship.ship_name)
 
 
 func start_game() -> void:
@@ -25,9 +33,23 @@ func start_game() -> void:
 
 
 func end_game(reason: String = "death") -> void:
-	current_state = State.GAME_OVER
+	if reason == "victory":
+		current_state = State.VICTORY
+	else:
+		current_state = State.GAME_OVER
 	DebugLog.log_info("GAME", "Game ended: %s (time: %.1fs)" % [reason, run_time])
 	EventBus.game_ended.emit(reason)
+
+
+func win_game() -> void:
+	end_game("victory")
+	EventBus.victory.emit()
+
+
+func go_to_menu() -> void:
+	current_state = State.MENU
+	selected_ship = null
+	get_tree().paused = false
 
 
 func _process(delta: float) -> void:
@@ -60,3 +82,8 @@ func _on_upgrade_selected(_upgrade_data: Resource) -> void:
 
 func _on_game_ended(_reason: String) -> void:
 	get_tree().paused = false
+
+
+func _on_boss_defeated() -> void:
+	DebugLog.log_info("GAME", "Final boss defeated! Victory!")
+	win_game()
