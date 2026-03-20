@@ -24,9 +24,9 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
-	var target := _find_nearest_enemy()
+	var target: Node2D = _find_nearest_enemy()
 	if target:
-		var to_target := (target.global_position - global_position).normalized()
+		var to_target: Vector2 = (target.global_position - global_position).normalized()
 		_velocity = _velocity.lerp(to_target * speed, HOMING_STRENGTH * delta).limit_length(speed)
 
 	position += _velocity * delta
@@ -34,14 +34,14 @@ func _physics_process(delta: float) -> void:
 
 
 func _find_nearest_enemy() -> Node2D:
-	var enemies := get_tree().get_nodes_in_group("enemies")
+	var enemies: Array = get_tree().get_nodes_in_group("enemies")
 	var nearest: Node2D = null
-	var nearest_dist := INF
+	var nearest_dist: float = INF
 	for node in enemies:
-		var body := node as Node2D
+		var body: Node2D = node as Node2D
 		if not is_instance_valid(body):
 			continue
-		var d := global_position.distance_squared_to(body.global_position)
+		var d: float = global_position.distance_squared_to(body.global_position)
 		if d < nearest_dist:
 			nearest_dist = d
 			nearest = body

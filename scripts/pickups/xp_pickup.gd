@@ -9,12 +9,12 @@ func set_value(v: int) -> void:
 
 
 func _process(_delta: float) -> void:
-	var player := get_tree().get_first_node_in_group("player") as Node2D
+	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 	if not player:
 		return
-	var dist := global_position.distance_to(player.global_position)
+	var dist: float = global_position.distance_to(player.global_position)
 	if player.has_method("get_pickup_radius"):
-		var radius := player.get_pickup_radius()
+		var radius: float = player.get_pickup_radius()
 		if dist <= radius:
 			_collect(player)
 

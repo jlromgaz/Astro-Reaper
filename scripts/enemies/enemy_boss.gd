@@ -4,7 +4,7 @@ extends CharacterBody2D
 
 const SPEED := 25.0
 const HP := 500.0
-const DAMAGE := 25.0
+const DAMAGE := 12.0
 const XP_VALUE := 20
 
 var hp: float = HP
@@ -43,11 +43,11 @@ func _physics_process(delta: float) -> void:
 		_is_charging = true
 		call_deferred("_start_charge_timer")
 		return
-	var dir := (_player.global_position - global_position).normalized()
+	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * SPEED
 	move_and_slide()
 	if get_slide_collision_count() > 0:
-		var col := get_slide_collision(0)
+		var col: KinematicCollision2D = get_slide_collision(0)
 		if col.get_collider().is_in_group("player"):
 			col.get_collider().take_damage(DAMAGE, self)
 
@@ -59,7 +59,7 @@ func _start_charge_timer() -> void:
 
 func _check_charge_collision() -> void:
 	for i in range(get_slide_collision_count()):
-		var col := get_slide_collision(i)
+		var col: KinematicCollision2D = get_slide_collision(i)
 		if col.get_collider().is_in_group("player"):
 			col.get_collider().take_damage(DAMAGE * 1.5, self)
 
@@ -80,8 +80,8 @@ func _die() -> void:
 
 
 func _spawn_xp() -> void:
-	var xp_scene := preload("res://scenes/pickups/xp_pickup.tscn")
-	var xp := xp_scene.instantiate()
+	var xp_scene: PackedScene = preload("res://scenes/pickups/xp_pickup.tscn")
+	var xp: Node = xp_scene.instantiate()
 	xp.global_position = global_position
 	if xp.has_method("set_value"):
 		xp.set_value(XP_VALUE)

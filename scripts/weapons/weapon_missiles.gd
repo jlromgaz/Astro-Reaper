@@ -7,7 +7,7 @@ const SPEED := 180.0
 
 
 func fire(owner_ship: Node2D, damage_mult: float = 1.0) -> void:
-	var missile := PROJECTILE_SCENE.instantiate() as Area2D
+	var missile: Area2D = PROJECTILE_SCENE.instantiate() as Area2D
 	missile.global_position = owner_ship.global_position
 	missile.rotation = owner_ship.rotation
 	owner_ship.get_parent().add_child(missile)

@@ -2,7 +2,7 @@ extends CharacterBody2D
 ## Player ship. Movement via virtual joystick, auto-fire.
 
 const BASE_SPEED := 120.0
-const BASE_HP := 100.0
+const BASE_HP := 150.0
 
 var max_hp: float = BASE_HP
 var current_hp: float = BASE_HP
@@ -14,6 +14,8 @@ var _move_input := Vector2.ZERO
 var _weapons: Array[Node2D] = []
 var _fire_timer: float = 0.0
 var _fire_interval: float = 0.5  # 2 shots/sec base
+const INVINCIBILITY_TIME := 0.8  # Seconds immune after taking damage
+var _invincibility_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -25,22 +27,25 @@ func _ready() -> void:
 
 func _on_game_started() -> void:
 	current_hp = max_hp
+	_invincibility_timer = 0.0
 
 
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_playing():
 		return
+	if _invincibility_timer > 0:
+		_invincibility_timer -= delta
 	velocity = _move_input * BASE_SPEED
 	move_and_slide()
 	_try_fire(delta)
 
 
 func set_move_input(direction: Vector2) -> void:
-	_move_input = direction.clamp_length(1.0)
+	_move_input = direction.limit_length(1.0)
 
 
 func _add_weapon(script: GDScript) -> void:
-	var w := script.new() as Node2D
+	var w: Node2D = script.new() as Node2D
 	add_child(w)
 	_weapons.append(w)
 
@@ -66,7 +71,7 @@ func _has_weapon(name_prefix: String) -> bool:
 
 func _try_fire(delta: float) -> void:
 	_fire_timer += delta
-	var interval := _fire_interval / fire_rate_mult
+	var interval: float = _fire_interval / fire_rate_mult
 	if _fire_timer >= interval:
 		_fire_timer = 0.0
 		for w in _weapons:
@@ -75,7 +80,10 @@ func _try_fire(delta: float) -> void:
 
 
 func take_damage(amount: float, _source: Node = null) -> void:
+	if _invincibility_timer > 0:
+		return  # Still invincible from previous hit
 	current_hp -= amount
+	_invincibility_timer = INVINCIBILITY_TIME
 	DebugLog.log_info("COMBAT", "Player took %.0f damage, HP: %.0f" % [amount, current_hp])
 	EventBus.player_damaged.emit(amount, _source)
 	if current_hp <= 0:

@@ -34,15 +34,15 @@ func set_world(w: Node2D) -> void:
 
 
 func _get_spawn_interval() -> float:
-	var run_minutes := GameManager.run_time / 60.0
-	var scale_factor := 1.0 - run_minutes * 0.04
+	var run_minutes: float = GameManager.run_time / 60.0
+	var scale_factor: float = 1.0 - run_minutes * 0.04
 	scale_factor = clampf(scale_factor, 0.4, 1.0)
 	return clampf(BASE_SPAWN_INTERVAL * scale_factor, MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL)
 
 
 func _get_enemy_scene() -> PackedScene:
-	var run_time := GameManager.run_time
-	var roll := randf()
+	var run_time: float = GameManager.run_time
+	var roll: float = randf()
 	if run_time < 30.0:
 		return _enemy_drone if roll < 0.6 else _enemy_kamikaze
 	elif run_time < 60.0:
@@ -70,7 +70,7 @@ func _process(delta: float) -> void:
 		return
 	_try_spawn_boss()
 	_spawn_timer += delta
-	var interval := _get_spawn_interval()
+	var interval: float = _get_spawn_interval()
 	if _spawn_timer >= interval:
 		_spawn_timer = 0.0
 		_spawn_enemy()
@@ -84,8 +84,8 @@ func _try_spawn_boss() -> void:
 	_boss_spawned = true
 	if not _world or not _player:
 		return
-	var boss := _enemy_boss.instantiate() as CharacterBody2D
-	var offset := Vector2(250, 0)
+	var boss: CharacterBody2D = _enemy_boss.instantiate() as CharacterBody2D
+	var offset: Vector2 = Vector2(250, 0)
 	if randi() % 2 == 0:
 		offset.x = -offset.x
 	boss.global_position = _player.global_position + offset
@@ -99,8 +99,8 @@ func _spawn_enemy() -> void:
 	if not _world or not _player:
 		return
 	var scene: PackedScene = _get_enemy_scene()
-	var enemy := scene.instantiate() as CharacterBody2D
-	var offset := Vector2(randf_range(200, 350), randf_range(-150, 150))
+	var enemy: CharacterBody2D = scene.instantiate() as CharacterBody2D
+	var offset: Vector2 = Vector2(randf_range(200, 350), randf_range(-150, 150))
 	if randi() % 2 == 0:
 		offset.x = -offset.x
 	if randi() % 2 == 0:

@@ -27,8 +27,8 @@ func log_error(category: String, message: String) -> void:
 
 
 func _log(category: String, message: String, level: String = "INFO") -> void:
-	var timestamp := Time.get_time_string_from_system()
-	var line := "[%s][%s][%s] %s" % [timestamp, level, category, message]
+	var timestamp: String = Time.get_time_string_from_system()
+	var line: String = "[%s][%s][%s] %s" % [timestamp, level, category, message]
 	_log_lines.append(line)
 	if _log_lines.size() > MAX_LOG_LINES:
 		_log_lines.remove_at(0)
@@ -37,7 +37,7 @@ func _log(category: String, message: String, level: String = "INFO") -> void:
 
 
 func _write_to_file(line: String) -> void:
-	var f := FileAccess.open(LOG_PATH, FileAccess.READ_WRITE)
+	var f: FileAccess = FileAccess.open(LOG_PATH, FileAccess.READ_WRITE)
 	if not f:
 		f = FileAccess.open(LOG_PATH, FileAccess.WRITE)
 	if f:
@@ -56,11 +56,11 @@ func get_log_content() -> String:
 
 func share_log() -> void:
 	## On Android, opens share intent with log content.
-	var content := get_log_content()
+	var content: String = get_log_content()
 	if content.is_empty():
 		content = "(no log entries)"
 	if OS.get_name() == "Android":
-		var f := FileAccess.open(LOG_PATH, FileAccess.WRITE)
+		var f: FileAccess = FileAccess.open(LOG_PATH, FileAccess.WRITE)
 		if f:
 			f.store_string(content)
 			f.close()
@@ -73,5 +73,5 @@ func share_log() -> void:
 func _android_share_file(path: String) -> void:
 	## Uses Godot's DisplayServer for Android share.
 	## Requires Android plugin or Engine singleton - simplified for MVP.
-	var abspath := ProjectSettings.globalize_path(path)
+	var abspath: String = ProjectSettings.globalize_path(path)
 	OS.shell_open("file://" + abspath)

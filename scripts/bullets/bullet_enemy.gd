@@ -1,7 +1,7 @@
 extends Area2D
 ## Enemy projectile. Hits player.
 
-var damage: float = 8.0
+var damage: float = 4.0
 var speed: float = 180.0
 var _direction := Vector2.RIGHT
 

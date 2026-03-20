@@ -28,20 +28,20 @@ func _setup_input_actions() -> void:
 	for action in ["move_up", "move_down", "move_left", "move_right"]:
 		if not InputMap.has_action(action):
 			InputMap.add_action(action)
-	var keys := {"move_up": KEY_W, "move_down": KEY_S, "move_left": KEY_A, "move_right": KEY_D}
+	var keys: Dictionary = {"move_up": KEY_W, "move_down": KEY_S, "move_left": KEY_A, "move_right": KEY_D}
 	for action in keys:
-		var ev := InputEventKey.new()
+		var ev: InputEventKey = InputEventKey.new()
 		ev.keycode = keys[action]
 		InputMap.action_add_event(action, ev)
-	var arrows := {"move_up": KEY_UP, "move_down": KEY_DOWN, "move_left": KEY_LEFT, "move_right": KEY_RIGHT}
+	var arrows: Dictionary = {"move_up": KEY_UP, "move_down": KEY_DOWN, "move_left": KEY_LEFT, "move_right": KEY_RIGHT}
 	for action in arrows:
-		var ev := InputEventKey.new()
+		var ev: InputEventKey = InputEventKey.new()
 		ev.keycode = arrows[action]
 		InputMap.action_add_event(action, ev)
 
 
 func _add_spawner_script() -> void:
-	var spawner_script := preload("res://scripts/systems/enemy_spawner.gd").new()
+	var spawner_script: Node = preload("res://scripts/systems/enemy_spawner.gd").new()
 	spawner_script.name = "SpawnerScript"
 	spawner.add_child(spawner_script)
 	_spawner_script = spawner_script
@@ -56,7 +56,7 @@ func _process(_delta: float) -> void:
 		$GameWorld/Camera2D.global_position = player.global_position
 	# Keyboard fallback for desktop testing (disabled on mobile)
 	if OS.get_name() != "Android" and OS.get_name() != "iOS":
-		var key_input := Vector2.ZERO
+		var key_input: Vector2 = Vector2.ZERO
 		if Input.is_action_pressed("move_right"):
 			key_input.x += 1
 		if Input.is_action_pressed("move_left"):

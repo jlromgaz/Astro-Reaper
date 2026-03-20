@@ -14,8 +14,10 @@ extends CanvasLayer
 @onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
 @onready var debug_panel: HBoxContainer = $DebugPanel
 @onready var share_log_btn: Button = $DebugPanel/ShareLogBtn
+@onready var damage_popup: Label = $DamagePopup
 
 var _player: Node2D
+var _damage_popup_timer: float = 0.0
 var _xp_current := 0
 var _xp_to_level := 5
 var _level := 1
@@ -37,11 +39,21 @@ func _ready() -> void:
 	EventBus.game_ended.connect(_on_game_ended)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _damage_popup_timer > 0:
+		_damage_popup_timer -= delta
+		if _damage_popup_timer <= 0:
+			damage_popup.visible = false
 	if GameManager.current_state == GameManager.State.PLAYING:
-		var mins := int(GameManager.run_time) / 60
-		var secs := int(GameManager.run_time) % 60
+		var mins: int = int(GameManager.run_time) / 60
+		var secs: int = int(GameManager.run_time) % 60
 		timer_label.text = "%d:%02d" % [mins, secs]
+
+
+func _show_damage_popup(amount: int) -> void:
+	damage_popup.text = "-%d" % amount
+	damage_popup.visible = true
+	_damage_popup_timer = 1.2
 
 
 func _on_player_spawned(player: Node2D) -> void:
@@ -49,8 +61,9 @@ func _on_player_spawned(player: Node2D) -> void:
 	_update_hp()
 
 
-func _on_player_damaged(_amount: float, _source: Node) -> void:
+func _on_player_damaged(amount: float, _source: Node) -> void:
 	_update_hp()
+	_show_damage_popup(int(amount))
 
 
 func _on_player_died() -> void:
@@ -62,8 +75,8 @@ func _update_hp() -> void:
 	if not _player:
 		return
 	if _player.has_method("get_current_hp"):
-		var hp := _player.current_hp
-		var max_hp := _player.max_hp
+		var hp: float = _player.current_hp
+		var max_hp: float = _player.max_hp
 		hp_bar.max_value = max_hp
 		hp_bar.value = hp
 		hp_label.text = "HP: %d/%d" % [int(hp), int(max_hp)]
@@ -97,16 +110,16 @@ func _show_upgrade_choices() -> void:
 	level_up_panel.visible = true
 	for c in upgrade_buttons.get_children():
 		c.queue_free()
-	var choices := _get_upgrade_choices()
+	var choices: Array = _get_upgrade_choices()
 	for i in range(min(3, choices.size())):
-		var btn := Button.new()
+		var btn: Button = Button.new()
 		btn.text = choices[i]
 		btn.pressed.connect(_on_upgrade_btn_pressed.bind(choices[i]))
 		upgrade_buttons.add_child(btn)
 
 
 func _get_upgrade_choices() -> Array[String]:
-	var pool := ["+10% Damage", "+10% Fire Rate", "+20 Max HP", "+Laser Weapon", "+Missiles Weapon"]
+	var pool: Array = ["+10% Damage", "+10% Fire Rate", "+20 Max HP", "+Laser Weapon", "+Missiles Weapon"]
 	pool.shuffle()
 	return pool.slice(0, 3)
 
@@ -144,8 +157,8 @@ func _on_game_ended(reason: String) -> void:
 func _show_game_over(reason: String = "death") -> void:
 	game_over_panel.visible = true
 	game_over_title.text = "VICTORY" if reason == "victory" else "GAME OVER"
-	var mins := int(GameManager.run_time) / 60
-	var secs := int(GameManager.run_time) % 60
+	var mins: int = int(GameManager.run_time) / 60
+	var secs: int = int(GameManager.run_time) % 60
 	game_over_summary.text = "Time: %d:%02d | Level: %d" % [mins, secs, _level]
 
 

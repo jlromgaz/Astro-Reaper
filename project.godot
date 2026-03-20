@@ -1,5 +1,10 @@
 ; Engine configuration file.
-; Astro Reaper - Survivors-like space auto-shooter roguelite
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -7,12 +12,18 @@ config_version=5
 
 config/name="Astro Reaper"
 run/main_scene="res://scenes/main/main.tscn"
+config/features=PackedStringArray("4.6")
 
 [autoload]
 
 EventBus="*res://scripts/core/event_bus.gd"
 GameManager="*res://scripts/core/game_manager.gd"
 DebugLog="*res://scripts/core/debug_log.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/max_log_files=3
 
 [display]
 
@@ -23,12 +34,6 @@ window/stretch/aspect="expand"
 window/handheld/orientation=1
 window/size/test_width=0
 window/size/test_height=0
-
-[debug]
-
-file_logging/enable_file_logging=true
-file_logging/log_path="user://logs/godot.log"
-file_logging/max_log_files=3
 
 [input]
 
@@ -65,5 +70,5 @@ move_right={
 
 [rendering]
 
-renderer/rendering_method="mobile"
 textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"

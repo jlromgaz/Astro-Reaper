@@ -3,7 +3,7 @@ extends CharacterBody2D
 
 const SPEED := 40.0
 const HP := 30.0
-const DAMAGE := 8.0
+const DAMAGE := 4.0
 const XP_VALUE := 2
 const ATTACK_COOLDOWN := 1.2
 const BULLET_SPEED := 180.0
@@ -29,7 +29,7 @@ func _find_player() -> void:
 func _physics_process(delta: float) -> void:
 	if not _player or not GameManager.is_playing():
 		return
-	var dir := (_player.global_position - global_position).normalized()
+	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * SPEED
 	move_and_slide()
 	_try_shoot(delta)
@@ -43,8 +43,8 @@ func _try_shoot(delta: float) -> void:
 
 
 func _shoot() -> void:
-	var bullet := _bullet_scene.instantiate()
-	var dir := (_player.global_position - global_position).normalized()
+	var bullet: Node = _bullet_scene.instantiate()
+	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	bullet.global_position = global_position + dir * 20
 	if bullet.has_method("setup"):
 		bullet.setup(DAMAGE, BULLET_SPEED, dir)
@@ -66,8 +66,8 @@ func _die() -> void:
 
 
 func _spawn_xp() -> void:
-	var xp_scene := preload("res://scenes/pickups/xp_pickup.tscn")
-	var xp := xp_scene.instantiate()
+	var xp_scene: PackedScene = preload("res://scenes/pickups/xp_pickup.tscn")
+	var xp: Node = xp_scene.instantiate()
 	xp.global_position = global_position
 	if xp.has_method("set_value"):
 		xp.set_value(XP_VALUE)

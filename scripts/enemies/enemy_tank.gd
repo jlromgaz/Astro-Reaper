@@ -3,7 +3,7 @@ extends CharacterBody2D
 
 const SPEED := 25.0
 const HP := 80.0
-const DAMAGE := 12.0
+const DAMAGE := 6.0
 const XP_VALUE := 3
 
 var hp: float = HP
@@ -24,11 +24,11 @@ func _find_player() -> void:
 func _physics_process(delta: float) -> void:
 	if not _player or not GameManager.is_playing():
 		return
-	var dir := (_player.global_position - global_position).normalized()
+	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * SPEED
 	move_and_slide()
 	if get_slide_collision_count() > 0:
-		var col := get_slide_collision(0)
+		var col: KinematicCollision2D = get_slide_collision(0)
 		if col.get_collider().is_in_group("player"):
 			col.get_collider().take_damage(DAMAGE, self)
 
@@ -48,8 +48,8 @@ func _die() -> void:
 
 
 func _spawn_xp() -> void:
-	var xp_scene := preload("res://scenes/pickups/xp_pickup.tscn")
-	var xp := xp_scene.instantiate()
+	var xp_scene: PackedScene = preload("res://scenes/pickups/xp_pickup.tscn")
+	var xp: Node = xp_scene.instantiate()
 	xp.global_position = global_position
 	if xp.has_method("set_value"):
 		xp.set_value(XP_VALUE)
