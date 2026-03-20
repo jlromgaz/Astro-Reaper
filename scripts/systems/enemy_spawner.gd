@@ -51,22 +51,31 @@ func _get_enemy_scene() -> PackedScene:
 	var level: int = GameManager.run_level
 	var roll: float = randf()
 	
+	# Levels 1-2: Mostly drones, few kamikazes
 	if level <= 2:
 		return _enemy_drone if roll < 0.8 else _enemy_kamikaze
+	# Levels 3-4: Drones fade, kamikazes + ranged appear
 	elif level <= 4:
-		if roll < 0.4: return _enemy_drone
-		elif roll < 0.8: return _enemy_kamikaze
-		else: return _enemy_ranged
-	elif level <= 6:
 		if roll < 0.3: return _enemy_drone
 		elif roll < 0.6: return _enemy_kamikaze
-		elif roll < 0.85: return _enemy_ranged
+		else: return _enemy_ranged
+	# Levels 5-6: Drones rare, tanks appear
+	elif level <= 6:
+		if roll < 0.15: return _enemy_drone
+		elif roll < 0.35: return _enemy_kamikaze
+		elif roll < 0.65: return _enemy_ranged
 		else: return _enemy_tank
+	# Levels 7-8: No more drones, interceptors join
+	elif level <= 8:
+		if roll < 0.15: return _enemy_kamikaze
+		elif roll < 0.40: return _enemy_ranged
+		elif roll < 0.65: return _enemy_tank
+		else: return _enemy_interceptor
+	# Level 9+: Elite composition, heavy enemies only
 	else:
-		if roll < 0.1: return _enemy_drone
-		elif roll < 0.2: return _enemy_kamikaze
-		elif roll < 0.5: return _enemy_ranged
-		elif roll < 0.7: return _enemy_tank
+		if roll < 0.05: return _enemy_kamikaze
+		elif roll < 0.30: return _enemy_ranged
+		elif roll < 0.60: return _enemy_tank
 		else: return _enemy_interceptor
 
 
