@@ -197,30 +197,31 @@ func _show_upgrade_selection() -> void:
 	
 	# Define possible upgrades
 	var all_options = [
-		{"name": "+Blaster Weapon", "type": "weapon_blaster", "is_weapon": true},
-		{"name": "+Laser Weapon", "type": "weapon_laser", "is_weapon": true},
-		{"name": "+Missiles Weapon", "type": "weapon_missiles", "is_weapon": true},
+		{"name": "+Blaster", "type": "weapon_blaster", "is_weapon": true},
+		{"name": "+Laser", "type": "weapon_laser", "is_weapon": true},
+		{"name": "+Missiles", "type": "weapon_missiles", "is_weapon": true},
 		{"name": "+Shield System", "type": "shield", "is_weapon": true},
+		{"name": "+1 Projectile", "type": "projectile", "is_weapon": false},
 		{"name": "+10% Damage", "type": "stat_damage", "is_weapon": false},
 		{"name": "+10% Fire Rate", "type": "stat_fire_rate", "is_weapon": false},
 		{"name": "+20 Max HP", "type": "stat_max_hp", "is_weapon": false},
 		{"name": "Heal +20 HP", "type": "heal", "is_weapon": false},
 		{"name": "+15% Move Speed", "type": "speed", "is_weapon": false},
-		{"name": "+10% Difficulty Spike", "type": "difficulty", "is_weapon": false}
 	]
 	
-	# Filter out owned weapons
-	var filtered_options = []
+	# For weapons player already has, show as level-up
+	var display_options = []
 	for opt in all_options:
-		if opt.is_weapon:
-			if not _player or not _player.has_weapon(opt.type):
-				filtered_options.append(opt)
-		else:
-			filtered_options.append(opt)
+		var entry = opt.duplicate()
+		if opt.is_weapon and opt.type != "shield" and _player and _player.has_weapon(opt.type):
+			var current_level = _player.get_weapon_level(opt.type)
+			var short_name = opt.type.replace("weapon_", "").capitalize()
+			entry.name = "%s → Lv.%d" % [short_name, current_level + 1]
+		display_options.append(entry)
 	
 	# Pick 3 random
-	filtered_options.shuffle()
-	var selected = filtered_options.slice(0, 3)
+	display_options.shuffle()
+	var selected = display_options.slice(0, 3)
 	
 	for opt in selected:
 		var btn = Button.new()
@@ -241,6 +242,8 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
 		"shield":
 			_player.add_shield()
+		"projectile":
+			_player.add_projectile_to_all()
 		"stat_damage": 
 			_player.damage_mult *= 1.1
 		"stat_fire_rate": 
@@ -253,10 +256,6 @@ func _on_upgrade_selected(upgrade: Dictionary) -> void:
 			_player.heal(20)
 		"speed": 
 			_player.add_speed(20)
-		"difficulty": 
-			var spawner = get_tree().get_first_node_in_group("spawner")
-			if spawner:
-				spawner.global_difficulty_mult += 0.1
 	
 	level_up_panel.hide()
 	EventBus.upgrade_selected.emit(null)
@@ -276,8 +275,6 @@ func _on_game_ended(reason: String) -> void:
 
 
 func _show_game_over(reason: String = "death") -> void:
-	# This function is now largely redundant as _on_game_ended handles the display.
-	# Keeping it for now, but its content is moved to _on_game_ended.
 	pass
 
 
@@ -290,11 +287,11 @@ func _update_stats() -> void:
 	if not _player or not _player.has_method("get_stats"):
 		return
 	var stats = _player.get_stats()
-	stats_label.text = "DMG: x%.1f | SPD: x%.1f\nWeps: %d (L:%d M:%d)" % [
-		stats.damage, stats.fire_rate, stats.weapon_count, 
-		stats.laser_count, stats.missile_count
+	stats_label.text = "DMG: x%.1f | FR: x%.1f | Proj: %d" % [
+		stats.damage, stats.fire_rate, stats.total_projectiles
 	]
 
 
 func _on_share_log() -> void:
 	DebugLog.share_log()
+
