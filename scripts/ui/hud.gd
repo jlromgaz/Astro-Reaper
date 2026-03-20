@@ -40,6 +40,7 @@ func _ready() -> void:
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
 	EventBus.player_hp_changed.connect(_on_hp_changed)
 	EventBus.game_ended.connect(_on_game_ended)
+	EventBus.player_leveled_up.connect(_on_external_level_up)
 	
 	# Fallback if player spawned before HUD was ready
 	call_deferred("_find_existing_player")
@@ -184,6 +185,11 @@ func _on_level_up(new_level: int) -> void:
 	_xp_to_level = 5 + (_level * 3) # Scaling XP curve
 	_update_xp_bar()
 	EventBus.player_leveled_up.emit(_level)
+	_show_upgrade_selection()
+
+
+func _on_external_level_up(_level_val: int) -> void:
+	# This handles level-ups not triggered by XP (e.g. Comets)
 	_show_upgrade_selection()
 
 
