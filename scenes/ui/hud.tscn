@@ -1,0 +1,186 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0, 0.6, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="HPBar" type="ProgressBar" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 35.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="ShieldBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = 20.0
+offset_top = 37.0
+offset_right = 200.0
+offset_bottom = 42.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_1")
+max_value = 20.0
+value = 20.0
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 35.0
+text = "HP: 100/100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DamagePopup" type="Label" parent="."]
+visible = false
+offset_left = 210.0
+offset_top = 15.0
+offset_right = 280.0
+offset_bottom = 45.0
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "-0"
+
+[node name="XPBar" type="ProgressBar" parent="."]
+offset_left = 20.0
+offset_top = 45.0
+offset_right = 200.0
+offset_bottom = 60.0
+max_value = 10.0
+value = 0.0
+show_percentage = false
+
+[node name="XPLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 45.0
+offset_right = 200.0
+offset_bottom = 60.0
+text = "Level 1 | XP: 0/5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WeaponListLabel" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 65.0
+offset_right = 200.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+text = "Weapons: Blaster"
+vertical_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 20
+text = "0:00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LevelUpPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -80.0
+offset_right = 150.0
+offset_bottom = 80.0
+
+[node name="VBox" type="VBoxContainer" parent="LevelUpPanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="LevelUpPanel/VBox"]
+layout_mode = 2
+text = "LEVEL UP!"
+horizontal_alignment = 1
+
+[node name="UpgradeButtons" type="HBoxContainer" parent="LevelUpPanel/VBox"]
+layout_mode = 2
+
+[node name="GameOverPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = 60.0
+offset_right = 400.0
+offset_bottom = 210.0
+
+[node name="VBox" type="VBoxContainer" parent="GameOverPanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="GameOverPanel/VBox"]
+layout_mode = 2
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="Summary" type="Label" parent="GameOverPanel/VBox"]
+layout_mode = 2
+text = "Time: 0:00 | Level: 1"
+horizontal_alignment = 1
+
+[node name="RestartBtn" type="Button" parent="GameOverPanel/VBox"]
+layout_mode = 2
+text = "Restart"
+
+[node name="DebugPanel" type="HBoxContainer" parent="."]
+visible = false
+offset_left = 400.0
+offset_top = 20.0
+offset_right = 470.0
+offset_bottom = 60.0
+
+[node name="ShareLogBtn" type="Button" parent="DebugPanel"]
+layout_mode = 2
+text = "Share Log"
+
+[node name="MessageLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 80.0
+offset_right = 150.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(1, 0.9, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "FINAL WAVE INCOMING"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -60.0
+offset_right = -20.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 12
+text = "Stats: ..."
+horizontal_alignment = 2
+vertical_alignment = 2

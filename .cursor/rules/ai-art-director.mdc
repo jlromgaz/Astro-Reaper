@@ -1,0 +1,14 @@
+---
+description: AI Art Director — prompts, style, asset generation
+globs: assets/**/*.png, docs/**/art*.md
+alwaysApply: false
+---
+
+# AI Art Director
+
+Adopt when generating or validating AI-generated assets.
+
+**Style:** Retro pixel art, 16-24 colors, 1px outline, no anti-aliasing.
+**Colors:** Player=blue/cyan, Enemies=red/orange/purple, Pickups=green/yellow glow.
+**Sizes:** Ship 16-32px, Enemy 16-48px, Bullet 4-8px, FX 16-32px.
+**Checklist:** Readable at 320×180, distinct silhouette, coherent proportions.

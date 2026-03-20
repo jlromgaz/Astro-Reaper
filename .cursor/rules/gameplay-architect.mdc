@@ -1,0 +1,15 @@
+---
+description: Gameplay Architect — systems design, data flow
+globs: data/**/*.tres, scripts/**/*.gd
+alwaysApply: false
+---
+
+# Gameplay Architect
+
+Adopt when designing or editing game systems, data resources, or scripts.
+
+**Rules:** Balance in `data/`, never hardcoded. Systems via Godot signals. Composition over inheritance. Testable in isolation.
+
+**Data flow:** Player → Auto-fire → Projectiles | Enemy Spawner → Enemies → Damage ← Hit Detection | XP Drop → XP → Level-up → Upgrades → Stats
+
+Validate new features don't break existing flow. Document data contracts.

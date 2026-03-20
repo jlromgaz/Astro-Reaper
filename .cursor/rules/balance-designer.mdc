@@ -1,0 +1,13 @@
+---
+description: Balance Designer — difficulty, stats, pacing
+globs: data/balance/**/*.tres, data/weapons/**/*.tres, data/enemies/**/*.tres, data/upgrades/**/*.tres
+alwaysApply: false
+---
+
+# Balance Designer
+
+Adopt when editing balance data, weapons, enemies, or upgrades.
+
+**Pacing:** First level-up ~30s, first power spike ~90s, build identity ~3min, peak chaos 7-8min.
+**Checklist:** Minute 1 TTK <1s, Minute 5 TTK <2s, no death <30s without upgrades, divergent builds viable.
+**Files:** data/balance/, data/weapons/, data/enemies/, data/upgrades/

@@ -1,0 +1,299 @@
+extends CanvasLayer
+## HUD: HP bar, XP bar, timer, level-up popup, game over.
+
+@onready var hp_bar: ProgressBar = $HPBar
+@onready var hp_label: Label = $HPLabel
+@onready var xp_bar: ProgressBar = $XPBar
+@onready var xp_label: Label = $XPLabel
+@onready var timer_label: Label = $TimerLabel
+@onready var level_up_panel: PanelContainer = $LevelUpPanel
+@onready var upgrade_buttons: HBoxContainer = $LevelUpPanel/VBox/UpgradeButtons
+@onready var game_over_panel: PanelContainer = $GameOverPanel
+@onready var game_over_title: Label = $GameOverPanel/VBox/Title
+@onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
+@onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
+@onready var debug_panel: HBoxContainer = $DebugPanel
+@onready var share_log_btn: Button = $DebugPanel/ShareLogBtn
+@onready var damage_popup: Label = $DamagePopup
+@onready var stats_label: Label = $StatsLabel
+
+var _player: Node2D
+var _damage_popup_timer: float = 0.0
+var _xp_current := 0
+var _xp_to_level := 5
+var _level := 1
+var _extra_time_notified := false
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	level_up_panel.visible = false
+	game_over_panel.visible = false
+	debug_panel.visible = OS.is_debug_build()
+	restart_btn.pressed.connect(_on_restart)
+	if debug_panel.visible:
+		share_log_btn.pressed.connect(_on_share_log)
+	EventBus.player_spawned.connect(_on_player_spawned)
+	EventBus.player_damaged.connect(_on_player_damaged)
+	EventBus.player_died.connect(_on_player_died)
+	EventBus.xp_collected.connect(_on_xp_collected)
+	EventBus.upgrade_selected.connect(_on_upgrade_selected)
+	EventBus.player_hp_changed.connect(_on_hp_changed)
+	EventBus.game_ended.connect(_on_game_ended)
+	
+	# Fallback if player spawned before HUD was ready
+	call_deferred("_find_existing_player")
+
+func _find_existing_player() -> void:
+	var p = get_tree().get_first_node_in_group("player")
+	if p and not _player:
+		_on_player_spawned(p)
+
+
+@onready var shield_bar: ProgressBar = $ShieldBar
+@onready var weapon_list_label: Label = $WeaponListLabel
+
+
+func _process(delta: float) -> void:
+	if _damage_popup_timer > 0:
+		_damage_popup_timer -= delta
+		if _damage_popup_timer <= 0:
+			damage_popup.visible = false
+	
+	if GameManager.current_state == GameManager.State.PLAYING:
+		_update_timer_display()
+		_update_stats()
+		_update_shield_bar()
+		_update_weapon_list()
+
+
+func _update_shield_bar() -> void:
+	if not _player: return
+	if _player.has_shield and _player.shield_hp > 0:
+		shield_bar.visible = true
+		shield_bar.value = _player.shield_hp
+	else:
+		shield_bar.visible = false
+
+
+func _update_weapon_list() -> void:
+	if not _player: return
+	if not _player.has_method("get_weapons_short_list"):
+		return
+	weapon_list_label.text = "Weapons: " + _player.get_weapons_short_list()
+
+
+func _update_timer_display() -> void:
+	var total_time: float = GameManager.run_time
+	var display_secs: int
+	
+	if total_time < 120.0:
+		# Countdown mode
+		display_secs = int(120.0 - total_time)
+		timer_label.remove_theme_color_override("font_color")
+	else:
+		# Extra time mode
+		display_secs = int(total_time - 120.0)
+		timer_label.add_theme_color_override("font_color", Color.RED)
+		if not _extra_time_notified:
+			_extra_time_notified = true
+			_show_message("FINAL WAVE INCOMING", 2.0)
+	
+	var mins: int = display_secs / 60
+	var secs: int = display_secs % 60
+	timer_label.text = "%d:%02d" % [mins, secs]
+
+
+func _show_message(text: String, duration: float) -> void:
+	# Assume we add MessageLabel to hud.tscn
+	var msg_label = get_node_or_null("MessageLabel")
+	if msg_label:
+		msg_label.text = text
+		msg_label.visible = true
+		await get_tree().create_timer(duration).timeout
+		msg_label.visible = false
+
+
+func _show_damage_popup(amount: int) -> void:
+	damage_popup.text = "-%d" % amount
+	damage_popup.visible = true
+	_damage_popup_timer = 1.2
+
+
+func _on_player_spawned(player: Node2D) -> void:
+	_player = player
+	DebugLog.log_info("HUD", "Tracking Player ID: %d" % _player.get_instance_id())
+	_update_hp()
+
+
+func _on_player_damaged(amount: float, _source: Node) -> void:
+	_update_hp()
+	_show_damage_popup(int(amount))
+
+
+func _on_player_died() -> void:
+	_update_hp()
+	_show_game_over()
+
+
+func _on_hp_changed(current: float, max_v: float) -> void:
+	hp_bar.max_value = max_v
+	hp_bar.value = current
+	hp_label.text = "HP: %d/%d" % [int(current), int(max_v)]
+
+
+func _update_hp() -> void:
+	if not _player:
+		return
+	
+	var hp: float = 0.0
+	var max_hp: float = 100.0
+	
+	if _player.has_method("get_current_hp"):
+		hp = _player.get_current_hp()
+	else:
+		hp = _player.current_hp
+		
+	if _player.has_method("get_max_hp"):
+		max_hp = _player.get_max_hp()
+	else:
+		max_hp = _player.max_hp
+		
+	hp_bar.max_value = max_hp
+	hp_bar.value = hp
+	hp_label.text = "HP: %d/%d" % [int(hp), int(max_hp)]
+	DebugLog.log_info("HUD", "UpdateHP: %.0f/%.0f (PlayerID: %d)" % [hp, max_hp, _player.get_instance_id() if _player else 0])
+
+
+func _on_xp_collected(amount: int) -> void:
+	_xp_current += amount
+	_update_xp_bar()
+	if _xp_current >= _xp_to_level:
+		_on_level_up(_level + 1)
+
+
+func _update_xp_bar() -> void:
+	xp_bar.max_value = _xp_to_level
+	xp_bar.value = _xp_current
+	xp_label.text = "Level %d | XP: %d/%d" % [_level, _xp_current, _xp_to_level]
+
+
+func _on_level_up(new_level: int) -> void:
+	_xp_current -= _xp_to_level
+	_level = new_level
+	_xp_to_level = 5 + (_level * 3) # Scaling XP curve
+	_update_xp_bar()
+	EventBus.player_leveled_up.emit(_level)
+	_show_upgrade_selection()
+
+
+func _show_upgrade_selection() -> void:
+	# GameManager handles get_tree().paused = true via _on_player_leveled_up
+	# Clear previous buttons
+	for child in upgrade_buttons.get_children():
+		child.queue_free()
+	
+	level_up_panel.show()
+	
+	# Define possible upgrades
+	var all_options = [
+		{"name": "+Blaster Weapon", "type": "weapon_blaster", "is_weapon": true},
+		{"name": "+Laser Weapon", "type": "weapon_laser", "is_weapon": true},
+		{"name": "+Missiles Weapon", "type": "weapon_missiles", "is_weapon": true},
+		{"name": "+Shield System", "type": "shield", "is_weapon": true},
+		{"name": "+10% Damage", "type": "stat_damage", "is_weapon": false},
+		{"name": "+10% Fire Rate", "type": "stat_fire_rate", "is_weapon": false},
+		{"name": "+20 Max HP", "type": "stat_max_hp", "is_weapon": false},
+		{"name": "Heal +20 HP", "type": "heal", "is_weapon": false},
+		{"name": "+15% Move Speed", "type": "speed", "is_weapon": false},
+		{"name": "+10% Difficulty Spike", "type": "difficulty", "is_weapon": false}
+	]
+	
+	# Filter out owned weapons
+	var filtered_options = []
+	for opt in all_options:
+		if opt.is_weapon:
+			if not _player or not _player.has_weapon(opt.type):
+				filtered_options.append(opt)
+		else:
+			filtered_options.append(opt)
+	
+	# Pick 3 random
+	filtered_options.shuffle()
+	var selected = filtered_options.slice(0, 3)
+	
+	for opt in selected:
+		var btn = Button.new()
+		btn.text = opt.name
+		btn.pressed.connect(_on_upgrade_selected.bind(opt))
+		upgrade_buttons.add_child(btn)
+
+func _on_upgrade_selected(upgrade: Dictionary) -> void:
+	DebugLog.log_info("UPGRADE", "Selected: %s" % upgrade.name)
+	get_tree().paused = false
+	
+	match upgrade.type:
+		"weapon_blaster": 
+			_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
+		"weapon_laser": 
+			_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
+		"weapon_missiles": 
+			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
+		"shield":
+			_player.add_shield()
+		"stat_damage": 
+			_player.damage_mult *= 1.1
+		"stat_fire_rate": 
+			_player.fire_rate_mult *= 1.1
+		"stat_max_hp": 
+			_player.max_hp += 20
+			_player.current_hp += 20
+			_update_hp()
+		"heal": 
+			_player.heal(20)
+		"speed": 
+			_player.add_speed(20)
+		"difficulty": 
+			var spawner = get_tree().get_first_node_in_group("spawner")
+			if spawner:
+				spawner.global_difficulty_mult += 0.1
+	
+	level_up_panel.hide()
+	EventBus.upgrade_selected.emit(null)
+
+
+func _on_game_ended(reason: String) -> void:
+	game_over_panel.show()
+	game_over_title.text = "VICTORY" if reason == "victory" else "GAME OVER"
+	var mins: int = int(GameManager.run_time) / 60
+	var secs: int = int(GameManager.run_time) % 60
+	var kills = 0
+	if _player and _player.has_method("get_stats") and _player.get_stats().has("kills"):
+		kills = _player.get_stats().kills
+	
+	game_over_summary.text = "KILLS: %d | TIME: %d:%02d" % [kills, mins, secs]
+	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
+
+
+func _show_game_over(reason: String = "death") -> void:
+	# This function is now largely redundant as _on_game_ended handles the display.
+	# Keeping it for now, but its content is moved to _on_game_ended.
+	pass
+
+
+func _on_restart() -> void:
+	get_tree().reload_current_scene()
+
+
+func _update_stats() -> void:
+	if not _player or not _player.has_method("get_stats"):
+		return
+	var stats = _player.get_stats()
+	stats_label.text = "DMG: x%.1f | SPD: x%.1f\nWeps: %d (L:%d M:%d)" % [
+		stats.damage, stats.fire_rate, stats.weapon_count, 
+		stats.laser_count, stats.missile_count
+	]
+
+
+func _on_share_log() -> void:
+	DebugLog.share_log()

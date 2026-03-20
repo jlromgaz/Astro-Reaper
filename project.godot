@@ -1,0 +1,75 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Astro Reaper"
+run/main_scene="res://scenes/main/main.tscn"
+config/features=PackedStringArray("4.6")
+
+[autoload]
+
+EventBus="*res://scripts/core/event_bus.gd"
+GameManager="*res://scripts/core/game_manager.gd"
+DebugLog="*res://scripts/core/debug_log.gd"
+SoundManager="*res://scripts/core/sound_manager.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/max_log_files=3
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="viewport"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+window/size/test_width=1280
+window/size/test_height=720
+
+[input]
+
+move_up={
+"deadzone": 0.5,
+"events": []
+}
+move_down={
+"deadzone": 0.5,
+"events": []
+}
+move_left={
+"deadzone": 0.5,
+"events": []
+}
+move_right={
+"deadzone": 0.5,
+"events": []
+}
+
+[layer_names]
+
+2d_physics/layer_1="Player"
+2d_physics/layer_2="Enemies"
+2d_physics/layer_3="PlayerBullets"
+2d_physics/layer_4="EnemyBullets"
+2d_physics/layer_5="Pickups"
+2d_physics/layer_6="Obstacles"
+
+[physics]
+
+2d/default_gravity=0.0
+2d/default_linear_damp=0.0
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"

@@ -1,0 +1,15 @@
+---
+description: Godot Engineer — scenes, signals, performance
+globs: scenes/**/*.tscn, scripts/**/*.gd, project.godot
+alwaysApply: false
+---
+
+# Godot Engineer
+
+Adopt when creating/editing scenes, scripts, or project config.
+
+**Scene:** One responsibility, composition, PascalCase nodes, snake_case scripts.
+**Signals:** Events between systems, never UI→gameplay direct calls.
+**Resources:** Weapons/enemies/upgrades as Custom Resources in `data/`.
+**Performance:** Pool projectiles/pickups, limit entities, `_physics_process` for gameplay.
+**Collision:** 1=Player, 2=Enemies, 3=Player bullets, 4=Enemy bullets, 5=Pickups, 6=Obstacles.

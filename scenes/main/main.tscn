@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://c7ivt0fc632t"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/virtual_joystick.tscn" id="3_joystick"]
+[ext_resource type="Script" uid="uid://y0hb1atjr4i6" path="res://scripts/main/main.gd" id="4_main"]
+
+[node name="Main" type="Node2D" unique_id=146783724]
+script = ExtResource("4_main")
+
+[node name="GameWorld" type="Node2D" parent="." unique_id=419548564]
+
+[node name="Camera2D" type="Camera2D" parent="GameWorld" unique_id=517278481]
+position = Vector2(240, 135)
+
+[node name="Background" type="ColorRect" parent="GameWorld" unique_id=760060380]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -381.0
+offset_right = 1656.0
+offset_bottom = 1119.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.02, 0.15, 1)
+
+[node name="EnemySpawner" type="Node2D" parent="GameWorld" unique_id=882869010]
+
+[node name="Player" parent="GameWorld" unique_id=1981388976 instance=ExtResource("1_player")]
+
+[node name="YSort" type="Node2D" parent="GameWorld" unique_id=1106382510]
+y_sort_enabled = true
+
+[node name="HUD" parent="." unique_id=822823120 instance=ExtResource("2_hud")]
+
+[node name="VirtualJoystick" parent="." unique_id=177512766 instance=ExtResource("3_joystick")]
+layout_mode = 3
+anchors_preset = 0
