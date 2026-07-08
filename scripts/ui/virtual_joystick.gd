@@ -6,8 +6,8 @@ signal input_changed(direction: Vector2)
 const DEADZONE := 0.2
 const KNOB_RANGE := 40.0
 
-@onready var _base: ColorRect = $Base
-@onready var _knob: ColorRect = $Knob
+@onready var _base: Control = $Base
+@onready var _knob: Control = $Knob
 
 var _base_center := Vector2.ZERO
 var _dragging := false
