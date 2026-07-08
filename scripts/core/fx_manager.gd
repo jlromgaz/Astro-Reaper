@@ -15,6 +15,8 @@ func _ready() -> void:
 	EventBus.player_damaged.connect(_on_player_damaged)
 	if EventBus.has_signal("boss_spawned"):
 		EventBus.boss_spawned.connect(func(_boss = null): shake(3.0, 0.4))
+	else:
+		DebugLog.log_warn("FX", "boss_spawned signal not found on EventBus — boss shake disabled")
 
 
 func shake(strength: float, duration: float) -> void:

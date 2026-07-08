@@ -20,10 +20,12 @@ func log_info(category: String, message: String) -> void:
 
 func log_warn(category: String, message: String) -> void:
 	_log(category, message, "WARN")
+	push_warning("[%s] %s" % [category, message])
 
 
 func log_error(category: String, message: String) -> void:
 	_log(category, message, "ERROR")
+	push_error("[%s] %s" % [category, message])
 
 
 func _log(category: String, message: String, level: String = "INFO") -> void:
@@ -40,10 +42,12 @@ func _write_to_file(line: String) -> void:
 	var f: FileAccess = FileAccess.open(LOG_PATH, FileAccess.READ_WRITE)
 	if not f:
 		f = FileAccess.open(LOG_PATH, FileAccess.WRITE)
-	if f:
-		f.seek_end()
-		f.store_line(line)
-		f.close()
+	if not f:
+		print("[DebugLog] Cannot write to log (error %d): %s" % [FileAccess.get_open_error(), line])
+		return
+	f.seek_end()
+	f.store_line(line)
+	f.close()
 
 
 func get_log_path() -> String:

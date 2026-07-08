@@ -14,8 +14,8 @@ var _boss_spawned: bool = false
 # Comet spawning
 var _comet_timer: float = 0.0
 var _comet_interval: float = 30.0
-const COMET_MIN_INTERVAL := 20.0
-const COMET_MAX_INTERVAL := 40.0
+const COMET_MIN_INTERVAL := 15.0
+const COMET_MAX_INTERVAL := 30.0
 var _comet_scene: PackedScene
 
 var _enemy_drone: PackedScene
@@ -35,6 +35,12 @@ func _ready() -> void:
 	_enemy_boss = preload("res://scenes/enemies/enemy_boss.tscn")
 	_comet_scene = preload("res://scenes/world/comet.tscn")
 	_comet_interval = randf_range(COMET_MIN_INTERVAL, COMET_MAX_INTERVAL)
+	EventBus.difficulty_bump.connect(_on_difficulty_bump)
+
+
+func _on_difficulty_bump() -> void:
+	global_difficulty_mult += 0.05
+	DebugLog.log_info("SPAWNER", "Difficulty bump → global_mult=%.2f" % global_difficulty_mult)
 
 
 func set_player(p: Node2D) -> void:
@@ -68,12 +74,13 @@ func _get_enemy_scene() -> PackedScene:
 		if roll < 0.40: return _enemy_drone
 		elif roll < 0.70: return _enemy_kamikaze
 		else: return _enemy_ranged
-	# 60-90s: Drones rare, tanks appear
+	# 60-90s: Drones rare, tanks appear, interceptors begin (10%)
 	elif t < 90.0:
-		if roll < 0.20: return _enemy_drone
-		elif roll < 0.45: return _enemy_kamikaze
-		elif roll < 0.80: return _enemy_ranged
-		else: return _enemy_tank
+		if roll < 0.10: return _enemy_drone
+		elif roll < 0.35: return _enemy_kamikaze
+		elif roll < 0.70: return _enemy_ranged
+		elif roll < 0.90: return _enemy_tank
+		else: return _enemy_interceptor
 	# 90-120s: Interceptors join, mix of everything
 	elif t < 120.0:
 		if roll < 0.10: return _enemy_drone
@@ -112,6 +119,7 @@ func _try_spawn_comet(delta: float) -> void:
 
 func _spawn_comet() -> void:
 	if not _world or not _player:
+		DebugLog.log_warn("SPAWNER", "_spawn_comet: world or player not set — skipping")
 		return
 	var comet = _comet_scene.instantiate()
 	# Spawn at edge, fly diagonally across
@@ -132,6 +140,7 @@ func _try_spawn_boss() -> void:
 		return
 	_boss_spawned = true
 	if not _world or not _player:
+		DebugLog.log_warn("SPAWNER", "_try_spawn_boss: world or player not set — skipping")
 		return
 	var boss: CharacterBody2D = _enemy_boss.instantiate() as CharacterBody2D
 	var offset: Vector2 = Vector2(250, 0)
@@ -146,9 +155,13 @@ func _try_spawn_boss() -> void:
 
 func _spawn_enemy() -> void:
 	if not _world or not _player:
+		DebugLog.log_warn("SPAWNER", "_spawn_enemy: world or player not set — skipping")
 		return
 	var scene: PackedScene = _get_enemy_scene()
 	var enemy: CharacterBody2D = scene.instantiate() as CharacterBody2D
+	if not enemy:
+		DebugLog.log_error("SPAWNER", "_spawn_enemy: scene.instantiate() returned null")
+		return
 	
 	# Scale stats based on time-progress (0.0 to 1.0 and beyond)
 	var progress: float = GameManager.run_time / SURVIVAL_TIME

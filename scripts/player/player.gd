@@ -18,7 +18,9 @@ var _move_input := Vector2.ZERO
 var _weapon_slots: Array[Dictionary] = []
 var _fire_timer: float = 0.0
 var _fire_interval: float = 1.2
-const INVINCIBILITY_TIME := 0.8
+## Body contact hits never set this — each enemy throttles itself via _damage_timer.
+## Area2D (bullet) hits set a brief window to prevent same-bullet double hits.
+const INVINCIBILITY_TIME := 0.15
 var _invincibility_timer: float = 0.0
 
 
@@ -52,7 +54,11 @@ func _emit_spawned() -> void:
 	var weapon_path: String = "res://scripts/weapons/weapon_blaster.gd"
 	if ship_data and ship_data.starting_weapon_path != "":
 		weapon_path = ship_data.starting_weapon_path
-	add_weapon(load(weapon_path) as GDScript)
+	var script := load(weapon_path) as GDScript
+	if not script:
+		DebugLog.log_error("PLAYER", "Failed to load weapon script: %s" % weapon_path)
+	else:
+		add_weapon(script)
 	EventBus.player_spawned.emit(self)
 
 
@@ -269,7 +275,8 @@ func take_damage(amount: float, _source: Node) -> void:
 		return
 		
 	current_hp -= remaining_dmg
-	_invincibility_timer = INVINCIBILITY_TIME
+	if _source is Area2D:
+		_invincibility_timer = INVINCIBILITY_TIME
 	DebugLog.log_info("COMBAT", "Player[%d] hit: %.1f. HP: %.1f/%.1f" % [get_instance_id(), remaining_dmg, current_hp, max_hp])
 	EventBus.player_hp_changed.emit(current_hp, max_hp)
 	EventBus.player_damaged.emit(remaining_dmg, _source)
