@@ -61,6 +61,15 @@ func _orient_to_velocity() -> void:
 
 func _draw() -> void:
 	var color := body_color if _flash_timer <= 0.0 else Palette.HIT_FLASH
+	# Short trail for fast threats (style guide: Motion & FX)
+	if color_class == ColorClass.FAST and shape_type in DIRECTIONAL_SHAPES:
+		var flicker := 0.6 + 0.4 * sin(_time * 35.0)
+		var tail := body_radius * (1.2 + 0.5 * flicker)
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(-body_radius, body_radius * 0.4),
+			Vector2(-body_radius - tail, 0),
+			Vector2(-body_radius, -body_radius * 0.4),
+		]), Color(body_color, 0.35 * flicker))
 	# Glow halo (keeps body hue even while flashing)
 	draw_circle(Vector2.ZERO, body_radius * 1.5, Color(body_color, 0.10))
 	match shape_type:
