@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/comet.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/world/comet_visual.gd" id="2_visual"]
 
 [sub_resource type="ConvexPolygonShape2D" id="CometShape"]
 points = PackedVector2Array(16, 0, -8, -10, -8, 10)
@@ -10,9 +11,8 @@ collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_script")
 
-[node name="Polygon" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(16, 0, -8, -10, -8, 10)
-color = Color(1.0, 0.85, 0.1, 1.0)
+[node name="CometVisual" type="Node2D" parent="."]
+script = ExtResource("2_visual")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CometShape")
