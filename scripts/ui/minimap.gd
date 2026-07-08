@@ -15,8 +15,8 @@ func _ready() -> void:
 
 func _draw() -> void:
 	# Background
-	draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), Color(0.05, 0.05, 0.15, 0.7))
-	draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), Color(0.2, 0.5, 0.8, 0.4), false, 1.0)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), Color(Palette.BG_NEBULA, 0.7))
+	draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), Color(Palette.UI_ACCENT, 0.4), false, 1.0)
 	
 	if not _player or not is_instance_valid(_player):
 		return
@@ -25,8 +25,8 @@ func _draw() -> void:
 	var scale_factor: float = (MAP_SIZE / 2.0) / MAP_RANGE
 	var player_pos: Vector2 = _player.global_position
 	
-	# Draw player dot (white center)
-	draw_circle(center, 2.0, Color.WHITE)
+	# Draw player dot (bright center)
+	draw_circle(center, 2.0, Palette.UI_TEXT)
 	
 	# Draw pickups
 	var pickups := get_tree().get_nodes_in_group("pickups")
@@ -38,9 +38,9 @@ func _draw() -> void:
 			continue
 		var dot_pos: Vector2 = center + offset
 		# Color by type
-		var dot_color := Color.GREEN  # XP default
+		var dot_color := Palette.XP_GEM
 		if pickup.is_in_group("health_pickups"):
-			dot_color = Color.RED
+			dot_color = Palette.HEALTH
 		draw_circle(dot_pos, 1.5, dot_color)
 	
 	# Draw comets (yellow)
@@ -52,7 +52,7 @@ func _draw() -> void:
 		if abs(offset.x) > MAP_SIZE / 2.0 or abs(offset.y) > MAP_SIZE / 2.0:
 			continue
 		var dot_pos: Vector2 = center + offset
-		draw_circle(dot_pos, 2.0, Color.YELLOW)
+		draw_circle(dot_pos, 2.0, Palette.COMET)
 	
 	# Draw boss (magenta, larger & pulsating)
 	var bosses := get_tree().get_nodes_in_group("boss")
@@ -66,8 +66,8 @@ func _draw() -> void:
 		
 		var dot_pos: Vector2 = center + offset
 		var pulse: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.01)
-		draw_circle(dot_pos, 5.0, Color(1.0, 0.0, 1.0, 0.5 + 0.5 * pulse))
-		draw_circle(dot_pos, 2.0, Color.MAGENTA)
+		draw_circle(dot_pos, 5.0, Color(Palette.BOSS, 0.5 + 0.5 * pulse))
+		draw_circle(dot_pos, 2.0, Palette.BOSS)
 
 
 func _process(_delta: float) -> void:

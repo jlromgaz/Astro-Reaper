@@ -46,5 +46,5 @@ func _draw() -> void:
 		var draw_pos: Vector2 = rel + cam_pos - global_position
 		
 		var alpha: float = star.brightness
-		var color := Color(0.7, 0.8, 1.0, alpha)
+		var color := Color(Palette.STAR_BRIGHT, alpha)
 		draw_circle(draw_pos, star.size, color)
