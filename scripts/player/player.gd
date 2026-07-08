@@ -38,9 +38,9 @@ func initialize_ship(data: ShipResource) -> void:
 	fire_rate_mult = data.base_fire_rate_mult
 	pickup_radius = data.base_pickup_radius
 	# Apply visual color
-	var sprite = get_node_or_null("Sprite")
-	if sprite and sprite is ColorRect:
-		sprite.color = data.color
+	var visual = get_node_or_null("ShipVisual")
+	if visual and visual.has_method("set_ship_color"):
+		visual.set_ship_color(data.color)
 	DebugLog.log_info("PLAYER", "Ship initialized: %s (HP:%.0f SPD:%.0f DMG:x%.1f FR:x%.1f)" % [
 		data.ship_name, max_hp, move_speed, damage_mult, fire_rate_mult
 	])
