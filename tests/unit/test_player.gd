@@ -68,11 +68,13 @@ func test_take_damage_reduces_hp() -> void:
 	assert_eq(player.current_hp, hp_before - 10.0)
 
 
-func test_invincibility_blocks_second_hit() -> void:
-	player.take_damage(10.0, null)
+func test_bullet_invincibility_blocks_second_hit() -> void:
+	# i-frames only apply to Area2D (bullet) hits, not body contacts
+	var bullet: Area2D = autofree(Area2D.new())
+	player.take_damage(10.0, bullet)
 	var hp_after_first: float = player.current_hp
-	player.take_damage(10.0, null)
-	assert_eq(player.current_hp, hp_after_first, "Second hit inside invincibility window must be ignored")
+	player.take_damage(10.0, bullet)
+	assert_eq(player.current_hp, hp_after_first, "Second bullet hit inside i-frame window must be blocked")
 
 
 func test_shield_absorbs_projectile_damage() -> void:
