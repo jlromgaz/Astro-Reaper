@@ -17,6 +17,7 @@ func _ready() -> void:
 	EventBus.player_leveled_up.connect(_on_player_leveled_up)
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
 	EventBus.boss_defeated.connect(_on_boss_defeated)
+	EventBus.comet_bonus.connect(_on_comet_bonus)
 
 
 func select_ship(ship: ShipResource) -> void:
@@ -91,6 +92,14 @@ func _on_upgrade_selected(_upgrade_data: Resource) -> void:
 	get_tree().paused = false
 	EventBus.game_resumed.emit()
 	DebugLog.log_info("UPGRADE", "Upgrade selected, resuming")
+
+
+func _on_comet_bonus() -> void:
+	# Same pause as a level-up, but run_level is untouched (bonus, not a level).
+	current_state = State.PAUSED_LEVEL_UP
+	get_tree().paused = true
+	EventBus.game_paused.emit()
+	DebugLog.log_info("UPGRADE", "Comet bonus — paused for upgrade choice")
 
 
 func _on_game_ended(_reason: String) -> void:

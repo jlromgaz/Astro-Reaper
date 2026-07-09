@@ -32,3 +32,4 @@ signal boss_defeated
 signal victory
 
 signal difficulty_bump
+signal comet_bonus

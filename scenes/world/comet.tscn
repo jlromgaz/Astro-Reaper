@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://scripts/world/comet.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/world/comet_visual.gd" id="2_visual"]
 
-[sub_resource type="ConvexPolygonShape2D" id="CometShape"]
-points = PackedVector2Array(16, 0, -8, -10, -8, 10)
+[sub_resource type="CircleShape2D" id="CometShape"]
+radius = 10.0
 
 [node name="Comet" type="Area2D" groups=["enemies", "comets"]]
 collision_layer = 2

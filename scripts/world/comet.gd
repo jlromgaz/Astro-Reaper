@@ -41,8 +41,7 @@ func take_damage(amount: float) -> void:
 func _die() -> void:
 	DebugLog.log_info("COMET", "Comet destroyed at %s — triggering upgrade" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
-	# Signal HUD to show upgrade selection
-	EventBus.player_leveled_up.emit(-1)  # -1 = comet bonus, not a real level
+	EventBus.comet_bonus.emit()
 	queue_free()
 
 

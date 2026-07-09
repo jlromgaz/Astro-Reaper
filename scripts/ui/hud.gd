@@ -52,6 +52,7 @@ func _ready() -> void:
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
 	EventBus.player_hp_changed.connect(_on_hp_changed)
 	EventBus.game_ended.connect(_on_game_ended)
+	EventBus.comet_bonus.connect(_show_upgrade_selection)
 	
 	_upgrade_pool = _load_upgrade_pool()
 	# Fallback if player spawned before HUD was ready
