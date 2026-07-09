@@ -65,6 +65,18 @@ func test_game_over_panel_fits_inside_viewport() -> void:
 		"Game over panel %s must fit inside viewport %s" % [rect, vp])
 
 
+func test_game_over_panel_fits_with_long_upgrade_list() -> void:
+	for i in range(10):
+		hud._chosen_upgrades.append("+10% Fire Rate")
+	EventBus.game_ended.emit("death")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var rect: Rect2 = hud.game_over_panel.get_global_rect()
+	var vp: Rect2 = Rect2(Vector2.ZERO, hud.game_over_panel.get_viewport_rect().size)
+	assert_true(vp.encloses(rect),
+		"Panel with a long upgrade list %s must still fit inside viewport %s" % [rect, vp])
+
+
 func test_pause_panel_fits_inside_viewport() -> void:
 	hud.pause_panel.show()
 	await get_tree().process_frame
