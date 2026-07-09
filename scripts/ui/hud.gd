@@ -35,6 +35,8 @@ var _upgrade_pool: Array[UpgradeData] = []
 var _pending_multiplier: int = 1
 var _rerolls_left: int = REROLLS_PER_RUN
 var _last_option_count: int = 3
+var _summary_base: String = ""
+var _score_tween: Tween
 
 
 func _ready() -> void:
@@ -361,17 +363,36 @@ func _on_game_ended(reason: String) -> void:
 
 	var summary := "%s: %d | %s: %d:%02d" % [tr("KILLS"), kills, tr("TIME"), mins, secs]
 	if not ScoreManager.last_result.is_empty():
-		summary += "\n%s: %d | %s: %d" % [
-			tr("SCORE"), ScoreManager.last_result.score,
-			tr("BEST"), ScoreManager.get_high_score()
-		]
+		for line in ScoreManager.get_breakdown(ScoreManager.last_result):
+			summary += "\n%s  +%d" % [line.label, line.points]
 		if ScoreManager.last_result.get("is_high_score", false):
 			summary += "\n" + tr("NEW HIGH SCORE!")
 	if _chosen_upgrades.size() > 0:
 		summary += "\n%s: %s" % [tr("Upgrades"), ", ".join(_chosen_upgrades)]
-	game_over_summary.text = summary
+	_summary_base = summary
+	if ScoreManager.last_result.is_empty():
+		game_over_summary.text = _summary_base
+	else:
+		_animate_score(ScoreManager.last_result.score, ScoreManager.get_high_score())
 	play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
+
+
+func _animate_score(final_score: int, best: int) -> void:
+	_set_displayed_score(0, best)
+	if _score_tween:
+		_score_tween.kill()
+	_score_tween = create_tween()
+	_score_tween.tween_method(
+		func(v: float) -> void: _set_displayed_score(int(v), best),
+		0.0, float(final_score), 1.2
+	).set_ease(Tween.EASE_OUT)
+
+
+func _set_displayed_score(value: int, best: int) -> void:
+	game_over_summary.text = _summary_base + "\n%s: %d | %s: %d" % [
+		tr("SCORE"), value, tr("BEST"), best
+	]
 
 
 func _show_game_over(reason: String = "death") -> void:

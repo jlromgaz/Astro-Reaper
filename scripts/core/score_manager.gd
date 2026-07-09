@@ -46,6 +46,27 @@ static func arcade_time_bonus(run_time: float) -> int:
 	return int(run_time) * ARCADE_TIME_POINTS
 
 
+## Splits a run record into labeled components that sum to its score.
+static func get_breakdown(result: Dictionary) -> Array:
+	var lines: Array = [
+		{"label": "KILLS x%d" % int(result.kills), "points": int(result.kills) * KILL_POINTS},
+		{"label": "LEVEL %d" % int(result.level), "points": int(result.level) * LEVEL_POINTS},
+	]
+	if result.victory:
+		lines.append({"label": "VICTORY", "points": VICTORY_BASE})
+		lines.append({
+			"label": "SPEED",
+			"points": int(maxf(0.0, PAR_TIME - result.time_to_boss)) * SPEED_POINTS_PER_SEC,
+		})
+		lines.append({
+			"label": "HULL",
+			"points": roundi(clampf(result.hp_ratio, 0.0, 1.0) * HP_BONUS_MAX),
+		})
+	if str(result.get("mode", "")) == "arcade":
+		lines.append({"label": "SURVIVAL", "points": arcade_time_bonus(result.run_time)})
+	return lines
+
+
 func get_high_score() -> int:
 	var high: Dictionary = _data.get("high_score", {})
 	return int(high.get("score", 0))
