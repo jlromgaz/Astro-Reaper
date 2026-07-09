@@ -21,6 +21,13 @@ const COMET_MIN_INTERVAL := 15.0
 const COMET_MAX_INTERVAL := 30.0
 var _comet_scene: PackedScene
 
+# Chest spawning (rarer than comets)
+var _chest_timer: float = 0.0
+var _chest_interval: float = 60.0
+const CHEST_MIN_INTERVAL := 45.0
+const CHEST_MAX_INTERVAL := 80.0
+var _chest_scene: PackedScene
+
 var _enemy_drone: PackedScene
 var _enemy_kamikaze: PackedScene
 var _enemy_tank: PackedScene
@@ -38,6 +45,8 @@ func _ready() -> void:
 	_enemy_boss = preload("res://scenes/enemies/enemy_boss.tscn")
 	_comet_scene = preload("res://scenes/world/comet.tscn")
 	_comet_interval = randf_range(COMET_MIN_INTERVAL, COMET_MAX_INTERVAL)
+	_chest_scene = preload("res://scenes/world/chest.tscn")
+	_chest_interval = randf_range(CHEST_MIN_INTERVAL, CHEST_MAX_INTERVAL)
 	EventBus.difficulty_bump.connect(_on_difficulty_bump)
 	EventBus.player_damaged.connect(_on_player_damaged)
 
@@ -114,6 +123,7 @@ func _process(delta: float) -> void:
 	_undamaged_streak += delta
 	_try_spawn_boss()
 	_try_spawn_comet(delta)
+	_try_spawn_chest(delta)
 	_spawn_timer += delta
 	var interval: float = _get_spawn_interval()
 	if _spawn_timer >= interval:
@@ -143,6 +153,25 @@ func _spawn_comet() -> void:
 		comet.setup(fly_dir)
 	_world.add_child(comet)
 	DebugLog.log_info("SPAWN", "Comet spawned at %s" % comet.global_position)
+
+
+func _try_spawn_chest(delta: float) -> void:
+	_chest_timer += delta
+	if _chest_timer >= _chest_interval:
+		_chest_timer = 0.0
+		_chest_interval = randf_range(CHEST_MIN_INTERVAL, CHEST_MAX_INTERVAL)
+		_spawn_chest()
+
+
+func _spawn_chest() -> void:
+	if not _world or not _player:
+		DebugLog.log_warn("SPAWNER", "_spawn_chest: world or player not set — skipping")
+		return
+	var chest: Area2D = _chest_scene.instantiate()
+	var offset: Vector2 = Vector2(randf_range(180, 300), 0).rotated(randf() * TAU)
+	chest.global_position = _player.global_position + offset
+	_world.add_child(chest)
+	DebugLog.log_info("SPAWN", "Chest spawned at %s" % chest.global_position)
 
 
 func _try_spawn_boss() -> void:

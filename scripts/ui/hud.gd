@@ -30,6 +30,7 @@ var _level := 1
 var _extra_time_notified := false
 var _chosen_upgrades: Array[String] = []
 var _upgrade_pool: Array[UpgradeData] = []
+var _pending_multiplier: int = 1
 
 
 func _ready() -> void:
@@ -53,6 +54,7 @@ func _ready() -> void:
 	EventBus.player_hp_changed.connect(_on_hp_changed)
 	EventBus.game_ended.connect(_on_game_ended)
 	EventBus.comet_bonus.connect(_show_upgrade_selection)
+	EventBus.chest_opened.connect(_on_chest_opened)
 	
 	_upgrade_pool = _load_upgrade_pool()
 	# Fallback if player spawned before HUD was ready
@@ -220,7 +222,12 @@ func _on_level_up(new_level: int) -> void:
 	_show_upgrade_selection()
 
 
-func _show_upgrade_selection() -> void:
+func _on_chest_opened() -> void:
+	_show_upgrade_selection(_upgrade_pool.size(), 3)
+
+
+func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void:
+	_pending_multiplier = multiplier
 	for child in upgrade_buttons.get_children():
 		child.queue_free()
 
@@ -228,7 +235,7 @@ func _show_upgrade_selection() -> void:
 
 	var pool := _upgrade_pool.duplicate()
 	pool.shuffle()
-	var selected: Array = pool.slice(0, 3)
+	var selected: Array = pool.slice(0, option_count)
 
 	for opt: UpgradeData in selected:
 		var btn := Button.new()
@@ -273,34 +280,44 @@ func _on_upgrade_selected(upgrade) -> void:
 	get_tree().paused = false
 
 	if _player:
-		match upg_type:
-			"weapon_blaster":
-				_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
-			"weapon_laser":
-				_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
-			"weapon_missiles":
-				_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
-			"weapon_anti_missile":
-				_player.add_weapon(load("res://scripts/weapons/weapon_anti_missile.gd"))
-			"shield":
-				_player.add_shield()
-			"projectile":
-				_player.add_projectile_to_all()
-			"stat_damage":
-				_player.damage_mult *= 1.1
-			"stat_fire_rate":
-				_player.fire_rate_mult *= 1.1
-			"stat_max_hp":
-				_player.max_hp += 20
-				_player.current_hp += 20
-				_update_hp()
-			"heal":
-				_player.heal(20)
-			"speed":
-				_player.add_speed(20)
+		for i in range(_pending_multiplier):
+			_apply_upgrade(upg_type)
+	_pending_multiplier = 1
 
 	level_up_panel.hide()
 	EventBus.upgrade_selected.emit(null)
+
+
+func _apply_upgrade(upg_type: String) -> void:
+	match upg_type:
+		"weapon_blaster":
+			_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
+		"weapon_laser":
+			_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
+		"weapon_missiles":
+			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
+		"weapon_anti_missile":
+			_player.add_weapon(load("res://scripts/weapons/weapon_anti_missile.gd"))
+		"weapon_orbitals":
+			_player.add_weapon(load("res://scripts/weapons/weapon_orbitals.gd"))
+		"weapon_mines":
+			_player.add_weapon(load("res://scripts/weapons/weapon_mines.gd"))
+		"shield":
+			_player.add_shield()
+		"projectile":
+			_player.add_projectile_to_all()
+		"stat_damage":
+			_player.damage_mult *= 1.1
+		"stat_fire_rate":
+			_player.fire_rate_mult *= 1.1
+		"stat_max_hp":
+			_player.max_hp += 20
+			_player.current_hp += 20
+			_update_hp()
+		"heal":
+			_player.heal(20)
+		"speed":
+			_player.add_speed(20)
 
 
 func _on_game_ended(reason: String) -> void:

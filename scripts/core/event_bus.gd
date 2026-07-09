@@ -33,3 +33,4 @@ signal victory
 
 signal difficulty_bump
 signal comet_bonus
+signal chest_opened
