@@ -17,6 +17,8 @@ func setup(dmg: float, spd: float, owner_ship: Node2D) -> void:
 	damage = dmg
 	speed = spd
 	_owner_ship = owner_ship
+	if _owner_ship and "projectile_size_mult" in _owner_ship:
+		scale *= _owner_ship.projectile_size_mult
 	_velocity = Vector2.RIGHT.rotated(rotation) * speed
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)

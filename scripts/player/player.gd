@@ -10,6 +10,7 @@ var max_hp: float = 150.0
 var current_hp: float = 150.0
 var damage_mult: float = 1.0
 var fire_rate_mult: float = 1.0
+var projectile_size_mult: float = 1.0
 var pickup_radius: float = 40.0
 var enemies_killed := 0
 var _is_dead := false

@@ -10,6 +10,8 @@ var _frames_alive: int = 0
 func setup(dmg: float, owner_ship: Node2D) -> void:
 	damage = dmg
 	_owner_ship = owner_ship
+	if _owner_ship and "projectile_size_mult" in _owner_ship:
+		scale *= _owner_ship.projectile_size_mult
 
 
 func _physics_process(_delta: float) -> void:
