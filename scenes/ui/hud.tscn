@@ -202,9 +202,13 @@ theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 text = "Time: 0:00 | Level: 1"
 horizontal_alignment = 1
 
+[node name="PlayAgainBtn" type="Button" parent="GameOverPanel/VBox"]
+layout_mode = 2
+text = "PLAY AGAIN"
+
 [node name="RestartBtn" type="Button" parent="GameOverPanel/VBox"]
 layout_mode = 2
-text = "Restart"
+text = "Menu"
 
 [node name="DebugPanel" type="HBoxContainer" parent="."]
 visible = false

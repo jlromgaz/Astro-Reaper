@@ -56,6 +56,20 @@ func test_summary_includes_chosen_upgrades() -> void:
 	)
 
 
+func test_game_over_panel_has_play_again_button() -> void:
+	assert_true(
+		hud.play_again_btn is Button,
+		"Game over panel must have a Play Again button"
+	)
+
+
+func test_play_again_button_is_wired() -> void:
+	assert_true(
+		hud.play_again_btn.pressed.is_connected(hud._on_play_again),
+		"Play Again button must be connected to its handler"
+	)
+
+
 func test_summary_shows_score_line() -> void:
 	EventBus.game_ended.emit("death")
 	assert_true(

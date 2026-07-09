@@ -12,6 +12,7 @@ extends CanvasLayer
 @onready var game_over_title: Label = $GameOverPanel/VBox/Title
 @onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
 @onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
+@onready var play_again_btn: Button = $GameOverPanel/VBox/PlayAgainBtn
 @onready var debug_panel: HBoxContainer = $DebugPanel
 @onready var share_log_btn: Button = $DebugPanel/ShareLogBtn
 @onready var damage_popup: Label = $DamagePopup
@@ -33,6 +34,7 @@ func _ready() -> void:
 	game_over_panel.visible = false
 	debug_panel.visible = OS.is_debug_build()
 	restart_btn.pressed.connect(_on_restart)
+	play_again_btn.pressed.connect(_on_play_again)
 	if debug_panel.visible:
 		share_log_btn.pressed.connect(_on_share_log)
 	EventBus.player_spawned.connect(_on_player_spawned)
@@ -308,6 +310,11 @@ func _show_game_over(reason: String = "death") -> void:
 func _on_restart() -> void:
 	GameManager.go_to_menu()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+
+func _on_play_again() -> void:
+	# Keeps GameManager.selected_ship; main.tscn's ready calls start_game()
+	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
 
 
 func _update_stats() -> void:
