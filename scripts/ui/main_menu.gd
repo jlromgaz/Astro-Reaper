@@ -53,6 +53,7 @@ func _build_ship_buttons() -> void:
 		var btn := Button.new()
 		btn.text = _ships[i].ship_name
 		btn.custom_minimum_size = Vector2(200, 40)
+		btn.focus_mode = Control.FOCUS_NONE
 		btn.pressed.connect(_select_ship.bind(i))
 		ship_list.add_child(btn)
 
@@ -73,6 +74,17 @@ func _select_ship(index: int) -> void:
 		var btn = ship_list.get_child(i) as Button
 		if btn:
 			btn.add_theme_color_override("font_color", Color.YELLOW if i == index else Color.WHITE)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _ships.is_empty():
+		return
+	if event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
+		_select_ship((_selected_index + 1) % _ships.size())
+	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left"):
+		_select_ship((_selected_index - 1 + _ships.size()) % _ships.size())
+	elif event.is_action_pressed("ui_accept"):
+		_on_start_pressed()
 
 
 func _on_start_pressed() -> void:

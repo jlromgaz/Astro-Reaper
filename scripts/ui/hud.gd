@@ -241,6 +241,10 @@ func _show_upgrade_selection() -> void:
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
 		upgrade_buttons.add_child(btn)
 
+	# Keyboard: focus the first option so arrows + Enter work out of the box
+	if upgrade_buttons.get_child_count() > 0:
+		upgrade_buttons.get_child(0).call_deferred("grab_focus")
+
 func _on_upgrade_selected(upgrade) -> void:
 	if not upgrade or (upgrade is Dictionary and upgrade.is_empty()):
 		return
@@ -309,6 +313,7 @@ func _on_game_ended(reason: String) -> void:
 	if _chosen_upgrades.size() > 0:
 		summary += "\nUpgrades: " + ", ".join(_chosen_upgrades)
 	game_over_summary.text = summary
+	play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
 
 
@@ -329,6 +334,8 @@ func _on_play_again() -> void:
 func _on_pause_toggle() -> void:
 	GameManager.toggle_pause()
 	pause_panel.visible = GameManager.current_state == GameManager.State.PAUSED
+	if pause_panel.visible:
+		resume_btn.grab_focus()
 
 
 func _unhandled_input(event: InputEvent) -> void:
