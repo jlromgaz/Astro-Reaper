@@ -9,6 +9,7 @@ var _expected := {
 	"res://scenes/bullets/bullet_blaster.tscn": BulletVisual.Style.BOLT,
 	"res://scenes/bullets/bullet_laser.tscn": BulletVisual.Style.BEAM,
 	"res://scenes/bullets/bullet_missile.tscn": BulletVisual.Style.MISSILE,
+	"res://scenes/bullets/bullet_counter_missile.tscn": BulletVisual.Style.MISSILE,
 	"res://scenes/bullets/bullet_enemy.tscn": BulletVisual.Style.ORB,
 }
 
