@@ -1,15 +1,19 @@
 extends CanvasLayer
-## Main Menu: Entry point. Ship selection and game start.
+## Main Menu: two-screen flow. Page 0 selects the ship (up/down + Enter),
+## page 1 picks the game mode from a flat list (up/down + Enter, ESC back).
+
+const MODE_OPTIONS := [
+	{"label": "CLASSIC — EASY", "mode": GameManager.GameMode.CLASSIC, "difficulty": GameManager.Difficulty.EASY},
+	{"label": "CLASSIC — MEDIUM", "mode": GameManager.GameMode.CLASSIC, "difficulty": GameManager.Difficulty.MEDIUM},
+	{"label": "CLASSIC — HARD", "mode": GameManager.GameMode.CLASSIC, "difficulty": GameManager.Difficulty.HARD},
+	{"label": "ARCADE — ENDLESS", "mode": GameManager.GameMode.ARCADE, "difficulty": GameManager.Difficulty.MEDIUM},
+]
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var best_score_label: Label = $VBox/BestScoreLabel
-@onready var mode_row: HBoxContainer = $VBox/ModeRow
-@onready var classic_btn: Button = $VBox/ModeRow/ClassicBtn
-@onready var arcade_btn: Button = $VBox/ModeRow/ArcadeBtn
-@onready var diff_row: HBoxContainer = $VBox/DiffRow
-@onready var easy_btn: Button = $VBox/DiffRow/EasyBtn
-@onready var medium_btn: Button = $VBox/DiffRow/MediumBtn
-@onready var hard_btn: Button = $VBox/DiffRow/HardBtn
+@onready var mode_list: VBoxContainer = $VBox/ModeList
+@onready var mode_hint: Label = $VBox/ModeHint
+@onready var subtitle_label: Label = $VBox/SubtitleLabel
 @onready var ship_list: VBoxContainer = $VBox/ShipList
 @onready var ship_info_panel: PanelContainer = $VBox/ShipInfoPanel
 @onready var ship_name_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipNameLabel
@@ -20,44 +24,66 @@ extends CanvasLayer
 
 var _ships: Array[ShipResource] = []
 var _selected_index: int = 0
+var _page: int = 0
+var _mode_index: int = 1  # CLASSIC — MEDIUM by default
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_load_ships()
 	_build_ship_buttons()
-	start_button.pressed.connect(_on_start_pressed)
+	_build_mode_buttons()
+	start_button.text = "CONTINUE"
+	start_button.focus_mode = Control.FOCUS_NONE
+	start_button.pressed.connect(func() -> void: _goto_page(1))
 	ship_info_panel.visible = false
 	_set_best_score(ScoreManager.get_high_score())
-	for btn: Button in [classic_btn, arcade_btn, easy_btn, medium_btn, hard_btn, start_button]:
-		btn.focus_mode = Control.FOCUS_NONE
-	classic_btn.pressed.connect(_select_mode.bind(GameManager.GameMode.CLASSIC))
-	arcade_btn.pressed.connect(_select_mode.bind(GameManager.GameMode.ARCADE))
-	easy_btn.pressed.connect(_select_difficulty.bind(GameManager.Difficulty.EASY))
-	medium_btn.pressed.connect(_select_difficulty.bind(GameManager.Difficulty.MEDIUM))
-	hard_btn.pressed.connect(_select_difficulty.bind(GameManager.Difficulty.HARD))
-	_select_mode(GameManager.game_mode)
-	_select_difficulty(GameManager.difficulty)
 	if _ships.size() > 0:
 		_select_ship(0)
+	_goto_page(0)
 
 
-func _select_mode(mode: GameManager.GameMode) -> void:
-	GameManager.game_mode = mode
-	diff_row.visible = mode == GameManager.GameMode.CLASSIC
-	_highlight(classic_btn, mode == GameManager.GameMode.CLASSIC)
-	_highlight(arcade_btn, mode == GameManager.GameMode.ARCADE)
+func _goto_page(page: int) -> void:
+	_page = page
+	var on_ships := page == 0
+	ship_list.visible = on_ships
+	ship_info_panel.visible = on_ships and _ships.size() > 0
+	subtitle_label.visible = on_ships
+	start_button.visible = on_ships
+	mode_list.visible = not on_ships
+	mode_hint.visible = not on_ships
+	if not on_ships:
+		_select_mode_option(_mode_index)
 
 
-func _select_difficulty(diff: GameManager.Difficulty) -> void:
-	GameManager.difficulty = diff
-	_highlight(easy_btn, diff == GameManager.Difficulty.EASY)
-	_highlight(medium_btn, diff == GameManager.Difficulty.MEDIUM)
-	_highlight(hard_btn, diff == GameManager.Difficulty.HARD)
+func _build_mode_buttons() -> void:
+	for child in mode_list.get_children():
+		child.queue_free()
+	for i in range(MODE_OPTIONS.size()):
+		var btn := Button.new()
+		btn.text = MODE_OPTIONS[i].label
+		btn.custom_minimum_size = Vector2(240, 40)
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.pressed.connect(_on_mode_clicked.bind(i))
+		mode_list.add_child(btn)
 
 
-func _highlight(btn: Button, active: bool) -> void:
-	btn.add_theme_color_override("font_color", Color.YELLOW if active else Color.WHITE)
+func _on_mode_clicked(index: int) -> void:
+	_select_mode_option(index)
+	_launch_game()
+
+
+func _select_mode_option(index: int) -> void:
+	_mode_index = index
+	for i in range(mode_list.get_child_count()):
+		var btn := mode_list.get_child(i) as Button
+		if btn:
+			btn.add_theme_color_override("font_color", Color.YELLOW if i == index else Color.WHITE)
+
+
+func _apply_mode_option(index: int) -> void:
+	GameManager.game_mode = MODE_OPTIONS[index].mode
+	GameManager.difficulty = MODE_OPTIONS[index].difficulty
 
 
 func _set_best_score(high: int) -> void:
@@ -82,7 +108,7 @@ func _load_ships() -> void:
 func _build_ship_buttons() -> void:
 	for child in ship_list.get_children():
 		child.queue_free()
-	
+
 	for i in range(_ships.size()):
 		var btn := Button.new()
 		btn.text = _ships[i].ship_name
@@ -102,7 +128,7 @@ func _select_ship(index: int) -> void:
 	]
 	ship_passive_label.text = "%s: %s" % [ship.passive_name, ship.passive_description]
 	ship_desc_label.text = ship.description
-	
+
 	# Highlight selected button
 	for i in range(ship_list.get_child_count()):
 		var btn = ship_list.get_child(i) as Button
@@ -113,28 +139,31 @@ func _select_ship(index: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _ships.is_empty():
 		return
-	if event.is_action_pressed("ui_down"):
-		_select_ship((_selected_index + 1) % _ships.size())
-	elif event.is_action_pressed("ui_up"):
-		_select_ship((_selected_index - 1 + _ships.size()) % _ships.size())
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
-		var other := GameManager.GameMode.ARCADE \
-			if GameManager.game_mode == GameManager.GameMode.CLASSIC \
-			else GameManager.GameMode.CLASSIC
-		_select_mode(other)
-	elif event.is_action_pressed("ui_accept"):
-		_on_start_pressed()
-	elif event is InputEventKey and event.pressed:
-		match event.keycode:
-			KEY_1: _select_difficulty(GameManager.Difficulty.EASY)
-			KEY_2: _select_difficulty(GameManager.Difficulty.MEDIUM)
-			KEY_3: _select_difficulty(GameManager.Difficulty.HARD)
+	if _page == 0:
+		if event.is_action_pressed("ui_down"):
+			_select_ship((_selected_index + 1) % _ships.size())
+		elif event.is_action_pressed("ui_up"):
+			_select_ship((_selected_index - 1 + _ships.size()) % _ships.size())
+		elif event.is_action_pressed("ui_accept"):
+			_goto_page(1)
+	else:
+		if event.is_action_pressed("ui_down"):
+			_select_mode_option((_mode_index + 1) % MODE_OPTIONS.size())
+		elif event.is_action_pressed("ui_up"):
+			_select_mode_option((_mode_index - 1 + MODE_OPTIONS.size()) % MODE_OPTIONS.size())
+		elif event.is_action_pressed("ui_cancel"):
+			_goto_page(0)
+		elif event.is_action_pressed("ui_accept"):
+			_launch_game()
 
 
-func _on_start_pressed() -> void:
+func _launch_game() -> void:
 	if _ships.is_empty():
 		return
+	_apply_mode_option(_mode_index)
 	var ship := _ships[_selected_index]
 	GameManager.select_ship(ship)
-	DebugLog.log_info("MENU", "Starting game with ship: %s" % ship.ship_name)
+	DebugLog.log_info("MENU", "Starting %s (%s) with ship: %s" % [
+		GameManager.mode_name(), GameManager.difficulty_name(), ship.ship_name
+	])
 	get_tree().change_scene_to_file("res://scenes/main/main.tscn")

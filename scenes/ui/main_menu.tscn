@@ -58,33 +58,17 @@ horizontal_alignment = 1
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 text = "BEST: 0"
 
-[node name="ModeRow" type="HBoxContainer" parent="VBox"]
+[node name="ModeList" type="VBoxContainer" parent="VBox"]
+visible = false
 layout_mode = 2
 alignment = 1
 
-[node name="ClassicBtn" type="Button" parent="VBox/ModeRow"]
+[node name="ModeHint" type="Label" parent="VBox"]
+visible = false
 layout_mode = 2
-text = "CLASSIC"
-
-[node name="ArcadeBtn" type="Button" parent="VBox/ModeRow"]
-layout_mode = 2
-text = "ARCADE"
-
-[node name="DiffRow" type="HBoxContainer" parent="VBox"]
-layout_mode = 2
-alignment = 1
-
-[node name="EasyBtn" type="Button" parent="VBox/DiffRow"]
-layout_mode = 2
-text = "Easy"
-
-[node name="MediumBtn" type="Button" parent="VBox/DiffRow"]
-layout_mode = 2
-text = "Medium"
-
-[node name="HardBtn" type="Button" parent="VBox/DiffRow"]
-layout_mode = 2
-text = "Hard"
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+text = "ENTER to launch | ESC to change ship"
+horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="VBox"]
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
