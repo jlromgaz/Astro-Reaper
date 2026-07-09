@@ -24,6 +24,7 @@ var _xp_to_level := 5
 var _level := 1
 var _extra_time_notified := false
 var _chosen_upgrades: Array[String] = []
+var _upgrade_pool: Array[UpgradeData] = []
 
 
 func _ready() -> void:
@@ -42,8 +43,28 @@ func _ready() -> void:
 	EventBus.player_hp_changed.connect(_on_hp_changed)
 	EventBus.game_ended.connect(_on_game_ended)
 	
+	_upgrade_pool = _load_upgrade_pool()
 	# Fallback if player spawned before HUD was ready
 	call_deferred("_find_existing_player")
+
+func _load_upgrade_pool() -> Array[UpgradeData]:
+	var pool: Array[UpgradeData] = []
+	var dir := DirAccess.open("res://data/upgrades/")
+	if not dir:
+		DebugLog.log_warn("HUD", "_load_upgrade_pool: data/upgrades/ not found")
+		return pool
+	dir.list_dir_begin()
+	var fname := dir.get_next()
+	while fname != "":
+		if fname.ends_with(".tres"):
+			var res := load("res://data/upgrades/" + fname) as UpgradeData
+			if res:
+				pool.append(res)
+			else:
+				DebugLog.log_warn("HUD", "Could not load upgrade resource: %s" % fname)
+		fname = dir.get_next()
+	return pool
+
 
 func _find_existing_player() -> void:
 	var p = get_tree().get_first_node_in_group("player")
@@ -189,58 +210,46 @@ func _on_level_up(new_level: int) -> void:
 
 
 func _show_upgrade_selection() -> void:
-	# GameManager handles get_tree().paused = true via _on_player_leveled_up
-	# Clear previous buttons
 	for child in upgrade_buttons.get_children():
 		child.queue_free()
-	
+
 	level_up_panel.show()
-	
-	# Define possible upgrades
-	var all_options = [
-		{"name": "+Blaster", "type": "weapon_blaster", "is_weapon": true},
-		{"name": "+Laser", "type": "weapon_laser", "is_weapon": true},
-		{"name": "+Missiles", "type": "weapon_missiles", "is_weapon": true},
-		{"name": "+Shield System", "type": "shield", "is_weapon": true},
-		{"name": "+Anti-Missile", "type": "weapon_anti_missile", "is_weapon": true},
-		{"name": "+1 Projectile", "type": "projectile", "is_weapon": false},
-		{"name": "+10% Damage", "type": "stat_damage", "is_weapon": false},
-		{"name": "+10% Fire Rate", "type": "stat_fire_rate", "is_weapon": false},
-		{"name": "+20 Max HP", "type": "stat_max_hp", "is_weapon": false},
-		{"name": "Heal +20 HP", "type": "heal", "is_weapon": false},
-		{"name": "+15% Move Speed", "type": "speed", "is_weapon": false},
-	]
-	
-	# For weapons player already has, show as level-up
-	var display_options = []
-	for opt in all_options:
-		var entry = opt.duplicate()
+
+	var pool := _upgrade_pool.duplicate()
+	pool.shuffle()
+	var selected: Array = pool.slice(0, 3)
+
+	for opt: UpgradeData in selected:
+		var btn := Button.new()
+		var label: String = opt.display_name
 		if opt.is_weapon and opt.type != "shield" and _player and _player.has_weapon(opt.type):
-			var current_level = _player.get_weapon_level(opt.type)
-			var short_name = opt.type.replace("weapon_", "").capitalize()
-			entry.name = "%s → Lv.%d" % [short_name, current_level + 1]
-		display_options.append(entry)
-	
-	# Pick 3 random
-	display_options.shuffle()
-	var selected = display_options.slice(0, 3)
-	
-	for opt in selected:
-		var btn = Button.new()
-		btn.text = opt.name
+			var current_level: int = _player.get_weapon_level(opt.type)
+			var short_name: String = opt.type.replace("weapon_", "").capitalize()
+			label = "%s → Lv.%d" % [short_name, current_level + 1]
+		btn.text = label
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
 		upgrade_buttons.add_child(btn)
 
 func _on_upgrade_selected(upgrade) -> void:
 	if not upgrade or (upgrade is Dictionary and upgrade.is_empty()):
 		return
-	DebugLog.log_info("UPGRADE", "Selected: %s" % upgrade.name)
-	_chosen_upgrades.append(upgrade.name)
+
+	var disp_name: String
+	var upg_type: String
+	if upgrade is UpgradeData:
+		disp_name = upgrade.display_name
+		upg_type = upgrade.type
+	else:
+		disp_name = upgrade.get("name", "")
+		upg_type = upgrade.get("type", "")
+
+	DebugLog.log_info("UPGRADE", "Selected: %s" % disp_name)
+	_chosen_upgrades.append(disp_name)
 	EventBus.difficulty_bump.emit()
 	get_tree().paused = false
 
 	if _player:
-		match upgrade.type:
+		match upg_type:
 			"weapon_blaster":
 				_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
 			"weapon_laser":
