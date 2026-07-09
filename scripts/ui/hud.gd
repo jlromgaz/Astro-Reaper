@@ -238,12 +238,21 @@ func _show_upgrade_selection() -> void:
 			var short_name: String = opt.type.replace("weapon_", "").capitalize()
 			label = "%s → Lv.%d" % [short_name, current_level + 1]
 		btn.text = label
+		btn.add_theme_color_override("font_color", _upgrade_color(opt))
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
 		upgrade_buttons.add_child(btn)
 
 	# Keyboard: focus the first option so arrows + Enter work out of the box
 	if upgrade_buttons.get_child_count() > 0:
 		upgrade_buttons.get_child(0).call_deferred("grab_focus")
+
+func _upgrade_color(opt: UpgradeData) -> Color:
+	if opt.type in ["heal", "stat_max_hp"]:
+		return Palette.HEALTH
+	if opt.is_weapon:
+		return Palette.UPGRADE_WEAPON
+	return Palette.UPGRADE_STAT
+
 
 func _on_upgrade_selected(upgrade) -> void:
 	if not upgrade or (upgrade is Dictionary and upgrade.is_empty()):

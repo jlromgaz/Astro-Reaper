@@ -30,6 +30,30 @@ func test_upgrade_history_stores_display_name() -> void:
 	assert_eq(hud._chosen_upgrades[0], "+10% Damage")
 
 
+## --- upgrade button color coding ---
+
+func _upgrade(type: String, is_weapon: bool) -> UpgradeData:
+	var u := UpgradeData.new()
+	u.type = type
+	u.is_weapon = is_weapon
+	return u
+
+
+func test_weapon_upgrades_use_weapon_color() -> void:
+	assert_eq(hud._upgrade_color(_upgrade("weapon_laser", true)), Palette.UPGRADE_WEAPON)
+	assert_eq(hud._upgrade_color(_upgrade("shield", true)), Palette.UPGRADE_WEAPON)
+
+
+func test_stat_upgrades_use_stat_color() -> void:
+	assert_eq(hud._upgrade_color(_upgrade("stat_damage", false)), Palette.UPGRADE_STAT)
+	assert_eq(hud._upgrade_color(_upgrade("projectile", false)), Palette.UPGRADE_STAT)
+
+
+func test_health_upgrades_use_health_color() -> void:
+	assert_eq(hud._upgrade_color(_upgrade("heal", false)), Palette.HEALTH)
+	assert_eq(hud._upgrade_color(_upgrade("stat_max_hp", false)), Palette.HEALTH)
+
+
 ## --- end-game screen ---
 
 func test_game_over_panel_visible_on_player_died() -> void:
