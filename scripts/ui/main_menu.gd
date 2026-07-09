@@ -3,6 +3,13 @@ extends CanvasLayer
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var best_score_label: Label = $VBox/BestScoreLabel
+@onready var mode_row: HBoxContainer = $VBox/ModeRow
+@onready var classic_btn: Button = $VBox/ModeRow/ClassicBtn
+@onready var arcade_btn: Button = $VBox/ModeRow/ArcadeBtn
+@onready var diff_row: HBoxContainer = $VBox/DiffRow
+@onready var easy_btn: Button = $VBox/DiffRow/EasyBtn
+@onready var medium_btn: Button = $VBox/DiffRow/MediumBtn
+@onready var hard_btn: Button = $VBox/DiffRow/HardBtn
 @onready var ship_list: VBoxContainer = $VBox/ShipList
 @onready var ship_info_panel: PanelContainer = $VBox/ShipInfoPanel
 @onready var ship_name_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipNameLabel
@@ -22,8 +29,35 @@ func _ready() -> void:
 	start_button.pressed.connect(_on_start_pressed)
 	ship_info_panel.visible = false
 	_set_best_score(ScoreManager.get_high_score())
+	for btn: Button in [classic_btn, arcade_btn, easy_btn, medium_btn, hard_btn, start_button]:
+		btn.focus_mode = Control.FOCUS_NONE
+	classic_btn.pressed.connect(_select_mode.bind(GameManager.GameMode.CLASSIC))
+	arcade_btn.pressed.connect(_select_mode.bind(GameManager.GameMode.ARCADE))
+	easy_btn.pressed.connect(_select_difficulty.bind(GameManager.Difficulty.EASY))
+	medium_btn.pressed.connect(_select_difficulty.bind(GameManager.Difficulty.MEDIUM))
+	hard_btn.pressed.connect(_select_difficulty.bind(GameManager.Difficulty.HARD))
+	_select_mode(GameManager.game_mode)
+	_select_difficulty(GameManager.difficulty)
 	if _ships.size() > 0:
 		_select_ship(0)
+
+
+func _select_mode(mode: GameManager.GameMode) -> void:
+	GameManager.game_mode = mode
+	diff_row.visible = mode == GameManager.GameMode.CLASSIC
+	_highlight(classic_btn, mode == GameManager.GameMode.CLASSIC)
+	_highlight(arcade_btn, mode == GameManager.GameMode.ARCADE)
+
+
+func _select_difficulty(diff: GameManager.Difficulty) -> void:
+	GameManager.difficulty = diff
+	_highlight(easy_btn, diff == GameManager.Difficulty.EASY)
+	_highlight(medium_btn, diff == GameManager.Difficulty.MEDIUM)
+	_highlight(hard_btn, diff == GameManager.Difficulty.HARD)
+
+
+func _highlight(btn: Button, active: bool) -> void:
+	btn.add_theme_color_override("font_color", Color.YELLOW if active else Color.WHITE)
 
 
 func _set_best_score(high: int) -> void:
@@ -79,12 +113,22 @@ func _select_ship(index: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _ships.is_empty():
 		return
-	if event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
+	if event.is_action_pressed("ui_down"):
 		_select_ship((_selected_index + 1) % _ships.size())
-	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left"):
+	elif event.is_action_pressed("ui_up"):
 		_select_ship((_selected_index - 1 + _ships.size()) % _ships.size())
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		var other := GameManager.GameMode.ARCADE \
+			if GameManager.game_mode == GameManager.GameMode.CLASSIC \
+			else GameManager.GameMode.CLASSIC
+		_select_mode(other)
 	elif event.is_action_pressed("ui_accept"):
 		_on_start_pressed()
+	elif event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_1: _select_difficulty(GameManager.Difficulty.EASY)
+			KEY_2: _select_difficulty(GameManager.Difficulty.MEDIUM)
+			KEY_3: _select_difficulty(GameManager.Difficulty.HARD)
 
 
 func _on_start_pressed() -> void:

@@ -148,6 +148,8 @@ func _spawn_comet() -> void:
 func _try_spawn_boss() -> void:
 	if _boss_spawned:
 		return
+	if GameManager.game_mode == GameManager.GameMode.ARCADE:
+		return
 	if GameManager.run_time < 120.0:
 		return
 	_boss_spawned = true
@@ -178,7 +180,7 @@ func _spawn_enemy() -> void:
 	# Scale stats based on time-progress (0.0 to 1.0 and beyond)
 	var progress: float = GameManager.run_time / SURVIVAL_TIME
 	var time_scale = 1.0 + progress * 0.5 # 50% stronger at 2 min
-	var total_scale = time_scale * global_difficulty_mult
+	var total_scale = time_scale * global_difficulty_mult * GameManager.get_difficulty_mult()
 	
 	if enemy.has_method("apply_difficulty_scale"):
 		enemy.apply_difficulty_scale(total_scale)

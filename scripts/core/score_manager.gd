@@ -9,6 +9,7 @@ const VICTORY_BASE := 10000
 const PAR_TIME := 240.0
 const SPEED_POINTS_PER_SEC := 50
 const HP_BONUS_MAX := 2000
+const ARCADE_TIME_POINTS := 25
 const RECENT_CAP := 20
 const SCHEMA_VERSION := 1
 
@@ -39,6 +40,10 @@ static func calculate_score(
 		score += int(maxf(0.0, PAR_TIME - time_to_boss)) * SPEED_POINTS_PER_SEC
 		score += roundi(clampf(hp_ratio, 0.0, 1.0) * HP_BONUS_MAX)
 	return score
+
+
+static func arcade_time_bonus(run_time: float) -> int:
+	return int(run_time) * ARCADE_TIME_POINTS
 
 
 func get_high_score() -> int:
@@ -72,6 +77,8 @@ func _on_game_ended(reason: String) -> void:
 	var score: int = calculate_score(
 		_kills, GameManager.run_level, victory, _time_to_boss, hp_ratio
 	)
+	if GameManager.game_mode == GameManager.GameMode.ARCADE:
+		score += arcade_time_bonus(GameManager.run_time)
 	last_result = _build_record(score, victory, hp_ratio)
 	# run_time == 0 means no real run happened (e.g. bare signal emissions
 	# in tests) — show the result but never persist it.
@@ -95,6 +102,8 @@ func _build_record(score: int, victory: bool, hp_ratio: float) -> Dictionary:
 		"level": GameManager.run_level,
 		"ship_id": ship_id,
 		"victory": victory,
+		"mode": GameManager.mode_name(),
+		"difficulty": GameManager.difficulty_name(),
 		"date": Time.get_datetime_string_from_system(true),
 		"app_version": str(ProjectSettings.get_setting("application/config/version", "")),
 		"schema_version": SCHEMA_VERSION,

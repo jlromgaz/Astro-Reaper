@@ -4,11 +4,33 @@ extends Node
 ## Holds selected ship data for the current run.
 
 enum State { MENU, PLAYING, PAUSED_LEVEL_UP, GAME_OVER, VICTORY, PAUSED }
+enum GameMode { CLASSIC, ARCADE }
+enum Difficulty { EASY, MEDIUM, HARD }
 
 var current_state: State = State.MENU
 var run_time: float = 0.0
 var run_level: int = 1
 var selected_ship: ShipResource = null
+var game_mode: GameMode = GameMode.CLASSIC
+var difficulty: Difficulty = Difficulty.MEDIUM
+
+
+func get_difficulty_mult() -> float:
+	match difficulty:
+		Difficulty.EASY: return 0.75
+		Difficulty.HARD: return 1.3
+	return 1.0
+
+
+func mode_name() -> String:
+	return "arcade" if game_mode == GameMode.ARCADE else "classic"
+
+
+func difficulty_name() -> String:
+	match difficulty:
+		Difficulty.EASY: return "easy"
+		Difficulty.HARD: return "hard"
+	return "medium"
 
 
 func _ready() -> void:
