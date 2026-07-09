@@ -4,7 +4,7 @@ extends Node2D
 ## elongated and cyan-family; enemy projectiles are round and hot.
 ## Drawn pointing +X — the bullet root node handles rotation.
 
-enum Style { BOLT, BEAM, MISSILE, ORB }
+enum Style { BOLT, BEAM, MISSILE, ORB, MINE }
 
 @export var style: Style = Style.BOLT
 @export var length: float = 0.0  # 0 = use per-style default
@@ -18,11 +18,18 @@ const DEFAULTS := {
 	Style.BEAM: {"length": 250.0, "width": 8.0},
 	Style.MISSILE: {"length": 12.0, "width": 6.0},
 	Style.ORB: {"length": 10.0, "width": 10.0},
+	Style.MINE: {"length": 12.0, "width": 12.0},
 }
 
 
 func _ready() -> void:
-	body_color = Palette.BULLET_ENEMY if style == Style.ORB else Palette.BULLET_PLAYER
+	match style:
+		Style.ORB:
+			body_color = Palette.BULLET_ENEMY
+		Style.MINE:
+			body_color = Palette.EXPLOSION
+		_:
+			body_color = Palette.BULLET_PLAYER
 	if length <= 0.0:
 		length = DEFAULTS[style]["length"]
 	if width <= 0.0:
@@ -44,6 +51,8 @@ func _draw() -> void:
 			_draw_missile()
 		Style.ORB:
 			_draw_orb()
+		Style.MINE:
+			_draw_mine()
 
 
 func _draw_bolt() -> void:
@@ -96,3 +105,18 @@ func _draw_orb() -> void:
 	draw_arc(Vector2.ZERO, radius * 1.6, 0.0, TAU, 20, Color(body_color.lightened(0.3), 0.6 * pulse), 1.5)
 	# Hot core
 	draw_circle(Vector2.ZERO, radius * 0.4, Color(1, 1, 0.9, 0.9))
+
+
+func _draw_mine() -> void:
+	var radius := width / 2.0
+	var pulse := 0.6 + 0.4 * sin(_time * 6.0)
+	# Soft proximity glow — pulses to telegraph the trigger radius
+	draw_circle(Vector2.ZERO, radius * 2.0, Color(body_color, 0.10 + 0.08 * pulse))
+	# Shell outline
+	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 16, body_color, 2.0)
+	# Contact spikes
+	for i in range(4):
+		var dir := Vector2.RIGHT.rotated(TAU * i / 4.0)
+		draw_line(dir * radius, dir * (radius + 3.0), body_color, 2.0)
+	# Pulsing core
+	draw_circle(Vector2.ZERO, radius * 0.45 * pulse + 1.0, Color(body_color.lightened(0.2), 0.9))
