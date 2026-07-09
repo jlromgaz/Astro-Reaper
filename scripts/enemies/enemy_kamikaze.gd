@@ -4,7 +4,10 @@ extends CharacterBody2D
 const SPEED := 120.0
 const HP := 8.0
 const DAMAGE := 8.0
+const EXPLOSION_DAMAGE := 14.0
 const XP_VALUE := 1
+
+const _FLASH_SCRIPT := preload("res://scripts/fx/intercept_flash.gd")
 
 var current_hp: float = HP
 var max_hp: float = HP
@@ -45,9 +48,17 @@ func _on_body_entered(body: Node) -> void:
 		_player_in_contact = true
 		_player = body
 		if _damage_timer <= 0:
-			_player.take_damage(DAMAGE, self)
+			_player.take_damage(EXPLOSION_DAMAGE, self)
 			_damage_timer = 0.5
-			_die() # Explode on contact
+			_explode()
+
+
+func _explode() -> void:
+	var flash: Node2D = _FLASH_SCRIPT.new()
+	flash.scale_mult = 1.6
+	flash.global_position = global_position
+	get_parent().add_child(flash)
+	_die()
 
 func _on_body_exited(body: Node) -> void:
 	if body.is_in_group("player"):
