@@ -3,6 +3,7 @@ extends GutTest
 ## Written BEFORE implementation.
 
 const DeathBurst := preload("res://scripts/fx/death_burst.gd")
+const InterceptFlash := preload("res://scripts/fx/intercept_flash.gd")
 
 
 func test_fx_manager_autoload_exists() -> void:
@@ -15,6 +16,14 @@ func test_death_burst_frees_itself_after_lifetime() -> void:
 	assert_true(is_instance_valid(burst))
 	await get_tree().create_timer(DeathBurst.LIFETIME + 0.2).timeout
 	assert_false(is_instance_valid(burst), "Death burst must free itself after its lifetime")
+
+
+func test_intercept_flash_frees_itself_after_lifetime() -> void:
+	var flash: Node2D = InterceptFlash.new()
+	add_child(flash)
+	assert_true(is_instance_valid(flash))
+	await get_tree().create_timer(InterceptFlash.LIFETIME + 0.2).timeout
+	assert_false(is_instance_valid(flash), "Intercept flash must free itself after its lifetime")
 
 
 func test_enemy_killed_spawns_death_burst() -> void:
