@@ -33,10 +33,21 @@ func _physics_process(delta: float) -> void:
 	var count := _blades.size()
 	for i in range(count):
 		var blade := _blades[i]
-		blade.position = Vector2.RIGHT.rotated(_angle + TAU * float(i) / float(count)) * ORBIT_RADIUS
+		blade.global_position = _orbit_center() \
+			+ Vector2.RIGHT.rotated(_angle + TAU * float(i) / float(count)) * ORBIT_RADIUS
 		var cooldown: float = blade.get_meta(COOLDOWN_META, 0.0)
 		if cooldown > 0.0:
 			blade.set_meta(COOLDOWN_META, maxf(cooldown - delta, 0.0))
+
+
+func _orbit_center() -> Vector2:
+	# Blades orbit the SHIP's world position, never its rotation/transform.
+	if _owner_ship and is_instance_valid(_owner_ship):
+		return _owner_ship.global_position
+	var parent := get_parent()
+	if parent is Node2D:
+		return parent.global_position
+	return global_position
 
 
 func _sync_blade_count(target_count: int) -> void:
@@ -47,11 +58,13 @@ func _sync_blade_count(target_count: int) -> void:
 	# Re-space immediately so a new blade never overlaps an existing one.
 	var count := _blades.size()
 	for i in range(count):
-		_blades[i].position = Vector2.RIGHT.rotated(_angle + TAU * float(i) / float(count)) * ORBIT_RADIUS
+		_blades[i].global_position = _orbit_center() \
+			+ Vector2.RIGHT.rotated(_angle + TAU * float(i) / float(count)) * ORBIT_RADIUS
 
 
 func _create_blade() -> Area2D:
 	var blade := Area2D.new()
+	blade.top_level = true  # orbit in world space, ignoring the ship transform
 	blade.collision_layer = 4
 	blade.collision_mask = 2
 	var collision := CollisionShape2D.new()
@@ -97,4 +110,4 @@ class BladeVisual:
 			Vector2(-HALF_LENGTH, 0), Vector2(0, -HALF_WIDTH),
 		]), Palette.BULLET_PLAYER)
 		# Hot core line
-		draw_line(Vector2(-HALF_LENGTH * 0.6, 0), Vector2(HALF_LENGTH * 0.6, 0), Color(1, 1, 1, 0.9), 1.0)
+		draw_line(Vector2(-HALF_LENGTH * 0.6, 0), Vector2(HALF_LENGTH * 0.6, 0), Color(Palette.HIT_FLASH, 0.9), 1.0)

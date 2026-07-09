@@ -53,6 +53,43 @@ func _make_enemy() -> StubEnemy:
 	return enemy
 
 
+## --- World-space orbit (independent of ship rotation) ---
+
+func test_blades_are_top_level() -> void:
+	_weapon.fire(_ship)
+	for blade in _blades():
+		assert_true(blade.top_level,
+			"Blades must ignore the ship transform and orbit in world space")
+
+
+func test_ship_rotation_does_not_rotate_formation() -> void:
+	_weapon.fire(_ship)
+	_weapon._physics_process(0.016)
+	var before: Array[Vector2] = []
+	for blade in _blades():
+		before.append(blade.global_position - _ship.global_position)
+	_ship.rotation = PI  # ship spins — formation must not
+	_weapon._physics_process(0.0)  # zero delta: angle unchanged
+	var i := 0
+	for blade in _blades():
+		var offset: Vector2 = blade.global_position - _ship.global_position
+		assert_almost_eq(offset.x, before[i].x, 0.5,
+			"Ship rotation must not displace the orbit formation")
+		assert_almost_eq(offset.y, before[i].y, 0.5, "")
+		i += 1
+
+
+func test_blades_recenter_when_ship_moves() -> void:
+	_weapon.fire(_ship)
+	_weapon._physics_process(0.016)
+	_ship.global_position += Vector2(200, -50)
+	_weapon._physics_process(0.016)
+	for blade in _blades():
+		var dist: float = blade.global_position.distance_to(_ship.global_position)
+		assert_almost_eq(dist, _weapon.ORBIT_RADIUS, 1.0,
+			"Blades must orbit around the ship's new position")
+
+
 func test_fire_maintains_level_plus_one_blades() -> void:
 	_ship.weapon_level = 1
 	_weapon.fire(_ship)
