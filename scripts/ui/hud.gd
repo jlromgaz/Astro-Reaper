@@ -28,9 +28,13 @@ var _xp_current := 0
 var _xp_to_level := 5
 var _level := 1
 var _extra_time_notified := false
+const REROLLS_PER_RUN := 2
+
 var _chosen_upgrades: Array[String] = []
 var _upgrade_pool: Array[UpgradeData] = []
 var _pending_multiplier: int = 1
+var _rerolls_left: int = REROLLS_PER_RUN
+var _last_option_count: int = 3
 
 
 func _ready() -> void:
@@ -55,6 +59,7 @@ func _ready() -> void:
 	EventBus.game_ended.connect(_on_game_ended)
 	EventBus.comet_bonus.connect(_show_upgrade_selection)
 	EventBus.chest_opened.connect(_on_chest_opened)
+	EventBus.game_started.connect(func() -> void: _rerolls_left = REROLLS_PER_RUN)
 	
 	_upgrade_pool = _load_upgrade_pool()
 	# Fallback if player spawned before HUD was ready
@@ -252,9 +257,26 @@ func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
 		upgrade_buttons.add_child(btn)
 
+	_last_option_count = option_count
+	# Rerolling a full-catalog (chest) offer is pointless — only offer it
+	# when some options are hidden.
+	if _rerolls_left > 0 and option_count < _upgrade_pool.size():
+		var reroll_btn := Button.new()
+		reroll_btn.text = "REROLL (%d)" % _rerolls_left
+		reroll_btn.add_theme_color_override("font_color", Palette.UI_ACCENT)
+		reroll_btn.pressed.connect(_on_reroll)
+		upgrade_buttons.add_child(reroll_btn)
+
 	# Keyboard: focus the first option so arrows + Enter work out of the box
 	if upgrade_buttons.get_child_count() > 0:
 		upgrade_buttons.get_child(0).call_deferred("grab_focus")
+
+
+func _on_reroll() -> void:
+	if _rerolls_left <= 0:
+		return
+	_rerolls_left -= 1
+	_show_upgrade_selection(_last_option_count, _pending_multiplier)
 
 func _upgrade_color(opt: UpgradeData) -> Color:
 	if opt.type in ["heal", "stat_max_hp"]:
@@ -305,6 +327,8 @@ func _apply_upgrade(upg_type: String) -> void:
 			_player.add_weapon(load("res://scripts/weapons/weapon_orbitals.gd"))
 		"weapon_mines":
 			_player.add_weapon(load("res://scripts/weapons/weapon_mines.gd"))
+		"weapon_aura":
+			_player.add_weapon(load("res://scripts/weapons/weapon_aura.gd"))
 		"shield":
 			_player.add_shield()
 		"projectile":
