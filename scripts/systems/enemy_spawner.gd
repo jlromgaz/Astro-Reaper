@@ -28,6 +28,13 @@ const CHEST_MIN_INTERVAL := 45.0
 const CHEST_MAX_INTERVAL := 80.0
 var _chest_scene: PackedScene
 
+# Demon icon spawning (summonable mini-boss)
+var _demon_timer: float = 0.0
+var _demon_interval: float = 70.0
+const DEMON_MIN_INTERVAL := 50.0
+const DEMON_MAX_INTERVAL := 90.0
+var _demon_scene: PackedScene
+
 var _enemy_drone: PackedScene
 var _enemy_kamikaze: PackedScene
 var _enemy_tank: PackedScene
@@ -47,6 +54,8 @@ func _ready() -> void:
 	_comet_interval = randf_range(COMET_MIN_INTERVAL, COMET_MAX_INTERVAL)
 	_chest_scene = preload("res://scenes/world/chest.tscn")
 	_chest_interval = randf_range(CHEST_MIN_INTERVAL, CHEST_MAX_INTERVAL)
+	_demon_scene = preload("res://scenes/world/demon_icon.tscn")
+	_demon_interval = randf_range(DEMON_MIN_INTERVAL, DEMON_MAX_INTERVAL)
 	EventBus.difficulty_bump.connect(_on_difficulty_bump)
 	EventBus.player_damaged.connect(_on_player_damaged)
 
@@ -124,6 +133,7 @@ func _process(delta: float) -> void:
 	_try_spawn_boss()
 	_try_spawn_comet(delta)
 	_try_spawn_chest(delta)
+	_try_spawn_demon_icon(delta)
 	_spawn_timer += delta
 	var interval: float = _get_spawn_interval()
 	if _spawn_timer >= interval:
@@ -172,6 +182,25 @@ func _spawn_chest() -> void:
 	chest.global_position = _player.global_position + offset
 	_world.add_child(chest)
 	DebugLog.log_info("SPAWN", "Chest spawned at %s" % chest.global_position)
+
+
+func _try_spawn_demon_icon(delta: float) -> void:
+	_demon_timer += delta
+	if _demon_timer >= _demon_interval:
+		_demon_timer = 0.0
+		_demon_interval = randf_range(DEMON_MIN_INTERVAL, DEMON_MAX_INTERVAL)
+		_spawn_demon_icon()
+
+
+func _spawn_demon_icon() -> void:
+	if not _world or not _player:
+		DebugLog.log_warn("SPAWNER", "_spawn_demon_icon: world or player not set — skipping")
+		return
+	var icon: Area2D = _demon_scene.instantiate()
+	var offset: Vector2 = Vector2(randf_range(200, 320), 0).rotated(randf() * TAU)
+	icon.global_position = _player.global_position + offset
+	_world.add_child(icon)
+	DebugLog.log_info("SPAWN", "Demon icon spawned at %s" % icon.global_position)
 
 
 func _try_spawn_boss() -> void:
