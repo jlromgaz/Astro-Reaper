@@ -6,6 +6,7 @@ extends CanvasLayer
 @onready var xp_bar: ProgressBar = $XPBar
 @onready var xp_label: Label = $XPLabel
 @onready var timer_label: Label = $TimerLabel
+@onready var mode_label: Label = $ModeLabel
 @onready var level_up_panel: PanelContainer = $LevelUpPanel
 @onready var upgrade_buttons: Container = $LevelUpPanel/VBox/UpgradeButtons
 @onready var game_over_panel: PanelContainer = $GameOverPanel
@@ -59,9 +60,9 @@ func _ready() -> void:
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
 	EventBus.player_hp_changed.connect(_on_hp_changed)
 	EventBus.game_ended.connect(_on_game_ended)
-	EventBus.comet_bonus.connect(_show_upgrade_selection)
+	EventBus.comet_bonus.connect(_on_comet_bonus)
 	EventBus.chest_opened.connect(_on_chest_opened)
-	EventBus.game_started.connect(func() -> void: _rerolls_left = REROLLS_PER_RUN)
+	EventBus.game_started.connect(_on_game_started)
 	
 	_upgrade_pool = _load_upgrade_pool()
 	# Fallback if player spawned before HUD was ready
@@ -122,7 +123,7 @@ func _update_weapon_list() -> void:
 	if not _player: return
 	if not _player.has_method("get_weapons_short_list"):
 		return
-	weapon_list_label.text = "Weapons: " + _player.get_weapons_short_list()
+	weapon_list_label.text = "%s: %s" % [tr("Weapons"), _player.get_weapons_short_list()]
 
 
 func _update_timer_display() -> void:
@@ -217,7 +218,7 @@ func _on_xp_collected(amount: int) -> void:
 func _update_xp_bar() -> void:
 	xp_bar.max_value = _xp_to_level
 	xp_bar.value = _xp_current
-	xp_label.text = "Level %d | XP: %d/%d" % [_level, _xp_current, _xp_to_level]
+	xp_label.text = "%s %d | XP: %d/%d" % [tr("Level"), _level, _xp_current, _xp_to_level]
 
 
 func _on_level_up(new_level: int) -> void:
@@ -229,8 +230,28 @@ func _on_level_up(new_level: int) -> void:
 	_show_upgrade_selection()
 
 
+func _on_game_started() -> void:
+	_rerolls_left = REROLLS_PER_RUN
+	mode_label.text = tr(_mode_display_key())
+
+
+func _mode_display_key() -> String:
+	if GameManager.game_mode == GameManager.GameMode.ARCADE:
+		return "ARCADE — ENDLESS"
+	return "CLASSIC — %s" % GameManager.difficulty_name().to_upper()
+
+
 func _on_chest_opened() -> void:
+	# Only show if the bonus pause actually engaged (GameManager runs first)
+	if GameManager.current_state != GameManager.State.PAUSED_LEVEL_UP:
+		return
 	_show_upgrade_selection(_upgrade_pool.size(), 3)
+
+
+func _on_comet_bonus() -> void:
+	if GameManager.current_state != GameManager.State.PAUSED_LEVEL_UP:
+		return
+	_show_upgrade_selection()
 
 
 func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void:
@@ -250,7 +271,8 @@ func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void
 	for opt: UpgradeData in selected:
 		var btn := Button.new()
 		var label: String = opt.display_name
-		if opt.is_weapon and opt.type != "shield" and _player and _player.has_weapon(opt.type):
+		if opt.is_weapon and opt.type != "shield" and _player \
+				and _player.has_method("has_weapon") and _player.has_weapon(opt.type):
 			var current_level: int = _player.get_weapon_level(opt.type)
 			var short_name: String = opt.type.replace("weapon_", "").capitalize()
 			label = "%s → Lv.%d" % [short_name, current_level + 1]
@@ -428,8 +450,9 @@ func _update_stats() -> void:
 	if not _player or not _player.has_method("get_stats"):
 		return
 	var stats = _player.get_stats()
-	stats_label.text = "DMG: x%.1f | FR: x%.1f | Proj: %d | Kills: %d" % [
-		stats.damage, stats.fire_rate, stats.total_projectiles, stats.get("kills", 0)
+	stats_label.text = "DMG: x%.1f | FR: x%.1f | Proj: %d | %s: %d" % [
+		stats.damage, stats.fire_rate, stats.total_projectiles,
+		tr("KILLS").capitalize(), stats.get("kills", 0)
 	]
 
 

@@ -18,6 +18,7 @@ func test_comet_death_emits_comet_bonus_not_level_up() -> void:
 	watch_signals(EventBus)
 	var level_before: int = GameManager.run_level
 	comet.take_damage(999.0)
+	await get_tree().process_frame  # bonus emission is deferred out of physics callbacks
 	assert_signal_emitted(EventBus, "comet_bonus", "Comet death must offer a bonus upgrade")
 	assert_signal_not_emitted(EventBus, "player_leveled_up",
 		"Comet death must NOT fake a level-up")
@@ -32,6 +33,7 @@ func test_comet_bonus_pauses_for_selection() -> void:
 
 
 func test_hud_shows_upgrade_panel_on_comet_bonus() -> void:
+	GameManager.current_state = GameManager.State.PLAYING
 	var hud: CanvasLayer = add_child_autofree(
 		preload("res://scenes/ui/hud.tscn").instantiate()
 	)

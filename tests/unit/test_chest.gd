@@ -31,8 +31,33 @@ func test_player_contact_opens_chest() -> void:
 	add_child_autofree(player)
 	watch_signals(EventBus)
 	chest._on_body_entered(player)
+	await get_tree().process_frame  # emission is deferred out of the physics callback
 	assert_signal_emitted(EventBus, "chest_opened")
-	assert_true(chest.is_queued_for_deletion(), "Chest must be consumed on open")
+	assert_true(not is_instance_valid(chest) or chest.is_queued_for_deletion(),
+		"Chest must be consumed on open")
+
+
+func test_full_chain_chest_touch_offers_upgrades_while_playing() -> void:
+	# Regression for "picked a chest and no upgrade choice appeared":
+	# the exact in-game chain from contact to visible panel.
+	GameManager.current_state = GameManager.State.PLAYING
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	var chest: Area2D = add_child_autofree(CHEST_SCENE.instantiate())
+	var player: CharacterBody2D = add_child_autofree(PLAYER_SCENE.instantiate())
+	await get_tree().process_frame
+	chest._on_body_entered(player)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_true(get_tree().paused, "Chest must pause the run")
+	assert_true(hud.level_up_panel.visible, "Chest MUST offer the upgrade choice")
+	assert_gt(hud.upgrade_buttons.get_child_count(), 3, "Full catalog expected")
+
+
+func test_chest_opened_outside_gameplay_does_not_pause() -> void:
+	GameManager.current_state = GameManager.State.MENU
+	EventBus.chest_opened.emit()
+	assert_false(get_tree().paused, "A stray chest signal outside a run must be ignored")
+	assert_eq(GameManager.current_state, GameManager.State.MENU)
 
 
 ## --- Pause + full catalog panel ---
@@ -45,6 +70,7 @@ func test_chest_opened_pauses_for_selection() -> void:
 
 
 func test_full_catalog_panel_fits_inside_viewport() -> void:
+	GameManager.current_state = GameManager.State.PLAYING
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
 	EventBus.chest_opened.emit()
@@ -57,6 +83,7 @@ func test_full_catalog_panel_fits_inside_viewport() -> void:
 
 
 func test_chest_shows_full_catalog_with_x3() -> void:
+	GameManager.current_state = GameManager.State.PLAYING
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
 	EventBus.chest_opened.emit()

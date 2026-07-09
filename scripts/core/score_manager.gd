@@ -49,21 +49,30 @@ static func arcade_time_bonus(run_time: float) -> int:
 ## Splits a run record into labeled components that sum to its score.
 static func get_breakdown(result: Dictionary) -> Array:
 	var lines: Array = [
-		{"label": "KILLS x%d" % int(result.kills), "points": int(result.kills) * KILL_POINTS},
-		{"label": "LEVEL %d" % int(result.level), "points": int(result.level) * LEVEL_POINTS},
+		{
+			"label": "%s x%d" % [TranslationServer.translate("KILLS"), int(result.kills)],
+			"points": int(result.kills) * KILL_POINTS,
+		},
+		{
+			"label": "%s %d" % [TranslationServer.translate("LEVEL"), int(result.level)],
+			"points": int(result.level) * LEVEL_POINTS,
+		},
 	]
 	if result.victory:
-		lines.append({"label": "VICTORY", "points": VICTORY_BASE})
+		lines.append({"label": TranslationServer.translate("VICTORY"), "points": VICTORY_BASE})
 		lines.append({
-			"label": "SPEED",
+			"label": TranslationServer.translate("SPEED"),
 			"points": int(maxf(0.0, PAR_TIME - result.time_to_boss)) * SPEED_POINTS_PER_SEC,
 		})
 		lines.append({
-			"label": "HULL",
+			"label": TranslationServer.translate("HULL"),
 			"points": roundi(clampf(result.hp_ratio, 0.0, 1.0) * HP_BONUS_MAX),
 		})
 	if str(result.get("mode", "")) == "arcade":
-		lines.append({"label": "SURVIVAL", "points": arcade_time_bonus(result.run_time)})
+		lines.append({
+			"label": TranslationServer.translate("SURVIVAL"),
+			"points": arcade_time_bonus(result.run_time),
+		})
 	return lines
 
 

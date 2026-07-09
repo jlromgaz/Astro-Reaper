@@ -24,5 +24,6 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	DebugLog.log_info("CHEST", "Chest opened at %s" % global_position)
-	EventBus.chest_opened.emit()
+	# Deferred: pausing the tree inside a physics callback is unreliable
+	EventBus.chest_opened.emit.call_deferred()
 	queue_free()

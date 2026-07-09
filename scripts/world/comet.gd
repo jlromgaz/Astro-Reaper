@@ -41,7 +41,8 @@ func take_damage(amount: float) -> void:
 func _die() -> void:
 	DebugLog.log_info("COMET", "Comet destroyed at %s — triggering upgrade" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
-	EventBus.comet_bonus.emit()
+	# Deferred: comets die inside bullet physics callbacks — pausing there is unreliable
+	EventBus.comet_bonus.emit.call_deferred()
 	queue_free()
 
 

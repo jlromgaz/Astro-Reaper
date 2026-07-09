@@ -119,6 +119,8 @@ func _on_upgrade_selected(_upgrade_data: Resource) -> void:
 
 func _on_bonus_pause() -> void:
 	# Same pause as a level-up, but run_level is untouched (bonus, not a level).
+	if current_state != State.PLAYING:
+		return
 	current_state = State.PAUSED_LEVEL_UP
 	get_tree().paused = true
 	EventBus.game_paused.emit()

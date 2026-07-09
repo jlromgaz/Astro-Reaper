@@ -106,6 +106,23 @@ func test_mode_options_cover_all_difficulties_and_arcade() -> void:
 	assert_eq(GameManager.game_mode, GameManager.GameMode.ARCADE)
 
 
+## --- HUD mode label ---
+
+func test_hud_shows_current_mode() -> void:
+	GameManager.game_mode = GameManager.GameMode.CLASSIC
+	GameManager.difficulty = GameManager.Difficulty.HARD
+	var hud: CanvasLayer = add_child_autofree(
+		preload("res://scenes/ui/hud.tscn").instantiate()
+	)
+	await get_tree().process_frame
+	EventBus.game_started.emit()
+	assert_true(hud.mode_label.text.contains("HARD"),
+		"HUD must show the active mode and difficulty")
+	GameManager.game_mode = GameManager.GameMode.ARCADE
+	EventBus.game_started.emit()
+	assert_true(hud.mode_label.text.contains("ARCADE"))
+
+
 ## --- Scoring ---
 
 func test_arcade_time_bonus_pure() -> void:
