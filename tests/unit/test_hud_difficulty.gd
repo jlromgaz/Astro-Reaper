@@ -56,6 +56,24 @@ func test_summary_includes_chosen_upgrades() -> void:
 	)
 
 
+func test_game_over_panel_fits_inside_viewport() -> void:
+	EventBus.player_died.emit()
+	await get_tree().process_frame
+	var rect: Rect2 = hud.game_over_panel.get_global_rect()
+	var vp: Rect2 = Rect2(Vector2.ZERO, hud.game_over_panel.get_viewport_rect().size)
+	assert_true(vp.encloses(rect),
+		"Game over panel %s must fit inside viewport %s" % [rect, vp])
+
+
+func test_pause_panel_fits_inside_viewport() -> void:
+	hud.pause_panel.show()
+	await get_tree().process_frame
+	var rect: Rect2 = hud.pause_panel.get_global_rect()
+	var vp: Rect2 = Rect2(Vector2.ZERO, hud.pause_panel.get_viewport_rect().size)
+	assert_true(vp.encloses(rect),
+		"Pause panel %s must fit inside viewport %s" % [rect, vp])
+
+
 func test_game_over_panel_has_play_again_button() -> void:
 	assert_true(
 		hud.play_again_btn is Button,

@@ -17,6 +17,11 @@ func before_each() -> void:
 	await get_tree().process_frame
 
 
+func after_each() -> void:
+	# Death tests trigger GameManager.end_game — restore neutral state.
+	GameManager.current_state = GameManager.State.MENU
+
+
 ## --- Ship initialization ---
 
 func test_initialize_ship_applies_stats() -> void:
@@ -96,6 +101,21 @@ func test_heal_clamps_to_max_hp() -> void:
 	player.current_hp = player.max_hp - 5.0
 	player.heal(50.0)
 	assert_eq(player.current_hp, player.max_hp)
+
+
+func test_player_dies_only_once() -> void:
+	watch_signals(EventBus)
+	player.take_damage(9999.0, null)
+	player.take_damage(9999.0, null)
+	assert_signal_emit_count(EventBus, "player_died", 1,
+		"A dead player must not die again on further damage")
+
+
+func test_dead_player_ignores_damage() -> void:
+	player.take_damage(9999.0, null)
+	var hp_at_death: float = player.current_hp
+	player.take_damage(50.0, null)
+	assert_eq(player.current_hp, hp_at_death, "HP must not keep dropping after death")
 
 
 ## --- Ship visual hit feedback ---

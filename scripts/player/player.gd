@@ -12,6 +12,7 @@ var damage_mult: float = 1.0
 var fire_rate_mult: float = 1.0
 var pickup_radius: float = 40.0
 var enemies_killed := 0
+var _is_dead := false
 
 var _move_input := Vector2.ZERO
 ## Each entry: { "node": Node2D, "type": String, "level": int, "projectile_count": int }
@@ -258,7 +259,7 @@ func get_weapons_short_list() -> String:
 
 
 func take_damage(amount: float, _source: Node) -> void:
-	if _invincibility_timer > 0:
+	if _is_dead or _invincibility_timer > 0:
 		return
 	
 	var remaining_dmg = amount
@@ -299,6 +300,9 @@ func add_speed(amount: float) -> void:
 
 
 func _die() -> void:
+	if _is_dead:
+		return
+	_is_dead = true
 	DebugLog.log_info("COMBAT", "Player died")
 	EventBus.player_died.emit()
 	GameManager.end_game("death")
