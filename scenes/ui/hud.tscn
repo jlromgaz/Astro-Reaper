@@ -210,6 +210,44 @@ text = "PLAY AGAIN"
 layout_mode = 2
 text = "Menu"
 
+[node name="PauseBtn" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -46.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 34.0
+text = "II"
+
+[node name="PausePanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 120.0
+offset_top = 60.0
+offset_right = 360.0
+offset_bottom = 210.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="PausePanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeBtn" type="Button" parent="PausePanel/VBox"]
+layout_mode = 2
+text = "Resume"
+
+[node name="QuitBtn" type="Button" parent="PausePanel/VBox"]
+layout_mode = 2
+text = "Quit to Menu"
+
 [node name="DebugPanel" type="HBoxContainer" parent="."]
 visible = false
 offset_left = 400.0

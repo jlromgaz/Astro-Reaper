@@ -13,6 +13,10 @@ extends CanvasLayer
 @onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
 @onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
 @onready var play_again_btn: Button = $GameOverPanel/VBox/PlayAgainBtn
+@onready var pause_btn: Button = $PauseBtn
+@onready var pause_panel: PanelContainer = $PausePanel
+@onready var resume_btn: Button = $PausePanel/VBox/ResumeBtn
+@onready var pause_quit_btn: Button = $PausePanel/VBox/QuitBtn
 @onready var debug_panel: HBoxContainer = $DebugPanel
 @onready var share_log_btn: Button = $DebugPanel/ShareLogBtn
 @onready var damage_popup: Label = $DamagePopup
@@ -35,6 +39,10 @@ func _ready() -> void:
 	debug_panel.visible = OS.is_debug_build()
 	restart_btn.pressed.connect(_on_restart)
 	play_again_btn.pressed.connect(_on_play_again)
+	pause_panel.visible = false
+	pause_btn.pressed.connect(_on_pause_toggle)
+	resume_btn.pressed.connect(_on_pause_toggle)
+	pause_quit_btn.pressed.connect(_on_restart)
 	if debug_panel.visible:
 		share_log_btn.pressed.connect(_on_share_log)
 	EventBus.player_spawned.connect(_on_player_spawned)
@@ -315,6 +323,19 @@ func _on_restart() -> void:
 func _on_play_again() -> void:
 	# Keeps GameManager.selected_ship; main.tscn's ready calls start_game()
 	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
+
+
+func _on_pause_toggle() -> void:
+	GameManager.toggle_pause()
+	pause_panel.visible = GameManager.current_state == GameManager.State.PAUSED
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	var state: GameManager.State = GameManager.current_state
+	if state == GameManager.State.PLAYING or state == GameManager.State.PAUSED:
+		_on_pause_toggle()
 
 
 func _update_stats() -> void:

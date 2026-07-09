@@ -3,7 +3,7 @@ extends Node
 ## Tracks run timer. Coordinates pause on level-up.
 ## Holds selected ship data for the current run.
 
-enum State { MENU, PLAYING, PAUSED_LEVEL_UP, GAME_OVER, VICTORY }
+enum State { MENU, PLAYING, PAUSED_LEVEL_UP, GAME_OVER, VICTORY, PAUSED }
 
 var current_state: State = State.MENU
 var run_time: float = 0.0
@@ -44,6 +44,19 @@ func end_game(reason: String = "death") -> void:
 func win_game() -> void:
 	end_game("victory")
 	EventBus.victory.emit()
+
+
+func toggle_pause() -> void:
+	if current_state == State.PLAYING:
+		current_state = State.PAUSED
+		get_tree().paused = true
+		EventBus.game_paused.emit()
+		DebugLog.log_info("GAME", "Paused by player")
+	elif current_state == State.PAUSED:
+		current_state = State.PLAYING
+		get_tree().paused = false
+		EventBus.game_resumed.emit()
+		DebugLog.log_info("GAME", "Resumed by player")
 
 
 func go_to_menu() -> void:
