@@ -58,6 +58,7 @@ func _ready() -> void:
 	_demon_interval = randf_range(DEMON_MIN_INTERVAL, DEMON_MAX_INTERVAL)
 	EventBus.difficulty_bump.connect(_on_difficulty_bump)
 	EventBus.player_damaged.connect(_on_player_damaged)
+	EventBus.enemy_killed.connect(_on_enemy_killed_drop)
 
 
 func _on_difficulty_bump() -> void:
@@ -182,6 +183,25 @@ func _spawn_chest() -> void:
 	chest.global_position = _player.global_position + offset
 	_world.add_child(chest)
 	DebugLog.log_info("SPAWN", "Chest spawned at %s" % chest.global_position)
+
+
+const MAGNET_DROP_CHANCE := 0.015
+var _magnet_scene: PackedScene = preload("res://scenes/pickups/pickup_magnet.tscn")
+
+
+func _on_enemy_killed_drop(_enemy: Node2D, position: Vector2) -> void:
+	if not _world or randf() >= MAGNET_DROP_CHANCE:
+		return
+	_drop_magnet(position)
+
+
+func _drop_magnet(position: Vector2) -> void:
+	if not _world:
+		return
+	var magnet: Area2D = _magnet_scene.instantiate()
+	magnet.global_position = position
+	_world.add_child.call_deferred(magnet)
+	DebugLog.log_info("SPAWN", "XP magnet dropped at %s" % position)
 
 
 func _try_spawn_demon_icon(delta: float) -> void:
