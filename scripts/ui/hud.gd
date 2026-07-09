@@ -23,6 +23,7 @@ var _xp_current := 0
 var _xp_to_level := 5
 var _level := 1
 var _extra_time_notified := false
+var _chosen_upgrades: Array[String] = []
 
 
 func _ready() -> void:
@@ -230,36 +231,41 @@ func _show_upgrade_selection() -> void:
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
 		upgrade_buttons.add_child(btn)
 
-func _on_upgrade_selected(upgrade: Dictionary) -> void:
+func _on_upgrade_selected(upgrade) -> void:
+	if not upgrade or (upgrade is Dictionary and upgrade.is_empty()):
+		return
 	DebugLog.log_info("UPGRADE", "Selected: %s" % upgrade.name)
+	_chosen_upgrades.append(upgrade.name)
+	EventBus.difficulty_bump.emit()
 	get_tree().paused = false
-	
-	match upgrade.type:
-		"weapon_blaster": 
-			_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
-		"weapon_laser": 
-			_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
-		"weapon_missiles": 
-			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
-		"weapon_anti_missile":
-			_player.add_weapon(load("res://scripts/weapons/weapon_anti_missile.gd"))
-		"shield":
-			_player.add_shield()
-		"projectile":
-			_player.add_projectile_to_all()
-		"stat_damage": 
-			_player.damage_mult *= 1.1
-		"stat_fire_rate": 
-			_player.fire_rate_mult *= 1.1
-		"stat_max_hp": 
-			_player.max_hp += 20
-			_player.current_hp += 20
-			_update_hp()
-		"heal": 
-			_player.heal(20)
-		"speed": 
-			_player.add_speed(20)
-	
+
+	if _player:
+		match upgrade.type:
+			"weapon_blaster":
+				_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
+			"weapon_laser":
+				_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
+			"weapon_missiles":
+				_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
+			"weapon_anti_missile":
+				_player.add_weapon(load("res://scripts/weapons/weapon_anti_missile.gd"))
+			"shield":
+				_player.add_shield()
+			"projectile":
+				_player.add_projectile_to_all()
+			"stat_damage":
+				_player.damage_mult *= 1.1
+			"stat_fire_rate":
+				_player.fire_rate_mult *= 1.1
+			"stat_max_hp":
+				_player.max_hp += 20
+				_player.current_hp += 20
+				_update_hp()
+			"heal":
+				_player.heal(20)
+			"speed":
+				_player.add_speed(20)
+
 	level_up_panel.hide()
 	EventBus.upgrade_selected.emit(null)
 
@@ -269,16 +275,19 @@ func _on_game_ended(reason: String) -> void:
 	game_over_title.text = "VICTORY!" if reason == "victory" else "GAME OVER"
 	var mins: int = int(GameManager.run_time) / 60
 	var secs: int = int(GameManager.run_time) % 60
-	var kills = 0
+	var kills := 0
 	if _player and _player.has_method("get_stats") and _player.get_stats().has("kills"):
 		kills = _player.get_stats().kills
-	
-	game_over_summary.text = "KILLS: %d | TIME: %d:%02d" % [kills, mins, secs]
+
+	var summary := "KILLS: %d | TIME: %d:%02d" % [kills, mins, secs]
+	if _chosen_upgrades.size() > 0:
+		summary += "\nUpgrades: " + ", ".join(_chosen_upgrades)
+	game_over_summary.text = summary
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
 
 
 func _show_game_over(reason: String = "death") -> void:
-	pass
+	_on_game_ended(reason)
 
 
 func _on_restart() -> void:
