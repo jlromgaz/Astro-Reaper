@@ -289,6 +289,12 @@ func _on_game_ended(reason: String) -> void:
 		kills = _player.get_stats().kills
 
 	var summary := "KILLS: %d | TIME: %d:%02d" % [kills, mins, secs]
+	if not ScoreManager.last_result.is_empty():
+		summary += "\nSCORE: %d | BEST: %d" % [
+			ScoreManager.last_result.score, ScoreManager.get_high_score()
+		]
+		if ScoreManager.last_result.get("is_high_score", false):
+			summary += "\nNEW HIGH SCORE!"
 	if _chosen_upgrades.size() > 0:
 		summary += "\nUpgrades: " + ", ".join(_chosen_upgrades)
 	game_over_summary.text = summary

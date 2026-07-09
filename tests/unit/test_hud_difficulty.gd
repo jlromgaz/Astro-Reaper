@@ -56,6 +56,14 @@ func test_summary_includes_chosen_upgrades() -> void:
 	)
 
 
+func test_summary_shows_score_line() -> void:
+	EventBus.game_ended.emit("death")
+	assert_true(
+		hud.game_over_summary.text.contains("SCORE:"),
+		"End-of-run summary must show the run score"
+	)
+
+
 func test_stats_label_shows_kill_count() -> void:
 	var player := preload("res://scenes/player/player.tscn").instantiate()
 	add_child_autofree(player)
