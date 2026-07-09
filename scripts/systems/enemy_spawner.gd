@@ -5,10 +5,13 @@ var _player: Node2D
 var _world: Node2D
 var _spawn_timer: float = 0.0
 var global_difficulty_mult: float = 1.0
+var _undamaged_streak: float = 0.0
 const BASE_SPAWN_INTERVAL := 2.0
-const MIN_SPAWN_INTERVAL := 0.3 # Even faster in survival
-const SURVIVAL_TIME := 120.0 # 2 minutes
+const MIN_SPAWN_INTERVAL := 0.3
+const SURVIVAL_TIME := 120.0
 const BOSS_LEVEL_THRESHOLD := 10
+const PRESSURE_THRESHOLD := 30.0
+const PRESSURE_SPAWN_MULT := 1.3
 var _boss_spawned: bool = false
 
 # Comet spawning
@@ -36,11 +39,16 @@ func _ready() -> void:
 	_comet_scene = preload("res://scenes/world/comet.tscn")
 	_comet_interval = randf_range(COMET_MIN_INTERVAL, COMET_MAX_INTERVAL)
 	EventBus.difficulty_bump.connect(_on_difficulty_bump)
+	EventBus.player_damaged.connect(_on_player_damaged)
 
 
 func _on_difficulty_bump() -> void:
 	global_difficulty_mult += 0.05
 	DebugLog.log_info("SPAWNER", "Difficulty bump → global_mult=%.2f" % global_difficulty_mult)
+
+
+func _on_player_damaged(_amount: float, _source: Node) -> void:
+	_undamaged_streak = 0.0
 
 
 func set_player(p: Node2D) -> void:
@@ -53,13 +61,16 @@ func set_world(w: Node2D) -> void:
 
 func _get_spawn_interval() -> float:
 	var progress: float = GameManager.run_time / SURVIVAL_TIME
-	# After survival time, we enter extra time (progress > 1.0)
-	var scale_factor: float = 1.0 - progress * 0.7 
+	var scale_factor: float = 1.0 - progress * 0.7
 	if progress > 1.0:
-		scale_factor *= 0.5 # Double speed in survival
+		scale_factor *= 0.5
 	scale_factor = clampf(scale_factor, 0.1, 1.0)
-	# Difficulty upgrades make it even faster
-	return clampf((BASE_SPAWN_INTERVAL * scale_factor) / global_difficulty_mult, MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL)
+	var pressure_mult: float = PRESSURE_SPAWN_MULT if _undamaged_streak > PRESSURE_THRESHOLD else 1.0
+	return clampf(
+		(BASE_SPAWN_INTERVAL * scale_factor) / (global_difficulty_mult * pressure_mult),
+		MIN_SPAWN_INTERVAL,
+		BASE_SPAWN_INTERVAL
+	)
 
 
 func _get_enemy_scene() -> PackedScene:
@@ -100,6 +111,7 @@ func _get_enemy_scene() -> PackedScene:
 func _process(delta: float) -> void:
 	if not GameManager.is_playing() or not _player:
 		return
+	_undamaged_streak += delta
 	_try_spawn_boss()
 	_try_spawn_comet(delta)
 	_spawn_timer += delta
