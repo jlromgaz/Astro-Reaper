@@ -63,6 +63,21 @@ func test_first_upgrade_button_grabs_focus() -> void:
 		"First upgrade option must be focused so arrows+Enter work")
 
 
+func test_focus_works_on_second_level_up() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	hud._show_upgrade_selection()
+	await get_tree().process_frame
+	# Second level-up in the same run — old buttons must not steal get_child(0)
+	hud._show_upgrade_selection()
+	await get_tree().process_frame
+	var first: Button = hud.upgrade_buttons.get_child(0)
+	assert_true(is_instance_valid(first) and not first.is_queued_for_deletion(),
+		"get_child(0) must be a fresh button, not a dying one")
+	assert_true(first.has_focus(),
+		"Keyboard focus must work on EVERY level-up, not just the first")
+
+
 ## --- End-game and pause panels ---
 
 func test_play_again_grabs_focus_on_game_over() -> void:

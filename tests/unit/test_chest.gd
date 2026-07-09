@@ -44,6 +44,18 @@ func test_chest_opened_pauses_for_selection() -> void:
 	assert_true(get_tree().paused)
 
 
+func test_full_catalog_panel_fits_inside_viewport() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	EventBus.chest_opened.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var rect: Rect2 = hud.level_up_panel.get_global_rect()
+	var vp: Rect2 = Rect2(Vector2.ZERO, hud.level_up_panel.get_viewport_rect().size)
+	assert_true(vp.encloses(rect),
+		"Full-catalog panel %s must fit inside viewport %s" % [rect, vp])
+
+
 func test_chest_shows_full_catalog_with_x3() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame

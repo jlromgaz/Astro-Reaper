@@ -7,7 +7,7 @@ extends CanvasLayer
 @onready var xp_label: Label = $XPLabel
 @onready var timer_label: Label = $TimerLabel
 @onready var level_up_panel: PanelContainer = $LevelUpPanel
-@onready var upgrade_buttons: HBoxContainer = $LevelUpPanel/VBox/UpgradeButtons
+@onready var upgrade_buttons: Container = $LevelUpPanel/VBox/UpgradeButtons
 @onready var game_over_panel: PanelContainer = $GameOverPanel
 @onready var game_over_title: Label = $GameOverPanel/VBox/Title
 @onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
@@ -229,6 +229,9 @@ func _on_chest_opened() -> void:
 func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void:
 	_pending_multiplier = multiplier
 	for child in upgrade_buttons.get_children():
+		# remove_child now so get_child(0) below is a FRESH button —
+		# queue_free alone is deferred and breaks focus on repeat level-ups
+		upgrade_buttons.remove_child(child)
 		child.queue_free()
 
 	level_up_panel.show()
@@ -318,6 +321,9 @@ func _apply_upgrade(upg_type: String) -> void:
 			_player.heal(20)
 		"speed":
 			_player.add_speed(20)
+		"stat_size":
+			_player.projectile_size_mult *= 1.1
+			_player.damage_mult *= 1.05
 
 
 func _on_game_ended(reason: String) -> void:
