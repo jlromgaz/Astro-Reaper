@@ -4,6 +4,7 @@ extends GutTest
 
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 const SHIP_STELLAR := preload("res://data/ships/ship_stellar.tres")
+const SHIP_PHANTOM := preload("res://data/ships/ship_phantom.tres")
 const WEAPON_BLASTER := preload("res://scripts/weapons/weapon_blaster.gd")
 const WEAPON_LASER := preload("res://scripts/weapons/weapon_laser.gd")
 
@@ -32,6 +33,12 @@ func test_initialize_ship_tints_visual() -> void:
 	player.initialize_ship(SHIP_STELLAR)
 	var visual := player.get_node("ShipVisual")
 	assert_eq(visual._body_color, SHIP_STELLAR.color)
+
+
+func test_initialize_ship_sets_visual_shape() -> void:
+	player.initialize_ship(SHIP_PHANTOM)
+	var visual := player.get_node("ShipVisual")
+	assert_eq(visual._shape, visual.ShipShape.PHANTOM, "initialize_ship must propagate ship_id to the visual shape")
 
 
 ## --- Weapon slots ---
