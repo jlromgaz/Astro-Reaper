@@ -25,6 +25,7 @@ func apply_difficulty_scale(p_scale: float) -> void:
 	DebugLog.log_info("ENEMY", "Boss scaled to %.1f HP" % max_hp)
 const TELEGRAPH_DURATION := 1.2
 const CHARGE_DURATION    := 0.5
+const PRE_ATTACK_DELAY   := 0.4
 const SPRAY_COOLDOWN     := 5.0
 const PULSE_COOLDOWN     := 8.0
 const SPRAY_DAMAGE       := 6.0
@@ -75,12 +76,12 @@ func _physics_process(delta: float) -> void:
 	_spray_timer -= delta
 	if _spray_timer <= 0.0:
 		_spray_timer = SPRAY_COOLDOWN
-		_do_spray()
+		_start_spray_attack()
 
 	_pulse_timer -= delta
 	if _pulse_timer <= 0.0:
 		_pulse_timer = PULSE_COOLDOWN
-		_do_pulse()
+		_start_pulse_attack()
 
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * SPEED
@@ -104,6 +105,26 @@ func _do_spray() -> void:
 func _do_pulse() -> void:
 	for i in range(PULSE_COUNT):
 		_spawn_bullet(Vector2.RIGHT.rotated(TAU / PULSE_COUNT * i), PULSE_DAMAGE)
+
+
+func _start_spray_attack() -> void:
+	var vis := get_node_or_null("EnemyVisual")
+	if vis and vis.has_method("start_telegraph"):
+		vis.start_telegraph(PRE_ATTACK_DELAY)
+	await get_tree().create_timer(PRE_ATTACK_DELAY).timeout
+	if not is_instance_valid(self) or is_queued_for_deletion():
+		return
+	_do_spray()
+
+
+func _start_pulse_attack() -> void:
+	var vis := get_node_or_null("EnemyVisual")
+	if vis and vis.has_method("start_telegraph"):
+		vis.start_telegraph(PRE_ATTACK_DELAY)
+	await get_tree().create_timer(PRE_ATTACK_DELAY).timeout
+	if not is_instance_valid(self) or is_queued_for_deletion():
+		return
+	_do_pulse()
 
 
 func _spawn_bullet(dir: Vector2, dmg: float) -> void:

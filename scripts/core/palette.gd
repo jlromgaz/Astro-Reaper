@@ -29,6 +29,7 @@ const XP_GEM := Color(0.30, 1.00, 0.50)
 const HEALTH := Color(1.00, 0.30, 0.45)
 const COMET := Color(1.00, 0.90, 0.30)
 const HIT_FLASH := Color(1.00, 1.00, 1.00)
+const TELEGRAPH_WARN := Color(1.00, 0.85, 0.00)
 const EXPLOSION := Color(1.00, 0.60, 0.20)
 
 # UI

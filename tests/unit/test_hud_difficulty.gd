@@ -54,3 +54,16 @@ func test_summary_includes_chosen_upgrades() -> void:
 		hud.game_over_summary.text.contains("+Laser"),
 		"Summary must list upgrades chosen during the run"
 	)
+
+
+func test_stats_label_shows_kill_count() -> void:
+	var player := preload("res://scenes/player/player.tscn").instantiate()
+	add_child_autofree(player)
+	await get_tree().process_frame
+	hud._player = player
+	player.enemies_killed = 5
+	hud._update_stats()
+	assert_true(
+		hud.stats_label.text.contains("5"),
+		"Stats label must display the live kill count"
+	)

@@ -308,8 +308,8 @@ func _update_stats() -> void:
 	if not _player or not _player.has_method("get_stats"):
 		return
 	var stats = _player.get_stats()
-	stats_label.text = "DMG: x%.1f | FR: x%.1f | Proj: %d" % [
-		stats.damage, stats.fire_rate, stats.total_projectiles
+	stats_label.text = "DMG: x%.1f | FR: x%.1f | Proj: %d | Kills: %d" % [
+		stats.damage, stats.fire_rate, stats.total_projectiles, stats.get("kills", 0)
 	]
 
 

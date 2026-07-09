@@ -76,3 +76,20 @@ func test_pulse_works_without_player() -> void:
 	boss._player = null
 	boss._do_pulse()
 	assert_true(true, "_do_pulse must not require a player")
+
+
+## --- Visual telegraph ---
+
+func test_enemy_visual_has_start_telegraph_method() -> void:
+	var vis: Node = load("res://scripts/enemies/enemy_visual.gd").new()
+	add_child_autofree(vis)
+	await get_tree().process_frame
+	assert_true(vis.has_method("start_telegraph"), "enemy_visual must expose start_telegraph(duration)")
+
+
+func test_start_telegraph_sets_timer() -> void:
+	var vis: Node = load("res://scripts/enemies/enemy_visual.gd").new()
+	add_child_autofree(vis)
+	await get_tree().process_frame
+	vis.start_telegraph(0.5)
+	assert_gt(vis._telegraph_timer, 0.0, "start_telegraph must set _telegraph_timer > 0")

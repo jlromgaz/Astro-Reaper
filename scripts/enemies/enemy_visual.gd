@@ -20,6 +20,7 @@ const ORIENT_SMOOTHING := 0.15
 
 var body_color: Color = Palette.ENEMY_CHASER
 var _flash_timer := 0.0
+var _telegraph_timer := 0.0
 var _time := 0.0
 
 
@@ -43,10 +44,16 @@ func _on_enemy_damaged(enemy: Node, _amount: float) -> void:
 		_flash_timer = FLASH_DURATION
 
 
+func start_telegraph(duration: float) -> void:
+	_telegraph_timer = duration
+
+
 func _process(delta: float) -> void:
 	_time += delta
 	if _flash_timer > 0.0:
 		_flash_timer -= delta
+	if _telegraph_timer > 0.0:
+		_telegraph_timer -= delta
 	_orient_to_velocity()
 	queue_redraw()
 
@@ -60,7 +67,13 @@ func _orient_to_velocity() -> void:
 
 
 func _draw() -> void:
-	var color := body_color if _flash_timer <= 0.0 else Palette.HIT_FLASH
+	var color: Color
+	if _flash_timer > 0.0:
+		color = Palette.HIT_FLASH
+	elif _telegraph_timer > 0.0:
+		color = body_color.lerp(Palette.TELEGRAPH_WARN, 0.5 + 0.5 * sin(_time * 25.0))
+	else:
+		color = body_color
 	# Short trail for fast threats (style guide: Motion & FX)
 	if color_class == ColorClass.FAST and shape_type in DIRECTIONAL_SHAPES:
 		var flicker := 0.6 + 0.4 * sin(_time * 35.0)
