@@ -22,6 +22,7 @@ DebugLog="*res://scripts/core/debug_log.gd"
 SoundManager="*res://scripts/core/sound_manager.gd"
 FXManager="*res://scripts/core/fx_manager.gd"
 ScoreManager="*res://scripts/core/score_manager.gd"
+Settings="*res://scripts/core/settings.gd"
 
 [debug]
 
@@ -37,6 +38,11 @@ window/stretch/aspect="expand"
 window/handheld/orientation=1
 window/size/test_width=1280
 window/size/test_height=720
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://data/i18n/translations.en.translation", "res://data/i18n/translations.es.translation")
+locale/fallback="en"
 
 [input]
 

@@ -58,6 +58,18 @@ horizontal_alignment = 1
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 text = "BEST: 0"
 
+[node name="LangRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="EnBtn" type="Button" parent="VBox/LangRow"]
+layout_mode = 2
+text = "EN"
+
+[node name="EsBtn" type="Button" parent="VBox/LangRow"]
+layout_mode = 2
+text = "ES"
+
 [node name="ModeList" type="VBoxContainer" parent="VBox"]
 visible = false
 layout_mode = 2

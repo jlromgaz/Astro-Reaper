@@ -11,6 +11,7 @@ const MODE_OPTIONS := [
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var best_score_label: Label = $VBox/BestScoreLabel
+@onready var lang_row: HBoxContainer = $VBox/LangRow
 @onready var mode_list: VBoxContainer = $VBox/ModeList
 @onready var mode_hint: Label = $VBox/ModeHint
 @onready var subtitle_label: Label = $VBox/SubtitleLabel
@@ -36,6 +37,7 @@ func _ready() -> void:
 	start_button.text = "CONTINUE"
 	start_button.focus_mode = Control.FOCUS_NONE
 	start_button.pressed.connect(func() -> void: _goto_page(1))
+	_setup_language_row()
 	ship_info_panel.visible = false
 	_set_best_score(ScoreManager.get_high_score())
 	if _ships.size() > 0:
@@ -86,9 +88,31 @@ func _apply_mode_option(index: int) -> void:
 	GameManager.difficulty = MODE_OPTIONS[index].difficulty
 
 
+func _setup_language_row() -> void:
+	# Mouse/touch only — deliberately outside the keyboard flow.
+	var codes := {"EnBtn": "en", "EsBtn": "es"}
+	for btn: Button in lang_row.get_children():
+		btn.focus_mode = Control.FOCUS_NONE
+		var code: String = codes.get(btn.name, "en")
+		btn.pressed.connect(_on_language_selected.bind(code))
+	_highlight_language(Settings.get_language())
+
+
+func _on_language_selected(code: String) -> void:
+	Settings.set_language(code)
+	_highlight_language(code)
+	_set_best_score(ScoreManager.get_high_score())  # refresh composed text
+
+
+func _highlight_language(code: String) -> void:
+	for btn: Button in lang_row.get_children():
+		var active: bool = btn.text.to_lower() == code
+		btn.add_theme_color_override("font_color", Color.YELLOW if active else Color.WHITE)
+
+
 func _set_best_score(high: int) -> void:
 	best_score_label.visible = high > 0
-	best_score_label.text = "BEST: %d" % high
+	best_score_label.text = "%s: %d" % [tr("BEST"), high]
 
 
 func _load_ships() -> void:

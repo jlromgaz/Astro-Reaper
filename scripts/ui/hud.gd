@@ -262,7 +262,7 @@ func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void
 	# when some options are hidden.
 	if _rerolls_left > 0 and option_count < _upgrade_pool.size():
 		var reroll_btn := Button.new()
-		reroll_btn.text = "REROLL (%d)" % _rerolls_left
+		reroll_btn.text = "%s (%d)" % [tr("REROLL"), _rerolls_left]
 		reroll_btn.add_theme_color_override("font_color", Palette.UI_ACCENT)
 		reroll_btn.pressed.connect(_on_reroll)
 		upgrade_buttons.add_child(reroll_btn)
@@ -352,22 +352,23 @@ func _apply_upgrade(upg_type: String) -> void:
 
 func _on_game_ended(reason: String) -> void:
 	game_over_panel.show()
-	game_over_title.text = "VICTORY!" if reason == "victory" else "GAME OVER"
+	game_over_title.text = tr("VICTORY!") if reason == "victory" else tr("GAME OVER")
 	var mins: int = int(GameManager.run_time) / 60
 	var secs: int = int(GameManager.run_time) % 60
 	var kills := 0
 	if _player and _player.has_method("get_stats") and _player.get_stats().has("kills"):
 		kills = _player.get_stats().kills
 
-	var summary := "KILLS: %d | TIME: %d:%02d" % [kills, mins, secs]
+	var summary := "%s: %d | %s: %d:%02d" % [tr("KILLS"), kills, tr("TIME"), mins, secs]
 	if not ScoreManager.last_result.is_empty():
-		summary += "\nSCORE: %d | BEST: %d" % [
-			ScoreManager.last_result.score, ScoreManager.get_high_score()
+		summary += "\n%s: %d | %s: %d" % [
+			tr("SCORE"), ScoreManager.last_result.score,
+			tr("BEST"), ScoreManager.get_high_score()
 		]
 		if ScoreManager.last_result.get("is_high_score", false):
-			summary += "\nNEW HIGH SCORE!"
+			summary += "\n" + tr("NEW HIGH SCORE!")
 	if _chosen_upgrades.size() > 0:
-		summary += "\nUpgrades: " + ", ".join(_chosen_upgrades)
+		summary += "\n%s: %s" % [tr("Upgrades"), ", ".join(_chosen_upgrades)]
 	game_over_summary.text = summary
 	play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
