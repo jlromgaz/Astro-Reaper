@@ -15,6 +15,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	GameManager.run_time = 0.0
 	if FileAccess.file_exists(TEST_SAVE_PATH):
 		DirAccess.remove_absolute(TEST_SAVE_PATH)
 
@@ -94,6 +95,7 @@ func test_game_started_resets_tally() -> void:
 
 func test_high_score_roundtrip() -> void:
 	manager._on_game_started()
+	GameManager.run_time = 5.0
 	for i in range(10):
 		manager._on_enemy_killed(null, Vector2.ZERO)
 	manager._on_game_ended("death")
@@ -104,15 +106,29 @@ func test_high_score_roundtrip() -> void:
 
 func test_lower_score_does_not_replace_high_score() -> void:
 	manager._on_game_started()
+	GameManager.run_time = 5.0
 	for i in range(10):
 		manager._on_enemy_killed(null, Vector2.ZERO)
 	manager._on_game_ended("death")
 	var high: int = manager.get_high_score()
 	manager._on_game_started()
+	GameManager.run_time = 5.0
 	manager._on_enemy_killed(null, Vector2.ZERO)
 	manager._on_game_ended("death")
 	assert_eq(manager.get_high_score(), high, "A worse run must not replace the high score")
 	assert_false(manager.last_result.get("is_high_score", true))
+
+
+func test_zero_run_time_is_not_persisted() -> void:
+	GameManager.run_time = 0.0
+	manager._on_game_started()
+	manager._on_enemy_killed(null, Vector2.ZERO)
+	manager._on_game_ended("death")
+	assert_false(manager.last_result.is_empty(), "Result is still built for display")
+	assert_false(
+		FileAccess.file_exists(TEST_SAVE_PATH),
+		"A zero-length run (bare test emission) must never touch the save file"
+	)
 
 
 func test_corrupt_save_file_falls_back_to_defaults() -> void:

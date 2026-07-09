@@ -2,6 +2,7 @@ extends CanvasLayer
 ## Main Menu: Entry point. Ship selection and game start.
 
 @onready var title_label: Label = $VBox/TitleLabel
+@onready var best_score_label: Label = $VBox/BestScoreLabel
 @onready var ship_list: VBoxContainer = $VBox/ShipList
 @onready var ship_info_panel: PanelContainer = $VBox/ShipInfoPanel
 @onready var ship_name_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipNameLabel
@@ -20,8 +21,14 @@ func _ready() -> void:
 	_build_ship_buttons()
 	start_button.pressed.connect(_on_start_pressed)
 	ship_info_panel.visible = false
+	_set_best_score(ScoreManager.get_high_score())
 	if _ships.size() > 0:
 		_select_ship(0)
+
+
+func _set_best_score(high: int) -> void:
+	best_score_label.visible = high > 0
+	best_score_label.text = "BEST: %d" % high
 
 
 func _load_ships() -> void:

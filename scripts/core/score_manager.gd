@@ -73,7 +73,12 @@ func _on_game_ended(reason: String) -> void:
 		_kills, GameManager.run_level, victory, _time_to_boss, hp_ratio
 	)
 	last_result = _build_record(score, victory, hp_ratio)
-	_persist()
+	# run_time == 0 means no real run happened (e.g. bare signal emissions
+	# in tests) — show the result but never persist it.
+	if GameManager.run_time > 0.0:
+		_persist()
+	else:
+		last_result["is_high_score"] = false
 	DebugLog.log_info("SCORE", "Run scored %d (best: %d)" % [score, get_high_score()])
 
 
