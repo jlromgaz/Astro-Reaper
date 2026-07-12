@@ -1,14 +1,34 @@
 extends Area2D
-## XP gem. Collected when player is within pickup radius.
+## XP gem. Collected when player is within pickup radius. A magnet pickup
+## can force-attract it from anywhere via attract_to().
+
+const MAGNET_SPEED := 550.0
+const COLLECT_DISTANCE := 15.0
 
 var xp_value: int = 1
+var _magnet_target: Node2D = null
+
+
+func _ready() -> void:
+	add_to_group("xp_pickups")
 
 
 func set_value(v: int) -> void:
 	xp_value = v
 
 
-func _process(_delta: float) -> void:
+func attract_to(player: Node2D) -> void:
+	_magnet_target = player
+
+
+func _process(delta: float) -> void:
+	if _magnet_target and is_instance_valid(_magnet_target):
+		var to_player: Vector2 = _magnet_target.global_position - global_position
+		if to_player.length() <= COLLECT_DISTANCE:
+			_collect(_magnet_target)
+			return
+		global_position += to_player.normalized() * MAGNET_SPEED * delta
+		return
 	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 	if not player:
 		return

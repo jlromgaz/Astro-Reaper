@@ -4,10 +4,14 @@ extends CharacterBody2D
 const SPEED := 120.0
 const HP := 8.0
 const DAMAGE := 8.0
+const EXPLOSION_DAMAGE := 14.0
 const XP_VALUE := 1
+
+const _FLASH_SCRIPT := preload("res://scripts/fx/intercept_flash.gd")
 
 var current_hp: float = HP
 var max_hp: float = HP
+var move_speed: float = SPEED
 var _player: Node2D
 var _damage_timer := 0.0
 var _player_in_contact := false
@@ -16,7 +20,8 @@ var _player_in_contact := false
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
-	DebugLog.log_info("ENEMY", "Kamikaze scaled to %.1f HP" % max_hp)
+	move_speed = SPEED * (1.0 + (p_scale - 1.0) * 0.3)
+	DebugLog.log_info("ENEMY", "Kamikaze scaled to %.1f HP, %.1f spd" % [max_hp, move_speed])
 
 
 func _ready() -> void:
@@ -43,8 +48,17 @@ func _on_body_entered(body: Node) -> void:
 		_player_in_contact = true
 		_player = body
 		if _damage_timer <= 0:
-			_player.take_damage(DAMAGE, self)
+			_player.take_damage(EXPLOSION_DAMAGE, self)
 			_damage_timer = 0.5
+			_explode()
+
+
+func _explode() -> void:
+	var flash: Node2D = _FLASH_SCRIPT.new()
+	flash.scale_mult = 1.6
+	flash.global_position = global_position
+	get_parent().add_child(flash)
+	_die()
 
 func _on_body_exited(body: Node) -> void:
 	if body.is_in_group("player"):
@@ -70,7 +84,7 @@ func _physics_process(delta: float) -> void:
 			_damage_timer = 0.5
 			
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
-	velocity = dir * SPEED
+	velocity = dir * move_speed
 	move_and_slide()
 
 

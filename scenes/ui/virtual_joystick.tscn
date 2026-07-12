@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/virtual_joystick.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/joystick_ring_visual.gd" id="2_ring"]
 
 [node name="VirtualJoystick" type="Control"]
 anchors_preset = 1
@@ -13,16 +14,18 @@ offset_bottom = 200.0
 grow_horizontal = 0
 script = ExtResource("1_script")
 
-[node name="Base" type="ColorRect" parent="."]
+[node name="Base" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.3, 0.3, 0.4, 0.5)
+script = ExtResource("2_ring")
+ring_color = Color(0.2, 0.8, 1, 0.35)
+filled = false
 
-[node name="Knob" type="ColorRect" parent="."]
+[node name="Knob" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -35,4 +38,6 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.6, 0.6, 0.8, 0.9)
+script = ExtResource("2_ring")
+ring_color = Color(0.2, 0.8, 1, 0.85)
+filled = true

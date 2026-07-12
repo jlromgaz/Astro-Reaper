@@ -1,5 +1,6 @@
 extends Node2D
 ## Main game scene. Wires joystick to player, starts game, spawns enemies.
+## Receives selected ship data from GameManager.
 
 @onready var game_world: Node2D = $GameWorld
 @onready var player: CharacterBody2D = $GameWorld/Player
@@ -12,7 +13,7 @@ var _spawner_script: Node
 func _ready() -> void:
 	_setup_input_actions()
 	
-	# Robuster Joystick discovery (fallbacks if moved/renamed)
+	# Robust Joystick discovery (fallbacks if moved/renamed)
 	if not joystick:
 		joystick = find_child("VirtualJoystick*", true, false)
 	
@@ -28,6 +29,11 @@ func _ready() -> void:
 			_spawner_script.set_player(player)
 		if _spawner_script.has_method("set_world"):
 			_spawner_script.set_world(game_world)
+	
+	# Initialize player with selected ship data
+	if GameManager.selected_ship and player.has_method("initialize_ship"):
+		player.initialize_ship(GameManager.selected_ship)
+	
 	GameManager.start_game()
 
 

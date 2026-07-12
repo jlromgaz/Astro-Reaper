@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Astro Reaper"
-run/main_scene="res://scenes/main/main.tscn"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.6")
 
 [autoload]
@@ -20,6 +20,9 @@ EventBus="*res://scripts/core/event_bus.gd"
 GameManager="*res://scripts/core/game_manager.gd"
 DebugLog="*res://scripts/core/debug_log.gd"
 SoundManager="*res://scripts/core/sound_manager.gd"
+FXManager="*res://scripts/core/fx_manager.gd"
+ScoreManager="*res://scripts/core/score_manager.gd"
+Settings="*res://scripts/core/settings.gd"
 
 [debug]
 
@@ -35,6 +38,11 @@ window/stretch/aspect="expand"
 window/handheld/orientation=1
 window/size/test_width=1280
 window/size/test_height=720
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://data/i18n/translations.en.translation", "res://data/i18n/translations.es.translation")
+locale/fallback="en"
 
 [input]
 

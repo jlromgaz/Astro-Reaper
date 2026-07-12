@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/chest.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/world/chest_visual.gd" id="2_visual"]
+
+[sub_resource type="CircleShape2D" id="ChestShape"]
+radius = 12.0
+
+[node name="Chest" type="Area2D" groups=["chests"]]
+collision_layer = 16
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="ChestVisual" type="Node2D" parent="."]
+script = ExtResource("2_visual")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("ChestShape")

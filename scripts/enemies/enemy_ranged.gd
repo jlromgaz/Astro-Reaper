@@ -10,17 +10,19 @@ const BULLET_SPEED := 180.0
 
 var current_hp: float = HP
 var max_hp: float = HP
+var move_speed: float = SPEED
 var _player: Node2D
 var _damage_timer := 0.0
 var _player_in_contact := false
+var _attack_timer: float = 0.0
+var _bullet_scene: PackedScene
 
 
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
-	DebugLog.log_info("ENEMY", "Ranged scaled to %.1f HP" % max_hp)
-var _attack_timer: float = 0.0
-var _bullet_scene: PackedScene
+	move_speed = SPEED * (1.0 + (p_scale - 1.0) * 0.3)
+	DebugLog.log_info("ENEMY", "Ranged scaled to %.1f HP, %.1f spd" % [max_hp, move_speed])
 
 
 func _ready() -> void:
@@ -75,7 +77,7 @@ func _physics_process(delta: float) -> void:
 			_damage_timer = 0.5
 			
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
-	velocity = dir * SPEED
+	velocity = dir * move_speed
 	move_and_slide()
 	_try_shoot(delta)
 

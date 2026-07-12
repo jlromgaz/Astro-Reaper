@@ -1,13 +1,51 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="2_minimap"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-bg_color = Color(0, 0.6, 1, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shield_fill"]
+bg_color = Color(0.3, 0.6, 1, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.95, 0.25, 0.35, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xp_fill"]
+bg_color = Color(0.3, 1, 0.5, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0.05, 0.05, 0.15, 0.85)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.05, 0.05, 0.15, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.8, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -17,6 +55,8 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 200.0
 offset_bottom = 35.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
 max_value = 100.0
 value = 100.0
 show_percentage = false
@@ -27,7 +67,8 @@ offset_left = 20.0
 offset_top = 37.0
 offset_right = 200.0
 offset_bottom = 42.0
-theme_override_styles/fill = SubResource("StyleBoxFlat_1")
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_shield_fill")
 max_value = 20.0
 value = 20.0
 show_percentage = false
@@ -37,6 +78,7 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 200.0
 offset_bottom = 35.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 text = "HP: 100/100"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -47,7 +89,7 @@ offset_left = 210.0
 offset_top = 15.0
 offset_right = 280.0
 offset_bottom = 45.0
-theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_colors/font_color = Color(0.95, 0.25, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "-0"
 
@@ -56,6 +98,8 @@ offset_left = 20.0
 offset_top = 45.0
 offset_right = 200.0
 offset_bottom = 60.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_xp_fill")
 max_value = 10.0
 value = 0.0
 show_percentage = false
@@ -65,18 +109,22 @@ offset_left = 20.0
 offset_top = 45.0
 offset_right = 200.0
 offset_bottom = 60.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 text = "Level 1 | XP: 0/5"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="WeaponListLabel" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 20.0
-offset_top = 65.0
-offset_right = 200.0
-offset_bottom = 80.0
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+offset_top = -30.0
+offset_right = 300.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 10
-text = "Weapons: Blaster"
+text = "Weapons: Blaster Lv.1"
 vertical_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="."]
@@ -87,10 +135,35 @@ offset_left = -120.0
 offset_top = 20.0
 offset_right = -20.0
 offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "0:00"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="ModeLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 50.0
+offset_right = -20.0
+offset_bottom = 72.0
+theme_override_colors/font_color = Color(0.35, 0.9, 1, 0.8)
+theme_override_font_sizes/font_size = 12
+text = ""
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Minimap" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -100.0
+offset_top = 55.0
+offset_right = -20.0
+offset_bottom = 135.0
+script = ExtResource("2_minimap")
 
 [node name="LevelUpPanel" type="PanelContainer" parent="."]
 visible = false
@@ -99,48 +172,107 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
+offset_left = -290.0
 offset_top = -80.0
-offset_right = 150.0
+offset_right = 290.0
 offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="LevelUpPanel"]
 layout_mode = 2
 
 [node name="Title" type="Label" parent="LevelUpPanel/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
 text = "LEVEL UP!"
 horizontal_alignment = 1
 
-[node name="UpgradeButtons" type="HBoxContainer" parent="LevelUpPanel/VBox"]
+[node name="UpgradeButtons" type="HFlowContainer" parent="LevelUpPanel/VBox"]
+custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
+alignment = 1
 
 [node name="GameOverPanel" type="PanelContainer" parent="."]
 visible = false
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 80.0
-offset_top = 60.0
-offset_right = 400.0
-offset_bottom = 210.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -120.0
+offset_right = 220.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="GameOverPanel"]
 layout_mode = 2
 
 [node name="Title" type="Label" parent="GameOverPanel/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
 text = "GAME OVER"
 horizontal_alignment = 1
 
 [node name="Summary" type="Label" parent="GameOverPanel/VBox"]
+custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 text = "Time: 0:00 | Level: 1"
 horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="PlayAgainBtn" type="Button" parent="GameOverPanel/VBox"]
+layout_mode = 2
+text = "PLAY AGAIN"
 
 [node name="RestartBtn" type="Button" parent="GameOverPanel/VBox"]
 layout_mode = 2
-text = "Restart"
+text = "Menu"
+
+[node name="PauseBtn" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -46.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 34.0
+text = "II"
+
+[node name="PausePanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = 80.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="PausePanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeBtn" type="Button" parent="PausePanel/VBox"]
+layout_mode = 2
+text = "Resume"
+
+[node name="QuitBtn" type="Button" parent="PausePanel/VBox"]
+layout_mode = 2
+text = "Quit to Menu"
 
 [node name="DebugPanel" type="HBoxContainer" parent="."]
 visible = false
@@ -162,7 +294,7 @@ offset_left = -150.0
 offset_top = 80.0
 offset_right = 150.0
 offset_bottom = 120.0
-theme_override_colors/font_color = Color(1, 0.9, 0, 1)
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 20
@@ -180,6 +312,7 @@ offset_left = -200.0
 offset_top = -60.0
 offset_right = -20.0
 offset_bottom = -20.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "Stats: ..."
 horizontal_alignment = 2

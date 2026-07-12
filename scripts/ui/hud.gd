@@ -6,12 +6,18 @@ extends CanvasLayer
 @onready var xp_bar: ProgressBar = $XPBar
 @onready var xp_label: Label = $XPLabel
 @onready var timer_label: Label = $TimerLabel
+@onready var mode_label: Label = $ModeLabel
 @onready var level_up_panel: PanelContainer = $LevelUpPanel
-@onready var upgrade_buttons: HBoxContainer = $LevelUpPanel/VBox/UpgradeButtons
+@onready var upgrade_buttons: Container = $LevelUpPanel/VBox/UpgradeButtons
 @onready var game_over_panel: PanelContainer = $GameOverPanel
 @onready var game_over_title: Label = $GameOverPanel/VBox/Title
 @onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
 @onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
+@onready var play_again_btn: Button = $GameOverPanel/VBox/PlayAgainBtn
+@onready var pause_btn: Button = $PauseBtn
+@onready var pause_panel: PanelContainer = $PausePanel
+@onready var resume_btn: Button = $PausePanel/VBox/ResumeBtn
+@onready var pause_quit_btn: Button = $PausePanel/VBox/QuitBtn
 @onready var debug_panel: HBoxContainer = $DebugPanel
 @onready var share_log_btn: Button = $DebugPanel/ShareLogBtn
 @onready var damage_popup: Label = $DamagePopup
@@ -23,6 +29,15 @@ var _xp_current := 0
 var _xp_to_level := 5
 var _level := 1
 var _extra_time_notified := false
+const REROLLS_PER_RUN := 2
+
+var _chosen_upgrades: Array[String] = []
+var _upgrade_pool: Array[UpgradeData] = []
+var _pending_multiplier: int = 1
+var _rerolls_left: int = REROLLS_PER_RUN
+var _last_option_count: int = 3
+var _summary_base: String = ""
+var _score_tween: Tween
 
 
 func _ready() -> void:
@@ -31,6 +46,11 @@ func _ready() -> void:
 	game_over_panel.visible = false
 	debug_panel.visible = OS.is_debug_build()
 	restart_btn.pressed.connect(_on_restart)
+	play_again_btn.pressed.connect(_on_play_again)
+	pause_panel.visible = false
+	pause_btn.pressed.connect(_on_pause_toggle)
+	resume_btn.pressed.connect(_on_pause_toggle)
+	pause_quit_btn.pressed.connect(_on_restart)
 	if debug_panel.visible:
 		share_log_btn.pressed.connect(_on_share_log)
 	EventBus.player_spawned.connect(_on_player_spawned)
@@ -40,9 +60,32 @@ func _ready() -> void:
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
 	EventBus.player_hp_changed.connect(_on_hp_changed)
 	EventBus.game_ended.connect(_on_game_ended)
+	EventBus.comet_bonus.connect(_on_comet_bonus)
+	EventBus.chest_opened.connect(_on_chest_opened)
+	EventBus.game_started.connect(_on_game_started)
 	
+	_upgrade_pool = _load_upgrade_pool()
 	# Fallback if player spawned before HUD was ready
 	call_deferred("_find_existing_player")
+
+func _load_upgrade_pool() -> Array[UpgradeData]:
+	var pool: Array[UpgradeData] = []
+	var dir := DirAccess.open("res://data/upgrades/")
+	if not dir:
+		DebugLog.log_warn("HUD", "_load_upgrade_pool: data/upgrades/ not found")
+		return pool
+	dir.list_dir_begin()
+	var fname := dir.get_next()
+	while fname != "":
+		if fname.ends_with(".tres"):
+			var res := load("res://data/upgrades/" + fname) as UpgradeData
+			if res:
+				pool.append(res)
+			else:
+				DebugLog.log_warn("HUD", "Could not load upgrade resource: %s" % fname)
+		fname = dir.get_next()
+	return pool
+
 
 func _find_existing_player() -> void:
 	var p = get_tree().get_first_node_in_group("player")
@@ -80,7 +123,7 @@ func _update_weapon_list() -> void:
 	if not _player: return
 	if not _player.has_method("get_weapons_short_list"):
 		return
-	weapon_list_label.text = "Weapons: " + _player.get_weapons_short_list()
+	weapon_list_label.text = "%s: %s" % [tr("Weapons"), _player.get_weapons_short_list()]
 
 
 func _update_timer_display() -> void:
@@ -175,7 +218,7 @@ func _on_xp_collected(amount: int) -> void:
 func _update_xp_bar() -> void:
 	xp_bar.max_value = _xp_to_level
 	xp_bar.value = _xp_current
-	xp_label.text = "Level %d | XP: %d/%d" % [_level, _xp_current, _xp_to_level]
+	xp_label.text = "%s %d | XP: %d/%d" % [tr("Level"), _level, _xp_current, _xp_to_level]
 
 
 func _on_level_up(new_level: int) -> void:
@@ -187,111 +230,229 @@ func _on_level_up(new_level: int) -> void:
 	_show_upgrade_selection()
 
 
-func _show_upgrade_selection() -> void:
-	# GameManager handles get_tree().paused = true via _on_player_leveled_up
-	# Clear previous buttons
+func _on_game_started() -> void:
+	_rerolls_left = REROLLS_PER_RUN
+	mode_label.text = tr(_mode_display_key())
+
+
+func _mode_display_key() -> String:
+	if GameManager.game_mode == GameManager.GameMode.ARCADE:
+		return "ARCADE — ENDLESS"
+	return "CLASSIC — %s" % GameManager.difficulty_name().to_upper()
+
+
+func _on_chest_opened() -> void:
+	# Only show if the bonus pause actually engaged (GameManager runs first)
+	if GameManager.current_state != GameManager.State.PAUSED_LEVEL_UP:
+		return
+	_show_upgrade_selection(_upgrade_pool.size(), 3)
+
+
+func _on_comet_bonus() -> void:
+	if GameManager.current_state != GameManager.State.PAUSED_LEVEL_UP:
+		return
+	_show_upgrade_selection()
+
+
+func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void:
+	_pending_multiplier = multiplier
 	for child in upgrade_buttons.get_children():
+		# remove_child now so get_child(0) below is a FRESH button —
+		# queue_free alone is deferred and breaks focus on repeat level-ups
+		upgrade_buttons.remove_child(child)
 		child.queue_free()
-	
+
 	level_up_panel.show()
-	
-	# Define possible upgrades
-	var all_options = [
-		{"name": "+Blaster Weapon", "type": "weapon_blaster", "is_weapon": true},
-		{"name": "+Laser Weapon", "type": "weapon_laser", "is_weapon": true},
-		{"name": "+Missiles Weapon", "type": "weapon_missiles", "is_weapon": true},
-		{"name": "+Shield System", "type": "shield", "is_weapon": true},
-		{"name": "+10% Damage", "type": "stat_damage", "is_weapon": false},
-		{"name": "+10% Fire Rate", "type": "stat_fire_rate", "is_weapon": false},
-		{"name": "+20 Max HP", "type": "stat_max_hp", "is_weapon": false},
-		{"name": "Heal +20 HP", "type": "heal", "is_weapon": false},
-		{"name": "+15% Move Speed", "type": "speed", "is_weapon": false},
-		{"name": "+10% Difficulty Spike", "type": "difficulty", "is_weapon": false}
-	]
-	
-	# Filter out owned weapons
-	var filtered_options = []
-	for opt in all_options:
-		if opt.is_weapon:
-			if not _player or not _player.has_weapon(opt.type):
-				filtered_options.append(opt)
-		else:
-			filtered_options.append(opt)
-	
-	# Pick 3 random
-	filtered_options.shuffle()
-	var selected = filtered_options.slice(0, 3)
-	
-	for opt in selected:
-		var btn = Button.new()
-		btn.text = opt.name
+
+	var pool := _upgrade_pool.duplicate()
+	pool.shuffle()
+	var selected: Array = pool.slice(0, option_count)
+
+	for opt: UpgradeData in selected:
+		var btn := Button.new()
+		var label: String = opt.display_name
+		if opt.is_weapon and opt.type != "shield" and _player \
+				and _player.has_method("has_weapon") and _player.has_weapon(opt.type):
+			var current_level: int = _player.get_weapon_level(opt.type)
+			var short_name: String = opt.type.replace("weapon_", "").capitalize()
+			label = "%s → Lv.%d" % [short_name, current_level + 1]
+		btn.text = label
+		btn.add_theme_color_override("font_color", _upgrade_color(opt))
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
 		upgrade_buttons.add_child(btn)
 
-func _on_upgrade_selected(upgrade: Dictionary) -> void:
-	DebugLog.log_info("UPGRADE", "Selected: %s" % upgrade.name)
+	_last_option_count = option_count
+	# Rerolling a full-catalog (chest) offer is pointless — only offer it
+	# when some options are hidden.
+	if _rerolls_left > 0 and option_count < _upgrade_pool.size():
+		var reroll_btn := Button.new()
+		reroll_btn.text = "%s (%d)" % [tr("REROLL"), _rerolls_left]
+		reroll_btn.add_theme_color_override("font_color", Palette.UI_ACCENT)
+		reroll_btn.pressed.connect(_on_reroll)
+		upgrade_buttons.add_child(reroll_btn)
+
+	# Keyboard: focus the first option so arrows + Enter work out of the box
+	if upgrade_buttons.get_child_count() > 0:
+		upgrade_buttons.get_child(0).call_deferred("grab_focus")
+
+
+func _on_reroll() -> void:
+	if _rerolls_left <= 0:
+		return
+	_rerolls_left -= 1
+	_show_upgrade_selection(_last_option_count, _pending_multiplier)
+
+func _upgrade_color(opt: UpgradeData) -> Color:
+	if opt.type in ["heal", "stat_max_hp"]:
+		return Palette.HEALTH
+	if opt.is_weapon:
+		return Palette.UPGRADE_WEAPON
+	return Palette.UPGRADE_STAT
+
+
+func _on_upgrade_selected(upgrade) -> void:
+	if not upgrade or (upgrade is Dictionary and upgrade.is_empty()):
+		return
+
+	var disp_name: String
+	var upg_type: String
+	if upgrade is UpgradeData:
+		disp_name = upgrade.display_name
+		upg_type = upgrade.type
+	else:
+		disp_name = upgrade.get("name", "")
+		upg_type = upgrade.get("type", "")
+
+	DebugLog.log_info("UPGRADE", "Selected: %s" % disp_name)
+	_chosen_upgrades.append(disp_name)
+	EventBus.difficulty_bump.emit()
 	get_tree().paused = false
-	
-	match upgrade.type:
-		"weapon_blaster": 
-			_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
-		"weapon_laser": 
-			_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
-		"weapon_missiles": 
-			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
-		"shield":
-			_player.add_shield()
-		"stat_damage": 
-			_player.damage_mult *= 1.1
-		"stat_fire_rate": 
-			_player.fire_rate_mult *= 1.1
-		"stat_max_hp": 
-			_player.max_hp += 20
-			_player.current_hp += 20
-			_update_hp()
-		"heal": 
-			_player.heal(20)
-		"speed": 
-			_player.add_speed(20)
-		"difficulty": 
-			var spawner = get_tree().get_first_node_in_group("spawner")
-			if spawner:
-				spawner.global_difficulty_mult += 0.1
-	
+
+	if _player:
+		for i in range(_pending_multiplier):
+			_apply_upgrade(upg_type)
+	_pending_multiplier = 1
+
 	level_up_panel.hide()
 	EventBus.upgrade_selected.emit(null)
 
 
+func _apply_upgrade(upg_type: String) -> void:
+	match upg_type:
+		"weapon_blaster":
+			_player.add_weapon(load("res://scripts/weapons/weapon_blaster.gd"))
+		"weapon_laser":
+			_player.add_weapon(load("res://scripts/weapons/weapon_laser.gd"))
+		"weapon_missiles":
+			_player.add_weapon(load("res://scripts/weapons/weapon_missiles.gd"))
+		"weapon_anti_missile":
+			_player.add_weapon(load("res://scripts/weapons/weapon_anti_missile.gd"))
+		"weapon_orbitals":
+			_player.add_weapon(load("res://scripts/weapons/weapon_orbitals.gd"))
+		"weapon_mines":
+			_player.add_weapon(load("res://scripts/weapons/weapon_mines.gd"))
+		"weapon_aura":
+			_player.add_weapon(load("res://scripts/weapons/weapon_aura.gd"))
+		"shield":
+			_player.add_shield()
+		"projectile":
+			_player.add_projectile_to_all()
+		"stat_damage":
+			_player.damage_mult *= 1.1
+		"stat_fire_rate":
+			_player.fire_rate_mult *= 1.1
+		"stat_max_hp":
+			_player.max_hp += 20
+			_player.current_hp += 20
+			_update_hp()
+		"heal":
+			_player.heal(20)
+		"speed":
+			_player.add_speed(20)
+		"stat_size":
+			_player.projectile_size_mult *= 1.1
+			_player.damage_mult *= 1.05
+
+
 func _on_game_ended(reason: String) -> void:
 	game_over_panel.show()
-	game_over_title.text = "VICTORY" if reason == "victory" else "GAME OVER"
+	game_over_title.text = tr("VICTORY!") if reason == "victory" else tr("GAME OVER")
 	var mins: int = int(GameManager.run_time) / 60
 	var secs: int = int(GameManager.run_time) % 60
-	var kills = 0
+	var kills := 0
 	if _player and _player.has_method("get_stats") and _player.get_stats().has("kills"):
 		kills = _player.get_stats().kills
-	
-	game_over_summary.text = "KILLS: %d | TIME: %d:%02d" % [kills, mins, secs]
+
+	var summary := "%s: %d | %s: %d:%02d" % [tr("KILLS"), kills, tr("TIME"), mins, secs]
+	if not ScoreManager.last_result.is_empty():
+		for line in ScoreManager.get_breakdown(ScoreManager.last_result):
+			summary += "\n%s  +%d" % [line.label, line.points]
+		if ScoreManager.last_result.get("is_high_score", false):
+			summary += "\n" + tr("NEW HIGH SCORE!")
+	if _chosen_upgrades.size() > 0:
+		summary += "\n%s: %s" % [tr("Upgrades"), ", ".join(_chosen_upgrades)]
+	_summary_base = summary
+	if ScoreManager.last_result.is_empty():
+		game_over_summary.text = _summary_base
+	else:
+		_animate_score(ScoreManager.last_result.score, ScoreManager.get_high_score())
+	play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
 
 
+func _animate_score(final_score: int, best: int) -> void:
+	_set_displayed_score(0, best)
+	if _score_tween:
+		_score_tween.kill()
+	_score_tween = create_tween()
+	_score_tween.tween_method(
+		func(v: float) -> void: _set_displayed_score(int(v), best),
+		0.0, float(final_score), 1.2
+	).set_ease(Tween.EASE_OUT)
+
+
+func _set_displayed_score(value: int, best: int) -> void:
+	game_over_summary.text = _summary_base + "\n%s: %d | %s: %d" % [
+		tr("SCORE"), value, tr("BEST"), best
+	]
+
+
 func _show_game_over(reason: String = "death") -> void:
-	# This function is now largely redundant as _on_game_ended handles the display.
-	# Keeping it for now, but its content is moved to _on_game_ended.
-	pass
+	_on_game_ended(reason)
 
 
 func _on_restart() -> void:
-	get_tree().reload_current_scene()
+	GameManager.go_to_menu()
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+
+func _on_play_again() -> void:
+	# Keeps GameManager.selected_ship; main.tscn's ready calls start_game()
+	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
+
+
+func _on_pause_toggle() -> void:
+	GameManager.toggle_pause()
+	pause_panel.visible = GameManager.current_state == GameManager.State.PAUSED
+	if pause_panel.visible:
+		resume_btn.grab_focus()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	var state: GameManager.State = GameManager.current_state
+	if state == GameManager.State.PLAYING or state == GameManager.State.PAUSED:
+		_on_pause_toggle()
 
 
 func _update_stats() -> void:
 	if not _player or not _player.has_method("get_stats"):
 		return
 	var stats = _player.get_stats()
-	stats_label.text = "DMG: x%.1f | SPD: x%.1f\nWeps: %d (L:%d M:%d)" % [
-		stats.damage, stats.fire_rate, stats.weapon_count, 
-		stats.laser_count, stats.missile_count
+	stats_label.text = "DMG: x%.1f | FR: x%.1f | Proj: %d | %s: %d" % [
+		stats.damage, stats.fire_rate, stats.total_projectiles,
+		tr("KILLS").capitalize(), stats.get("kills", 0)
 	]
 
 

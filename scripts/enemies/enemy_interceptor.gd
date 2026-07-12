@@ -1,13 +1,14 @@
 extends CharacterBody2D
 ## Interceptor - extremely fast elite enemy spawning in Final Wave.
 
-const SPEED := 180.0 # 3x faster than drone
+const SPEED := 140.0 # Reduced from 180
 const HP := 12.0 # Fragile
 const DAMAGE := 5.0 # Repeat damage every 0.5s makes it deadly
 const XP_VALUE := 2
 
 var current_hp: float = HP
 var max_hp: float = HP
+var move_speed: float = SPEED
 var _player: Node2D
 var _damage_timer := 0.0
 var _player_in_contact := false
@@ -15,6 +16,7 @@ var _player_in_contact := false
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
+	move_speed = SPEED * (1.0 + (p_scale - 1.0) * 0.3)
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -63,7 +65,7 @@ func _physics_process(delta: float) -> void:
 			_damage_timer = 0.5
 			
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
-	velocity = dir * SPEED
+	velocity = dir * move_speed
 	move_and_slide()
 
 func take_damage(amount: float) -> void:

@@ -1,0 +1,127 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_script"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_title"]
+font_size = 32
+font_color = Color(0.2, 0.8, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.05, 0.05, 0.15, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.8, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+
+[node name="MainMenu" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.03, 0.08, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -250.0
+offset_right = 200.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+horizontal_alignment = 1
+text = "ASTRO REAPER"
+label_settings = SubResource("LabelSettings_title")
+
+[node name="BestScoreLabel" type="Label" parent="VBox"]
+visible = false
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+text = "BEST: 0"
+
+[node name="LangRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="EnBtn" type="Button" parent="VBox/LangRow"]
+layout_mode = 2
+text = "EN"
+
+[node name="EsBtn" type="Button" parent="VBox/LangRow"]
+layout_mode = 2
+text = "ES"
+
+[node name="ModeList" type="VBoxContainer" parent="VBox"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="ModeHint" type="Label" parent="VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+text = "ENTER to launch | ESC to change ship"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="VBox"]
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+horizontal_alignment = 1
+text = "Select Your Ship"
+
+[node name="ShipList" type="VBoxContainer" parent="VBox"]
+theme_override_constants/separation = 6
+
+[node name="ShipInfoPanel" type="PanelContainer" parent="VBox"]
+custom_minimum_size = Vector2(0, 100)
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBox/ShipInfoPanel"]
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 393.0
+offset_bottom = 100.0
+theme_override_constants/separation = 4
+
+[node name="ShipNameLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
+horizontal_alignment = 1
+text = "Ship Name"
+
+[node name="ShipStatsLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+horizontal_alignment = 1
+text = "HP: 0 | SPD: 0 | DMG: x0 | FR: x0"
+
+[node name="ShipPassiveLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+horizontal_alignment = 1
+text = "Passive: None"
+
+[node name="ShipDescLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+text = "Description"
+
+[node name="StartButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(200, 50)
+text = "LAUNCH"

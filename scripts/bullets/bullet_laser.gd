@@ -10,6 +10,8 @@ var _frames_alive: int = 0
 func setup(dmg: float, owner_ship: Node2D) -> void:
 	damage = dmg
 	_owner_ship = owner_ship
+	if _owner_ship and "projectile_size_mult" in _owner_ship:
+		scale *= _owner_ship.projectile_size_mult
 
 
 func _physics_process(_delta: float) -> void:
@@ -19,4 +21,8 @@ func _physics_process(_delta: float) -> void:
 		for body in get_overlapping_bodies():
 			if body.is_in_group("enemies") and body.has_method("take_damage"):
 				body.take_damage(damage)
+		# Area2D targets too (comets are areas, not bodies)
+		for area in get_overlapping_areas():
+			if area.is_in_group("enemies") and area.has_method("take_damage"):
+				area.take_damage(damage)
 		queue_free()

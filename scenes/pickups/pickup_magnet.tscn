@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/pickup_magnet.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/pickups/pickup_magnet_visual.gd" id="2_visual"]
+
+[sub_resource type="CircleShape2D" id="MagnetShape"]
+radius = 12.0
+
+[node name="PickupMagnet" type="Area2D" groups=["magnets"]]
+collision_layer = 16
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="MagnetVisual" type="Node2D" parent="."]
+script = ExtResource("2_visual")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("MagnetShape")
