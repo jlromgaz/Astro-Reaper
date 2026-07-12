@@ -9,7 +9,7 @@
 .import/
 
 # Export presets / templates
-export_presets.cfg
+# export_presets.cfg is tracked: no signing keys or sensitive data in this project
 *.export
 
 # Builds

@@ -7,25 +7,22 @@ var _gen_stream: AudioStreamGeneratorPlayback
 var _music_gen: AudioStreamGeneratorPlayback
 var _music_phase := 0.0
 var _hit_cooldown: float = 0.0  # rate-limit enemy_hit to prevent audio stacking
+var _audio_unlocked := false  # web browsers block audio until first user gesture
 
 
 func _ready() -> void:
 	_shoot_player = AudioStreamPlayer.new()
-	var s_gen = AudioStreamGenerator.new()
+	var s_gen := AudioStreamGenerator.new()
 	s_gen.mix_rate = 44100
 	_shoot_player.stream = s_gen
 	add_child(_shoot_player)
-	_shoot_player.play()
-	_gen_stream = _shoot_player.get_stream_playback()
-	
+
 	_music_player = AudioStreamPlayer.new()
-	var m_gen = AudioStreamGenerator.new()
+	var m_gen := AudioStreamGenerator.new()
 	m_gen.mix_rate = 44100
 	_music_player.stream = m_gen
-	_music_player.volume_db = -20.0 # Very soft
+	_music_player.volume_db = -20.0
 	add_child(_music_player)
-	_music_player.play()
-	_music_gen = _music_player.get_stream_playback()
 
 	EventBus.enemy_damaged.connect(func(_e, _a): play_enemy_hit())
 	EventBus.enemy_killed.connect(func(_e, _p): play_enemy_death())
@@ -36,7 +33,26 @@ func _ready() -> void:
 	EventBus.player_leveled_up.connect(func(_l): play_level_up_sound())
 
 
+func _input(event: InputEvent) -> void:
+	if _audio_unlocked:
+		return
+	if event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventKey:
+		_unlock_audio()
+
+
+func _unlock_audio() -> void:
+	if _audio_unlocked:
+		return
+	_audio_unlocked = true
+	_shoot_player.play()
+	_gen_stream = _shoot_player.get_stream_playback()
+	_music_player.play()
+	_music_gen = _music_player.get_stream_playback()
+
+
 func _process(delta: float) -> void:
+	if not _audio_unlocked:
+		return
 	_update_music()
 	if _hit_cooldown > 0.0:
 		_hit_cooldown -= delta

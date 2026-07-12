@@ -30,6 +30,21 @@ func test_play_xp_ping_exists() -> void:
 	assert_true(SoundManager.has_method("play_xp_ping"))
 
 
+## --- Web autoplay gate ---
+
+func test_audio_unlocked_flag_starts_false() -> void:
+	SoundManager._audio_unlocked = false
+	assert_false(SoundManager._audio_unlocked,
+		"audio must be locked until user gesture (web autoplay policy)")
+
+
+func test_unlock_audio_sets_flag() -> void:
+	SoundManager._audio_unlocked = false
+	SoundManager._unlock_audio()
+	assert_true(SoundManager._audio_unlocked, "_unlock_audio must set the flag")
+	SoundManager._audio_unlocked = false  # reset autoload state for other tests
+
+
 ## --- EventBus smoke tests (must not crash) ---
 
 func test_enemy_damaged_signal_triggers_hit_sound() -> void:

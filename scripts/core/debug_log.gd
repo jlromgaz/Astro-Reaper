@@ -10,6 +10,8 @@ var _log_lines: Array[String] = []
 
 
 func _ready() -> void:
+	if not OS.is_debug_build():
+		return
 	_log("SYSTEM", "DebugLog initialized")
 	_write_to_file("[SESSION START] %s" % Time.get_datetime_string_from_system())
 
