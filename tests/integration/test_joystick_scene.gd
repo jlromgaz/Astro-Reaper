@@ -26,6 +26,35 @@ func test_joystick_visuals_use_palette_accent() -> void:
 	assert_eq(knob.ring_color, Color(Palette.UI_ACCENT, 0.85), "Knob must be bright accent")
 
 
+func test_joystick_base_and_knob_hidden_at_start() -> void:
+	var js: Control = add_child_autofree(load("res://scenes/ui/virtual_joystick.tscn").instantiate())
+	await get_tree().process_frame
+	var base: Control = js.get_node("Base")
+	var knob: Control = js.get_node("Knob")
+	assert_false(base.visible, "Base must be hidden at rest")
+	assert_false(knob.visible, "Knob must be hidden at rest")
+
+
+func test_show_at_reveals_base_centered_at_touch() -> void:
+	var js: Control = add_child_autofree(load("res://scenes/ui/virtual_joystick.tscn").instantiate())
+	await get_tree().process_frame
+	js._show_at(Vector2(300.0, 400.0))
+	var base: Control = js.get_node("Base")
+	assert_true(base.visible, "Base must be visible after show_at")
+	var base_center := base.position + base.size / 2.0
+	assert_almost_eq(base_center.x, 300.0, 1.0, "Base centered at touch X")
+	assert_almost_eq(base_center.y, 400.0, 1.0, "Base centered at touch Y")
+
+
+func test_hide_conceals_both_rings() -> void:
+	var js: Control = add_child_autofree(load("res://scenes/ui/virtual_joystick.tscn").instantiate())
+	await get_tree().process_frame
+	js._show_at(Vector2(300.0, 400.0))
+	js._hide()
+	assert_false(js.get_node("Base").visible, "Base hidden after _hide")
+	assert_false(js.get_node("Knob").visible, "Knob hidden after _hide")
+
+
 func test_direction_drag_up_emits_negative_y() -> void:
 	var js: Control = add_child_autofree(load("res://scenes/ui/virtual_joystick.tscn").instantiate())
 	await get_tree().process_frame
