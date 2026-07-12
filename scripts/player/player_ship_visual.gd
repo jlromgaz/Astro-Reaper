@@ -82,7 +82,6 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	_draw_engine_flame()
-	_draw_glow()
 	_draw_body()
 	_draw_shield()
 
@@ -94,11 +93,6 @@ func _draw_engine_flame() -> void:
 		Vector2(-8, 4), Vector2(-8 - flame_len, 0), Vector2(-8, -4),
 	]
 	draw_colored_polygon(flame, Color(Palette.PLAYER_GLOW, 0.6 * flicker))
-
-
-func _draw_glow() -> void:
-	draw_circle(Vector2.ZERO, 18.0, Color(_body_color, 0.10))
-	draw_circle(Vector2.ZERO, 13.0, Color(_body_color, 0.12))
 
 
 func _draw_body() -> void:

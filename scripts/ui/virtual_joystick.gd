@@ -15,6 +15,8 @@ var _dragging := false
 
 func _ready() -> void:
 	_base_center = size / 2
+	if not DisplayServer.is_touchscreen_available():
+		visible = false
 
 
 func _input(event: InputEvent) -> void:
