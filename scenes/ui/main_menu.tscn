@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/ship_preview.gd" id="2_ship_preview"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
 font_size = 44
@@ -103,32 +104,41 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(0, 130)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="InfoVBox" type="VBoxContainer" parent="VBox/ShipInfoPanel"]
+[node name="InfoHBox" type="HBoxContainer" parent="VBox/ShipInfoPanel"]
 offset_left = 9.0
 offset_top = 9.0
 offset_right = 681.0
 offset_bottom = 130.0
+theme_override_constants/separation = 10
+
+[node name="ShipPreview" type="Control" parent="VBox/ShipInfoPanel/InfoHBox"]
+script = ExtResource("2_ship_preview")
+custom_minimum_size = Vector2(100, 100)
+size_flags_vertical = 4
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBox/ShipInfoPanel/InfoHBox"]
+size_flags_horizontal = 3
 theme_override_constants/separation = 5
 
-[node name="ShipNameLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+[node name="ShipNameLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 text = "Ship Name"
 
-[node name="ShipStatsLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+[node name="ShipStatsLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 text = "HP: 0 | SPD: 0 | DMG: x0 | FR: x0"
 
-[node name="ShipPassiveLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+[node name="ShipPassiveLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 text = "Passive: None"
 
-[node name="ShipDescLabel" type="Label" parent="VBox/ShipInfoPanel/InfoVBox"]
+[node name="ShipDescLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 15
 horizontal_alignment = 1

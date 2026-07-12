@@ -28,3 +28,19 @@ VICTORY,VICTORY,VICTORIA
 SPEED,SPEED,VELOCIDAD
 HULL,HULL,CASCO
 SURVIVAL,SURVIVAL,SUPERVIVENCIA
+SHIP_STELLAR_NAME,Stellar,Estelar
+SHIP_STELLAR_DESC,Balanced all-rounder. Good at everything, master of none.,Todo terreno equilibrado. Bueno en todo, maestro en nada.
+SHIP_STELLAR_PASSIVE_NAME,Adaptive Core,Núcleo Adaptativo
+SHIP_STELLAR_PASSIVE_DESC,Balanced stats, no weaknesses,Estadísticas equilibradas, sin debilidades
+SHIP_VANGUARD_NAME,Vanguard,Vanguardia
+SHIP_VANGUARD_DESC,Heavy assault cruiser. High HP and armor, slower but tough.,Crucero de asalto pesado. Alta vida y blindaje, más lento pero resistente.
+SHIP_VANGUARD_PASSIVE_NAME,Fortified Hull,Casco Reforzado
+SHIP_VANGUARD_PASSIVE_DESC,+50% HP, reduced speed,+50% de vida, velocidad reducida
+SHIP_INTERCEPTOR_NAME,Interceptor,Interceptor
+SHIP_INTERCEPTOR_DESC,Agile fighter. Fast and deadly, but fragile.,Cazador ágil. Rápido y letal, pero frágil.
+SHIP_INTERCEPTOR_PASSIVE_NAME,Afterburner,Postquemador
+SHIP_INTERCEPTOR_PASSIVE_DESC,+40% speed, +20% fire rate, less HP,+40% velocidad, +20% cadencia, menos vida
+SHIP_PHANTOM_NAME,Phantom,Fantasma
+SHIP_PHANTOM_DESC,Precision striker. High damage, low fire rate. Every shot counts.,Atacante de precisión. Daño alto, cadencia baja. Cada disparo cuenta.
+SHIP_PHANTOM_PASSIVE_NAME,Critical Focus,Enfoque Crítico
+SHIP_PHANTOM_PASSIVE_DESC,+50% damage, slower fire rate,+50% de daño, cadencia más lenta

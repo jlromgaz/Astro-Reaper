@@ -17,13 +17,16 @@ const MODE_OPTIONS := [
 @onready var subtitle_label: Label = $VBox/SubtitleLabel
 @onready var ship_list: VBoxContainer = $VBox/ShipList
 @onready var ship_info_panel: PanelContainer = $VBox/ShipInfoPanel
-@onready var ship_name_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipNameLabel
-@onready var ship_stats_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipStatsLabel
-@onready var ship_passive_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipPassiveLabel
-@onready var ship_desc_label: Label = $VBox/ShipInfoPanel/InfoVBox/ShipDescLabel
+@onready var ship_name_label: Label = $VBox/ShipInfoPanel/InfoHBox/InfoVBox/ShipNameLabel
+@onready var ship_stats_label: Label = $VBox/ShipInfoPanel/InfoHBox/InfoVBox/ShipStatsLabel
+@onready var ship_passive_label: Label = $VBox/ShipInfoPanel/InfoHBox/InfoVBox/ShipPassiveLabel
+@onready var ship_desc_label: Label = $VBox/ShipInfoPanel/InfoHBox/InfoVBox/ShipDescLabel
+@onready var ship_preview: Control = $VBox/ShipInfoPanel/InfoHBox/ShipPreview
 @onready var start_button: Button = $VBox/StartButton
+@onready var _vbox: VBoxContainer = $VBox
 
 var _ships: Array[ShipResource] = []
+var _back_button: Button
 var _selected_index: int = 0
 var _page: int = 0
 var _mode_index: int = 1  # CLASSIC — MEDIUM by default
@@ -38,6 +41,7 @@ func _ready() -> void:
 	start_button.focus_mode = Control.FOCUS_NONE
 	start_button.pressed.connect(func() -> void: _goto_page(1))
 	_setup_language_row()
+	_build_back_button()
 	ship_info_panel.visible = false
 	_set_best_score(ScoreManager.get_high_score())
 	if _ships.size() > 0:
@@ -54,8 +58,22 @@ func _goto_page(page: int) -> void:
 	start_button.visible = on_ships
 	mode_list.visible = not on_ships
 	mode_hint.visible = not on_ships
+	if _back_button:
+		_back_button.visible = not on_ships
 	if not on_ships:
 		_select_mode_option(_mode_index)
+
+
+func _build_back_button() -> void:
+	_back_button = Button.new()
+	_back_button.text = "← SHIPS"
+	_back_button.custom_minimum_size = Vector2(180, 52)
+	_back_button.add_theme_font_size_override("font_size", 20)
+	_back_button.focus_mode = Control.FOCUS_NONE
+	_back_button.visible = false
+	_back_button.pressed.connect(func() -> void: _goto_page(0))
+	_vbox.add_child(_back_button)
+	_vbox.move_child(_back_button, mode_list.get_index())
 
 
 func _build_mode_buttons() -> void:
@@ -136,7 +154,7 @@ func _build_ship_buttons() -> void:
 
 	for i in range(_ships.size()):
 		var btn := Button.new()
-		btn.text = _ships[i].ship_name
+		btn.text = tr("SHIP_%s_NAME" % _ships[i].ship_id.to_upper())
 		btn.custom_minimum_size = Vector2(340, 64)
 		btn.add_theme_font_size_override("font_size", 21)
 		btn.focus_mode = Control.FOCUS_NONE
@@ -147,13 +165,15 @@ func _build_ship_buttons() -> void:
 func _select_ship(index: int) -> void:
 	_selected_index = index
 	var ship := _ships[index]
+	var key := "SHIP_%s" % ship.ship_id.to_upper()
 	ship_info_panel.visible = true
-	ship_name_label.text = ship.ship_name
+	ship_name_label.text = tr("%s_NAME" % key)
 	ship_stats_label.text = "HP: %.0f | SPD: %.0f | DMG: x%.1f | FR: x%.1f" % [
 		ship.base_hp, ship.base_speed, ship.base_damage_mult, ship.base_fire_rate_mult
 	]
-	ship_passive_label.text = "%s: %s" % [ship.passive_name, ship.passive_description]
-	ship_desc_label.text = ship.description
+	ship_passive_label.text = "%s: %s" % [tr("%s_PASSIVE_NAME" % key), tr("%s_PASSIVE_DESC" % key)]
+	ship_desc_label.text = tr("%s_DESC" % key)
+	ship_preview.set_ship(ship.ship_id)
 
 	# Highlight selected button
 	for i in range(ship_list.get_child_count()):
