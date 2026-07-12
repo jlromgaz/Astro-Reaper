@@ -4,10 +4,10 @@ extends Control
 
 signal input_changed(direction: Vector2)
 
-const DEADZONE    := 0.15
-const KNOB_RANGE  := 70.0
-const BASE_RADIUS := 70.0
-const KNOB_RADIUS := 25.0
+const DEADZONE    := 0.06   # near-instant direction response
+const KNOB_RANGE  := 30.0   # 30 px travel = full speed (was 70)
+const BASE_RADIUS := 50.0   # visual ring radius
+const KNOB_RADIUS := 18.0   # knob radius
 
 @onready var _base: Control = $Base
 @onready var _knob: Control = $Knob

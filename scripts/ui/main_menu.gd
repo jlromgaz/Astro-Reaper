@@ -64,8 +64,8 @@ func _build_mode_buttons() -> void:
 	for i in range(MODE_OPTIONS.size()):
 		var btn := Button.new()
 		btn.text = MODE_OPTIONS[i].label
-		btn.custom_minimum_size = Vector2(260, 54)
-		btn.add_theme_font_size_override("font_size", 18)
+		btn.custom_minimum_size = Vector2(340, 66)
+		btn.add_theme_font_size_override("font_size", 21)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.pressed.connect(_on_mode_clicked.bind(i))
 		mode_list.add_child(btn)
@@ -137,8 +137,8 @@ func _build_ship_buttons() -> void:
 	for i in range(_ships.size()):
 		var btn := Button.new()
 		btn.text = _ships[i].ship_name
-		btn.custom_minimum_size = Vector2(260, 52)
-		btn.add_theme_font_size_override("font_size", 18)
+		btn.custom_minimum_size = Vector2(340, 64)
+		btn.add_theme_font_size_override("font_size", 21)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.pressed.connect(_select_ship.bind(i))
 		ship_list.add_child(btn)

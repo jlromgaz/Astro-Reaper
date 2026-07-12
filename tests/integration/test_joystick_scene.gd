@@ -84,7 +84,7 @@ func test_deadzone_swallows_tiny_movement() -> void:
 	var cap := DirectionCapture.new()
 	cap.value = Vector2(99.0, 99.0)  # sentinel — must become ZERO
 	js.input_changed.connect(func(d: Vector2) -> void: cap.value = d)
-	js._update_knob(Vector2(115.0, 112.0))  # 5px nudge — inside deadzone
+	js._update_knob(Vector2(111.0, 110.3))  # ~1px nudge — inside deadzone (DEADZONE=0.06, range=30 → threshold=1.8px)
 	assert_eq(cap.value, Vector2.ZERO, "Tiny movement inside deadzone must emit zero")
 
 
