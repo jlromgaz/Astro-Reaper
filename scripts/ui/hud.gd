@@ -69,21 +69,28 @@ func _ready() -> void:
 	call_deferred("_find_existing_player")
 
 func _load_upgrade_pool() -> Array[UpgradeData]:
+	# preload() instead of DirAccess — DirAccess cannot list res:// in web exports.
+	const UPGRADES: Array = [
+		preload("res://data/upgrades/upgrade_anti_missile.tres"),
+		preload("res://data/upgrades/upgrade_aura.tres"),
+		preload("res://data/upgrades/upgrade_blaster.tres"),
+		preload("res://data/upgrades/upgrade_damage.tres"),
+		preload("res://data/upgrades/upgrade_fire_rate.tres"),
+		preload("res://data/upgrades/upgrade_heal.tres"),
+		preload("res://data/upgrades/upgrade_laser.tres"),
+		preload("res://data/upgrades/upgrade_max_hp.tres"),
+		preload("res://data/upgrades/upgrade_mines.tres"),
+		preload("res://data/upgrades/upgrade_missiles.tres"),
+		preload("res://data/upgrades/upgrade_orbitals.tres"),
+		preload("res://data/upgrades/upgrade_projectile.tres"),
+		preload("res://data/upgrades/upgrade_shield.tres"),
+		preload("res://data/upgrades/upgrade_size.tres"),
+		preload("res://data/upgrades/upgrade_speed.tres"),
+	]
 	var pool: Array[UpgradeData] = []
-	var dir := DirAccess.open("res://data/upgrades/")
-	if not dir:
-		DebugLog.log_warn("HUD", "_load_upgrade_pool: data/upgrades/ not found")
-		return pool
-	dir.list_dir_begin()
-	var fname := dir.get_next()
-	while fname != "":
-		if fname.ends_with(".tres"):
-			var res := load("res://data/upgrades/" + fname) as UpgradeData
-			if res:
-				pool.append(res)
-			else:
-				DebugLog.log_warn("HUD", "Could not load upgrade resource: %s" % fname)
-		fname = dir.get_next()
+	for res in UPGRADES:
+		if res is UpgradeData:
+			pool.append(res)
 	return pool
 
 
