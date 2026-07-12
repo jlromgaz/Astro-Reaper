@@ -40,6 +40,44 @@ func test_contact_deals_explosion_damage_and_self_destructs() -> void:
 	assert_true(kamikaze.is_queued_for_deletion(), "Kamikaze must explode (die) on contact")
 
 
+func test_is_dying_flag_prevents_double_die() -> void:
+	var parts: Array = await _make_kamikaze_and_player()
+	var kamikaze: CharacterBody2D = parts[0]
+	kamikaze._die()
+	assert_true(kamikaze._is_dying, "_is_dying must be true after first _die()")
+	# Second call must not crash or re-queue-free
+	kamikaze._die()  # should be a no-op
+	assert_true(kamikaze.is_queued_for_deletion(), "Kamikaze must be queued for deletion")
+
+
+func test_contact_while_dying_does_not_re_explode() -> void:
+	var parts: Array = await _make_kamikaze_and_player()
+	var kamikaze: CharacterBody2D = parts[0]
+	var player: CharacterBody2D   = parts[1]
+	kamikaze._is_dying = true
+	var damage_before: float = player.damage_taken
+	kamikaze._on_body_entered(player)
+	assert_eq(player.damage_taken, damage_before, "No damage must be dealt when kamikaze is already dying")
+
+
+func test_contact_freezes_velocity() -> void:
+	var parts: Array = await _make_kamikaze_and_player()
+	var kamikaze: CharacterBody2D = parts[0]
+	var player: CharacterBody2D   = parts[1]
+	kamikaze.velocity = Vector2(100, 0)
+	kamikaze._on_body_entered(player)
+	assert_eq(kamikaze.velocity, Vector2.ZERO, "Velocity must be zero'd on contact so kamikaze stops drilling")
+
+
+func test_take_damage_ignores_dead_kamikaze() -> void:
+	var parts: Array = await _make_kamikaze_and_player()
+	var kamikaze: CharacterBody2D = parts[0]
+	kamikaze._is_dying = true
+	var hp_before: float = kamikaze.current_hp
+	kamikaze.take_damage(999.0)
+	assert_eq(kamikaze.current_hp, hp_before, "take_damage must be a no-op when _is_dying")
+
+
 func test_contact_explosion_spawns_flash() -> void:
 	var parts: Array = await _make_kamikaze_and_player()
 	var kamikaze: CharacterBody2D = parts[0]
