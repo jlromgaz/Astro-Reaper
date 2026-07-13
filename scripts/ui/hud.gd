@@ -130,7 +130,10 @@ func _update_weapon_list() -> void:
 	if not _player: return
 	if not _player.has_method("get_weapons_short_list"):
 		return
-	weapon_list_label.text = "%s: %s" % [tr("Weapons"), _player.get_weapons_short_list()]
+	var ship_prefix := ""
+	if GameManager.selected_ship:
+		ship_prefix = "[%s] " % tr("SHIP_%s_NAME" % GameManager.selected_ship.ship_id.to_upper())
+	weapon_list_label.text = "%s%s: %s" % [ship_prefix, tr("Weapons"), _player.get_weapons_short_list()]
 
 
 func _update_timer_display() -> void:

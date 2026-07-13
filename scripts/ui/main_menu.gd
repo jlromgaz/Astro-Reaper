@@ -66,7 +66,7 @@ func _goto_page(page: int) -> void:
 
 func _build_back_button() -> void:
 	_back_button = Button.new()
-	_back_button.text = "← SHIPS"
+	_back_button.text = "< SHIPS"
 	_back_button.custom_minimum_size = Vector2(140, 24)
 	_back_button.add_theme_font_size_override("font_size", 11)
 	_back_button.focus_mode = Control.FOCUS_NONE

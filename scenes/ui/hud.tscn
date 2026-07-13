@@ -115,16 +115,19 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="WeaponListLabel" type="Label" parent="."]
-anchors_preset = 2
+anchors_preset = 12
+anchor_left = 0.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = -30.0
-offset_right = 300.0
-offset_bottom = -10.0
+offset_left = 0.0
+offset_top = -26.0
+offset_right = 0.0
+offset_bottom = -2.0
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 18
 text = "Weapons: Blaster Lv.1"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="."]
@@ -142,27 +145,23 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="ModeLabel" type="Label" parent="."]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -260.0
-offset_top = 50.0
-offset_right = -20.0
-offset_bottom = 72.0
+offset_left = 20.0
+offset_top = 62.0
+offset_right = 220.0
+offset_bottom = 76.0
 theme_override_colors/font_color = Color(0.35, 0.9, 1, 0.8)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 10
 text = ""
-horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="Minimap" type="Control" parent="."]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -100.0
+offset_left = -180.0
 offset_top = 55.0
 offset_right = -20.0
-offset_bottom = 135.0
+offset_bottom = 215.0
 script = ExtResource("2_minimap")
 
 [node name="LevelUpPanel" type="PanelContainer" parent="."]
@@ -303,17 +302,17 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StatsLabel" type="Label" parent="."]
-anchors_preset = 3
-anchor_left = 1.0
+anchors_preset = 12
+anchor_left = 0.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -200.0
-offset_top = -60.0
-offset_right = -20.0
-offset_bottom = -20.0
+offset_left = 0.0
+offset_top = -52.0
+offset_right = 0.0
+offset_bottom = -28.0
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 18
 text = "Stats: ..."
-horizontal_alignment = 2
+horizontal_alignment = 1
 vertical_alignment = 2
