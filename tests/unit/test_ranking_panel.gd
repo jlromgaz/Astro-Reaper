@@ -40,6 +40,17 @@ func test_highlight_marks_own_entry() -> void:
 	assert_false(lines[1].contains("<"), "same name, other score must not highlight")
 
 
+func test_fetch_failure_retries_once_then_shows_code() -> void:
+	var panel := _make_panel()
+	panel.show()
+	Leaderboard.last_http_code = 400
+	panel._on_top_fetched(false, [])
+	assert_eq(panel._list.text, tr("LOADING"), "first failure must retry silently")
+	panel._on_top_fetched(false, [])
+	assert_string_contains(panel._list.text, "(400)",
+		"the HTTP code must be visible so reports are diagnosable")
+
+
 func test_mode_labels_cover_all_modes() -> void:
 	for mode in PANEL_SCRIPT.MODES:
 		assert_true(PANEL_SCRIPT.MODE_LABELS.has(mode), "missing label for %s" % mode)

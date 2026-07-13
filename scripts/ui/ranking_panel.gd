@@ -16,6 +16,7 @@ const MODE_LABELS := {
 var _mode_index := 1
 var _highlight_name := ""
 var _highlight_score := -1
+var _retry_left := 1
 var _mode_label: Label
 var _list: Label
 
@@ -82,6 +83,7 @@ func open(mode: String, hl_name: String = "", hl_score: int = -1, fetch: bool = 
 	_mode_index = maxi(0, MODES.find(mode))
 	_highlight_name = hl_name
 	_highlight_score = hl_score
+	_retry_left = 1
 	show()
 	_update_mode_label()
 	show_loading()
@@ -96,6 +98,7 @@ func refresh() -> void:
 
 func _on_cycle(delta: int) -> void:
 	_mode_index = posmod(_mode_index + delta, MODES.size())
+	_retry_left = 1
 	_update_mode_label()
 	refresh()
 
@@ -109,8 +112,13 @@ func _on_top_fetched(ok: bool, rows: Array) -> void:
 		return
 	if ok:
 		populate(rows)
-	else:
-		show_error()
+		return
+	# One silent retry covers transient blips (e.g. an index warming up)
+	if _retry_left > 0:
+		_retry_left -= 1
+		get_tree().create_timer(1.5).timeout.connect(refresh)
+		return
+	show_error()
 
 
 func show_loading() -> void:
@@ -118,7 +126,8 @@ func show_loading() -> void:
 
 
 func show_error() -> void:
-	_list.text = tr("RANKING_ERROR")
+	# The HTTP code turns a vague failure into a diagnosable report
+	_list.text = "%s (%d)" % [tr("RANKING_ERROR"), Leaderboard.last_http_code]
 
 
 func populate(rows: Array) -> void:

@@ -12,6 +12,8 @@ const API_KEY := "AIzaSyDBhzO4OjTyQxq3SN8E4xnrXloB7991ROI"
 const TOP_LIMIT := 10
 const REQUEST_TIMEOUT := 10.0
 
+var last_http_code: int = 0  # last fetch response code, for diagnosable errors
+
 var _base_url := "https://firestore.googleapis.com/v1/projects/%s/databases/(default)/documents" % PROJECT_ID
 
 
@@ -54,6 +56,7 @@ func _on_submit_done(result: int, code: int, _body: PackedByteArray) -> void:
 
 func _on_fetch_done(result: int, code: int, body: PackedByteArray) -> void:
 	var ok := result == HTTPRequest.RESULT_SUCCESS and code >= 200 and code < 300
+	last_http_code = code
 	var rows: Array[Dictionary] = []
 	if ok:
 		var json = JSON.parse_string(body.get_string_from_utf8())

@@ -26,6 +26,7 @@ const BULLET_ENEMY := Color(1.00, 0.40, 0.30)
 
 # Pickups & FX
 const XP_GEM := Color(0.30, 1.00, 0.50)
+const MAGNET := Color(0.75, 0.45, 1.00)
 const HEALTH := Color(1.00, 0.30, 0.45)
 const COMET := Color(1.00, 0.90, 0.30)
 const CHEST := Color(1.00, 0.78, 0.10)
