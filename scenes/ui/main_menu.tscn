@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/ui/ship_preview.gd" id="2_ship_preview"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
-font_size = 44
+font_size = 18
 font_color = Color(0.2, 0.8, 1, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
@@ -18,10 +18,10 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
-content_margin_left = 10.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
 
 [node name="MainMenu" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -40,13 +40,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -350.0
-offset_top = -340.0
-offset_right = 350.0
-offset_bottom = 340.0
+offset_left = -220.0
+offset_top = -130.0
+offset_right = 220.0
+offset_bottom = 130.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 3
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 horizontal_alignment = 1
@@ -57,95 +57,95 @@ label_settings = SubResource("LabelSettings_title")
 visible = false
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 11
 text = "BEST: 0"
 
 [node name="LangRow" type="HBoxContainer" parent="VBox"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 
 [node name="EnBtn" type="Button" parent="VBox/LangRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(90, 52)
-theme_override_font_sizes/font_size = 20
+custom_minimum_size = Vector2(65, 26)
+theme_override_font_sizes/font_size = 11
 text = "EN"
 
 [node name="EsBtn" type="Button" parent="VBox/LangRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(90, 52)
-theme_override_font_sizes/font_size = 20
+custom_minimum_size = Vector2(65, 26)
+theme_override_font_sizes/font_size = 11
 text = "ES"
 
 [node name="ModeList" type="VBoxContainer" parent="VBox"]
 visible = false
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
 
 [node name="ModeHint" type="Label" parent="VBox"]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 10
 text = "ENTER to launch | ESC to change ship"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="VBox"]
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 text = "Select Your Ship"
 
 [node name="ShipList" type="VBoxContainer" parent="VBox"]
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
 
 [node name="ShipInfoPanel" type="PanelContainer" parent="VBox"]
-custom_minimum_size = Vector2(0, 130)
+custom_minimum_size = Vector2(0, 60)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="InfoHBox" type="HBoxContainer" parent="VBox/ShipInfoPanel"]
-offset_left = 9.0
-offset_top = 9.0
-offset_right = 681.0
-offset_bottom = 130.0
-theme_override_constants/separation = 10
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 432.0
+offset_bottom = 60.0
+theme_override_constants/separation = 6
 
 [node name="ShipPreview" type="Control" parent="VBox/ShipInfoPanel/InfoHBox"]
 script = ExtResource("2_ship_preview")
-custom_minimum_size = Vector2(100, 100)
+custom_minimum_size = Vector2(48, 48)
 size_flags_vertical = 4
 
 [node name="InfoVBox" type="VBoxContainer" parent="VBox/ShipInfoPanel/InfoHBox"]
 size_flags_horizontal = 3
-theme_override_constants/separation = 5
+theme_override_constants/separation = 1
 
 [node name="ShipNameLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(0.2, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "Ship Name"
 
 [node name="ShipStatsLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 9
 horizontal_alignment = 1
 text = "HP: 0 | SPD: 0 | DMG: x0 | FR: x0"
 
 [node name="ShipPassiveLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 9
 horizontal_alignment = 1
 text = "Passive: None"
 
 [node name="ShipDescLabel" type="Label" parent="VBox/ShipInfoPanel/InfoHBox/InfoVBox"]
 theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 8
 horizontal_alignment = 1
 autowrap_mode = 2
 text = "Description"
 
 [node name="StartButton" type="Button" parent="VBox"]
-custom_minimum_size = Vector2(320, 72)
-theme_override_font_sizes/font_size = 22
+custom_minimum_size = Vector2(200, 26)
+theme_override_font_sizes/font_size = 12
 text = "LAUNCH"

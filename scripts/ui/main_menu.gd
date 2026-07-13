@@ -67,8 +67,8 @@ func _goto_page(page: int) -> void:
 func _build_back_button() -> void:
 	_back_button = Button.new()
 	_back_button.text = "← SHIPS"
-	_back_button.custom_minimum_size = Vector2(180, 52)
-	_back_button.add_theme_font_size_override("font_size", 20)
+	_back_button.custom_minimum_size = Vector2(140, 24)
+	_back_button.add_theme_font_size_override("font_size", 11)
 	_back_button.focus_mode = Control.FOCUS_NONE
 	_back_button.visible = false
 	_back_button.pressed.connect(func() -> void: _goto_page(0))
@@ -82,8 +82,8 @@ func _build_mode_buttons() -> void:
 	for i in range(MODE_OPTIONS.size()):
 		var btn := Button.new()
 		btn.text = MODE_OPTIONS[i].label
-		btn.custom_minimum_size = Vector2(340, 66)
-		btn.add_theme_font_size_override("font_size", 21)
+		btn.custom_minimum_size = Vector2(300, 26)
+		btn.add_theme_font_size_override("font_size", 11)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.pressed.connect(_on_mode_clicked.bind(i))
 		mode_list.add_child(btn)
@@ -155,8 +155,8 @@ func _build_ship_buttons() -> void:
 	for i in range(_ships.size()):
 		var btn := Button.new()
 		btn.text = tr("SHIP_%s_NAME" % _ships[i].ship_id.to_upper())
-		btn.custom_minimum_size = Vector2(340, 64)
-		btn.add_theme_font_size_override("font_size", 21)
+		btn.custom_minimum_size = Vector2(300, 26)
+		btn.add_theme_font_size_override("font_size", 11)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.pressed.connect(_select_ship.bind(i))
 		ship_list.add_child(btn)
