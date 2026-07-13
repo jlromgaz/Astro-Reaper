@@ -18,6 +18,8 @@ var _touch_index  := -1
 
 
 func _ready() -> void:
+	# Force-release on game over so the visuals never linger over end panels.
+	EventBus.game_ended.connect(_on_game_ended)
 	if not DisplayServer.is_touchscreen_available():
 		visible = false
 		return
@@ -25,10 +27,24 @@ func _ready() -> void:
 	_knob.visible = false
 
 
+func _on_game_ended(_reason: String) -> void:
+	_force_release()
+
+
+func _force_release() -> void:
+	_touch_index = -1
+	_dragging = false
+	_hide()
+
+
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if get_viewport().is_input_handled():
+		return
+	# Only steer during gameplay — at game over the tree is unpaused, and a
+	# live joystick would spawn its base under every tap on the end buttons.
+	if GameManager.current_state != GameManager.State.PLAYING:
 		return
 	if event is InputEventScreenTouch:
 		_on_screen_touch(event)

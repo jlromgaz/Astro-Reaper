@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/ui/ship_preview.gd" id="2_ship_preview"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ranking_panel.tscn" id="3_ranking"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_title"]
 font_size = 18
@@ -149,3 +150,10 @@ text = "Description"
 custom_minimum_size = Vector2(200, 26)
 theme_override_font_sizes/font_size = 12
 text = "LAUNCH"
+
+[node name="RankingBtn" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(200, 26)
+theme_override_font_sizes/font_size = 12
+text = "RANKING"
+
+[node name="RankingPanel" parent="." instance=ExtResource("3_ranking")]

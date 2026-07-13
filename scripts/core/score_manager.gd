@@ -32,14 +32,24 @@ func _ready() -> void:
 
 
 static func calculate_score(
-	kills: int, run_level: int, victory: bool, time_to_boss: float, hp_ratio: float
+	kills: int, run_level: int, victory: bool, time_to_boss: float, hp_ratio: float,
+	difficulty_mult: float = 1.0
 ) -> int:
-	var score: int = kills * KILL_POINTS + run_level * LEVEL_POINTS
+	var score: int = int(kills * KILL_POINTS * difficulty_mult) + run_level * LEVEL_POINTS
 	if victory:
 		score += VICTORY_BASE
 		score += int(maxf(0.0, PAR_TIME - time_to_boss)) * SPEED_POINTS_PER_SEC
 		score += roundi(clampf(hp_ratio, 0.0, 1.0) * HP_BONUS_MAX)
 	return score
+
+
+## Kill-point multiplier for a persisted difficulty string. Mirrors
+## GameManager.get_difficulty_mult() so breakdowns of stored records match.
+static func difficulty_mult_for(diff_name: String) -> float:
+	match diff_name:
+		"easy": return 0.75
+		"hard": return 1.3
+	return 1.0
 
 
 static func arcade_time_bonus(run_time: float) -> int:
@@ -48,10 +58,11 @@ static func arcade_time_bonus(run_time: float) -> int:
 
 ## Splits a run record into labeled components that sum to its score.
 static func get_breakdown(result: Dictionary) -> Array:
+	var kill_mult := difficulty_mult_for(str(result.get("difficulty", "medium")))
 	var lines: Array = [
 		{
 			"label": "%s x%d" % [TranslationServer.translate("KILLS"), int(result.kills)],
-			"points": int(result.kills) * KILL_POINTS,
+			"points": int(int(result.kills) * KILL_POINTS * kill_mult),
 		},
 		{
 			"label": "%s %d" % [TranslationServer.translate("LEVEL"), int(result.level)],
@@ -81,6 +92,17 @@ func get_high_score() -> int:
 	return int(high.get("score", 0))
 
 
+## Score the run would earn if it ended right now (death terms only).
+func get_live_score() -> int:
+	var score := calculate_score(
+		_kills, GameManager.run_level, false, _time_to_boss, 0.0,
+		GameManager.get_difficulty_mult()
+	)
+	if GameManager.game_mode == GameManager.GameMode.ARCADE:
+		score += arcade_time_bonus(GameManager.run_time)
+	return score
+
+
 func _on_game_started() -> void:
 	_kills = 0
 	_time_to_boss = -1.0
@@ -105,7 +127,8 @@ func _on_game_ended(reason: String) -> void:
 	var victory: bool = reason == "victory"
 	var hp_ratio: float = _hp_ratio if victory else 0.0
 	var score: int = calculate_score(
-		_kills, GameManager.run_level, victory, _time_to_boss, hp_ratio
+		_kills, GameManager.run_level, victory, _time_to_boss, hp_ratio,
+		GameManager.get_difficulty_mult()
 	)
 	if GameManager.game_mode == GameManager.GameMode.ARCADE:
 		score += arcade_time_bonus(GameManager.run_time)

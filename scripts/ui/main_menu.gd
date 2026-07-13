@@ -23,6 +23,8 @@ const MODE_OPTIONS := [
 @onready var ship_desc_label: Label = $VBox/ShipInfoPanel/InfoHBox/InfoVBox/ShipDescLabel
 @onready var ship_preview: Control = $VBox/ShipInfoPanel/InfoHBox/ShipPreview
 @onready var start_button: Button = $VBox/StartButton
+@onready var ranking_button: Button = $VBox/RankingBtn
+@onready var ranking_panel: PanelContainer = $RankingPanel
 @onready var _vbox: VBoxContainer = $VBox
 
 var _ships: Array[ShipResource] = []
@@ -40,6 +42,9 @@ func _ready() -> void:
 	start_button.text = "CONTINUE"
 	start_button.focus_mode = Control.FOCUS_NONE
 	start_button.pressed.connect(func() -> void: _goto_page(1))
+	ranking_button.focus_mode = Control.FOCUS_NONE
+	ranking_button.pressed.connect(_open_ranking)
+	ranking_panel.closed.connect(func() -> void: ranking_panel.hide())
 	_setup_language_row()
 	_build_back_button()
 	ship_info_panel.visible = false
@@ -56,6 +61,7 @@ func _goto_page(page: int) -> void:
 	ship_info_panel.visible = on_ships and _ships.size() > 0
 	subtitle_label.visible = on_ships
 	start_button.visible = on_ships
+	ranking_button.visible = on_ships
 	mode_list.visible = not on_ships
 	mode_hint.visible = not on_ships
 	if _back_button:
@@ -182,7 +188,20 @@ func _select_ship(index: int) -> void:
 			btn.add_theme_color_override("font_color", Color.YELLOW if i == index else Color.WHITE)
 
 
+func _open_ranking() -> void:
+	# Open on the bucket of the currently highlighted mode option.
+	var opt: Dictionary = MODE_OPTIONS[_mode_index]
+	var mode: String = "arcade"
+	if opt.mode == GameManager.GameMode.CLASSIC:
+		mode = "classic-%s" % ["easy", "medium", "hard"][opt.difficulty]
+	ranking_panel.open(mode)
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if ranking_panel.visible:
+		if event.is_action_pressed("ui_cancel"):
+			ranking_panel.hide()
+		return
 	if _ships.is_empty():
 		return
 	if _page == 0:

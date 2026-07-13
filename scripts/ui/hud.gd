@@ -14,6 +14,10 @@ extends CanvasLayer
 @onready var game_over_summary: Label = $GameOverPanel/VBox/Summary
 @onready var restart_btn: Button = $GameOverPanel/VBox/RestartBtn
 @onready var play_again_btn: Button = $GameOverPanel/VBox/PlayAgainBtn
+@onready var save_score_btn: Button = $GameOverPanel/VBox/SaveScoreBtn
+@onready var name_entry_panel: PanelContainer = $NameEntryPanel
+@onready var ranking_panel: PanelContainer = $RankingPanel
+@onready var score_label: Label = $ScoreLabel
 @onready var pause_btn: Button = $PauseBtn
 @onready var pause_panel: PanelContainer = $PausePanel
 @onready var resume_btn: Button = $PausePanel/VBox/ResumeBtn
@@ -38,6 +42,8 @@ var _rerolls_left: int = REROLLS_PER_RUN
 var _last_option_count: int = 3
 var _summary_base: String = ""
 var _score_tween: Tween
+var _score_submitted: bool = false
+var _pending_name: String = ""
 
 
 func _ready() -> void:
@@ -47,6 +53,12 @@ func _ready() -> void:
 	debug_panel.visible = OS.is_debug_build()
 	restart_btn.pressed.connect(_on_restart)
 	play_again_btn.pressed.connect(_on_play_again)
+	save_score_btn.text = tr("SAVE_SCORE")
+	save_score_btn.pressed.connect(_on_save_score)
+	name_entry_panel.submitted.connect(_on_name_submitted)
+	name_entry_panel.skipped.connect(_on_name_skipped)
+	ranking_panel.closed.connect(_on_ranking_closed)
+	Leaderboard.submit_finished.connect(_on_submit_finished)
 	pause_panel.visible = false
 	pause_btn.pressed.connect(_on_pause_toggle)
 	resume_btn.pressed.connect(_on_pause_toggle)
@@ -115,6 +127,7 @@ func _process(delta: float) -> void:
 		_update_stats()
 		_update_shield_bar()
 		_update_weapon_list()
+		score_label.text = "%s: %d" % [tr("SCORE"), ScoreManager.get_live_score()]
 
 
 func _update_shield_bar() -> void:
@@ -242,6 +255,7 @@ func _on_level_up(new_level: int) -> void:
 
 func _on_game_started() -> void:
 	_rerolls_left = REROLLS_PER_RUN
+	_score_submitted = false
 	mode_label.text = tr(_mode_display_key())
 
 
@@ -285,7 +299,7 @@ func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void
 				and _player.has_method("has_weapon") and _player.has_weapon(opt.type):
 			var current_level: int = _player.get_weapon_level(opt.type)
 			var short_name: String = opt.type.replace("weapon_", "").capitalize()
-			label = "%s → Lv.%d" % [short_name, current_level + 1]
+			label = "%s -> Lv.%d" % [short_name, current_level + 1]
 		btn.text = label
 		btn.add_theme_color_override("font_color", _upgrade_color(opt))
 		btn.pressed.connect(_on_upgrade_selected.bind(opt))
@@ -406,8 +420,43 @@ func _on_game_ended(reason: String) -> void:
 		game_over_summary.text = _summary_base
 	else:
 		_animate_score(ScoreManager.last_result.score, ScoreManager.get_high_score())
+	save_score_btn.visible = not _score_submitted \
+		and int(ScoreManager.last_result.get("score", 0)) > 0
 	play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
+
+
+func _on_save_score() -> void:
+	game_over_panel.hide()
+	name_entry_panel.show()
+
+
+func _on_name_submitted(player_name: String) -> void:
+	_pending_name = player_name
+	name_entry_panel.hide()
+	# Open in loading state; the fetch fires once the submit lands so the
+	# fresh entry is included in the list.
+	ranking_panel.open(GameManager.mode_key(), player_name,
+		int(ScoreManager.last_result.get("score", 0)), false)
+	Leaderboard.submit_score(player_name,
+		int(ScoreManager.last_result.get("score", 0)), GameManager.mode_key())
+
+
+func _on_submit_finished(ok: bool) -> void:
+	if ok:
+		_score_submitted = true
+		save_score_btn.visible = false
+	ranking_panel.refresh()
+
+
+func _on_name_skipped() -> void:
+	name_entry_panel.hide()
+	game_over_panel.show()
+
+
+func _on_ranking_closed() -> void:
+	ranking_panel.hide()
+	game_over_panel.show()
 
 
 func _animate_score(final_score: int, best: int) -> void:

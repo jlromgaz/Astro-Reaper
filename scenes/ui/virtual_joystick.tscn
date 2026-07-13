@@ -15,6 +15,7 @@ script = ExtResource("1_script")
 [node name="Base" type="Control" parent="."]
 layout_mode = 0
 visible = false
+mouse_filter = 2
 script = ExtResource("2_ring")
 ring_color = Color(0.2, 0.8, 1, 0.35)
 filled = false
@@ -22,6 +23,7 @@ filled = false
 [node name="Knob" type="Control" parent="."]
 layout_mode = 0
 visible = false
+mouse_filter = 2
 script = ExtResource("2_ring")
 ring_color = Color(0.2, 0.8, 1, 0.85)
 filled = true

@@ -49,6 +49,46 @@ func test_hp_ratio_is_clamped_to_one() -> void:
 	assert_eq(ScoreManagerScript.calculate_score(0, 1, true, 240.0, 2.0), 12050)
 
 
+## --- Difficulty calibration ---
+
+func test_hard_kills_score_more_than_medium() -> void:
+	# 100 kills * 100 pts * 1.3 = 13000, + 1 level * 50
+	assert_eq(ScoreManagerScript.calculate_score(100, 1, false, -1.0, 0.0, 1.3), 13050)
+
+
+func test_easy_kills_score_less_than_medium() -> void:
+	# 100 kills * 100 pts * 0.75 = 7500, + 1 level * 50
+	assert_eq(ScoreManagerScript.calculate_score(100, 1, false, -1.0, 0.0, 0.75), 7550)
+
+
+func test_default_multiplier_keeps_medium_scoring() -> void:
+	var explicit: int = ScoreManagerScript.calculate_score(100, 8, false, -1.0, 0.0, 1.0)
+	var implicit: int = ScoreManagerScript.calculate_score(100, 8, false, -1.0, 0.0)
+	assert_eq(explicit, implicit)
+
+
+func test_game_ended_applies_current_difficulty() -> void:
+	var prev := GameManager.difficulty
+	GameManager.difficulty = GameManager.Difficulty.HARD
+	manager._on_game_started()
+	for i in range(10):
+		manager._on_enemy_killed(null, Vector2.ZERO)
+	manager._on_game_ended("death")
+	GameManager.difficulty = prev
+	# 10 kills * 100 * 1.3 = 1300 + level 1 * 50
+	assert_eq(int(manager.last_result.score), 1350)
+
+
+func test_breakdown_kill_line_matches_hard_scoring() -> void:
+	var result := {
+		"kills": 37, "level": 4, "victory": false,
+		"mode": "classic", "difficulty": "hard",
+	}
+	var lines: Array = ScoreManagerScript.get_breakdown(result)
+	# 37 * 100 * 1.3 = 4810 — breakdown must sum to the recorded score
+	assert_eq(int(lines[0].points), 4810)
+
+
 ## --- Invariants ---
 
 func test_victory_always_outscores_death_with_equal_stats() -> void:

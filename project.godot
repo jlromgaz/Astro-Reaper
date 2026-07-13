@@ -23,6 +23,7 @@ SoundManager="*res://scripts/core/sound_manager.gd"
 FXManager="*res://scripts/core/fx_manager.gd"
 ScoreManager="*res://scripts/core/score_manager.gd"
 Settings="*res://scripts/core/settings.gd"
+Leaderboard="*res://scripts/core/leaderboard.gd"
 
 [debug]
 

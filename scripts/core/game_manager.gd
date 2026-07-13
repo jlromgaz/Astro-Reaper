@@ -26,6 +26,13 @@ func mode_name() -> String:
 	return "arcade" if game_mode == GameMode.ARCADE else "classic"
 
 
+## Stable identifier for one leaderboard bucket ("classic-hard", "arcade").
+func mode_key() -> String:
+	if game_mode == GameMode.ARCADE:
+		return "arcade"
+	return "classic-%s" % difficulty_name()
+
+
 func difficulty_name() -> String:
 	match difficulty:
 		Difficulty.EASY: return "easy"
