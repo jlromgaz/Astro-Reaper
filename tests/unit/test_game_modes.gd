@@ -141,7 +141,7 @@ func test_arcade_run_scores_time_bonus_and_records_mode() -> void:
 	manager._on_game_ended("death")
 	assert_eq(manager.last_result.mode, "arcade")
 	assert_true(manager.last_result.has("difficulty"))
-	# level 1 death: 50 base + 1500 arcade time bonus
-	assert_eq(manager.last_result.score, 50 + 1500)
+	# level 1 death scores nothing base — only the 1500 arcade time bonus
+	assert_eq(manager.last_result.score, 1500)
 	if FileAccess.file_exists("user://test_scores_modes.json"):
 		DirAccess.remove_absolute("user://test_scores_modes.json")

@@ -1,7 +1,51 @@
 extends GutTest
 ## Tests for SoundManager audio integration with EventBus combat signals.
 ## Audio output is not assertable in headless — these are method-existence
-## and smoke tests (no crash = pass).
+## and smoke tests (no crash = pass), plus SFX synthesis/cache checks.
+
+const SOUND_SCRIPT := preload("res://scripts/core/sound_manager.gd")
+
+
+func _make_manager() -> Node:
+	var m: Node = SOUND_SCRIPT.new()
+	add_child_autofree(m)
+	return m
+
+
+## --- SFX synthesis (crackling fix: pre-rendered WAVs, no generator pushes) ---
+
+func test_beep_is_prerendered_wav() -> void:
+	var m := _make_manager()
+	var beep: AudioStreamWAV = m._make_beep(440.0, 0.05)
+	assert_eq(beep.format, AudioStreamWAV.FORMAT_16_BITS)
+	assert_false(beep.stereo)
+	# 0.05s at 22050 Hz, 2 bytes per frame
+	assert_eq(beep.data.size(), int(22050 * 0.05) * 2)
+
+
+func test_beep_cache_reuses_streams() -> void:
+	var m := _make_manager()
+	var first: AudioStreamWAV = m._get_beep(440.0, 0.05)
+	var second: AudioStreamWAV = m._get_beep(440.0, 0.05)
+	assert_same(first, second, "Same freq/duration must not re-render the WAV")
+	var other: AudioStreamWAV = m._get_beep(200.0, 0.12)
+	assert_ne(other, first)
+
+
+func test_beep_envelope_starts_and_ends_silent() -> void:
+	var m := _make_manager()
+	var beep: AudioStreamWAV = m._make_beep(440.0, 0.05)
+	# Hard edges click — first and last samples must be (near) zero
+	assert_eq(beep.data.decode_s16(0), 0)
+	assert_lt(absi(beep.data.decode_s16(beep.data.size() - 2)), 400)
+
+
+func test_music_stream_loops() -> void:
+	var m := _make_manager()
+	var music: AudioStreamWAV = m._music_player.stream
+	assert_not_null(music, "Background music must be loaded")
+	assert_eq(music.loop_mode, AudioStreamWAV.LOOP_FORWARD)
+	assert_gt(music.loop_end, 0)
 
 
 ## --- Method existence ---

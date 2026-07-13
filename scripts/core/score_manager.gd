@@ -35,7 +35,9 @@ static func calculate_score(
 	kills: int, run_level: int, victory: bool, time_to_boss: float, hp_ratio: float,
 	difficulty_mult: float = 1.0
 ) -> int:
-	var score: int = int(kills * KILL_POINTS * difficulty_mult) + run_level * LEVEL_POINTS
+	# Level 1 is the starting state, not an achievement — only gained levels score.
+	var score: int = int(kills * KILL_POINTS * difficulty_mult) \
+		+ maxi(0, run_level - 1) * LEVEL_POINTS
 	if victory:
 		score += VICTORY_BASE
 		score += int(maxf(0.0, PAR_TIME - time_to_boss)) * SPEED_POINTS_PER_SEC
@@ -66,7 +68,7 @@ static func get_breakdown(result: Dictionary) -> Array:
 		},
 		{
 			"label": "%s %d" % [TranslationServer.translate("LEVEL"), int(result.level)],
-			"points": int(result.level) * LEVEL_POINTS,
+			"points": maxi(0, int(result.level) - 1) * LEVEL_POINTS,
 		},
 	]
 	if result.victory:

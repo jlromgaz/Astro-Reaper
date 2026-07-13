@@ -24,6 +24,14 @@ func _make_kamikaze_and_player() -> Array:
 	return [kamikaze, player, arena]
 
 
+func test_kamikaze_flies_through_the_horde() -> void:
+	# mask=2 made kamikazes jam against the crowd near the boss and hover one
+	# body-width from the ship without their contact area ever reaching it.
+	var kamikaze: CharacterBody2D = autofree(KAMIKAZE_SCENE.instantiate())
+	assert_eq(kamikaze.collision_mask, 0,
+		"Kamikaze must collide with nothing — contact is handled by its Area2D")
+
+
 func test_explosion_damage_exceeds_contact_damage() -> void:
 	var kamikaze: CharacterBody2D = autofree(KAMIKAZE_SCENE.instantiate())
 	assert_gt(kamikaze.EXPLOSION_DAMAGE, kamikaze.DAMAGE,

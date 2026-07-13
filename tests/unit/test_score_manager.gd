@@ -29,36 +29,41 @@ func _make_manager_with_same_path() -> Node:
 
 ## --- Pure formula: exact values ---
 
-func test_death_score_is_kills_plus_level() -> void:
-	# 100*100 + 8*50 = 10400; no victory bonuses on death
-	assert_eq(ScoreManagerScript.calculate_score(100, 8, false, -1.0, 0.0), 10400)
+func test_fresh_run_scores_zero() -> void:
+	# Level 1 is the starting state — a run that just began must show 0 points
+	assert_eq(ScoreManagerScript.calculate_score(0, 1, false, -1.0, 0.0), 0)
+
+
+func test_death_score_is_kills_plus_gained_levels() -> void:
+	# 100*100 + (8-1)*50 = 10350; no victory bonuses on death
+	assert_eq(ScoreManagerScript.calculate_score(100, 8, false, -1.0, 0.0), 10350)
 
 
 func test_victory_score_full_breakdown() -> void:
-	# kills 10000 + level 400 + base 10000 + speed (240-180)*50=3000 + hp 0.5*2000=1000
-	assert_eq(ScoreManagerScript.calculate_score(100, 8, true, 180.0, 0.5), 24400)
+	# kills 10000 + levels 350 + base 10000 + speed (240-180)*50=3000 + hp 0.5*2000=1000
+	assert_eq(ScoreManagerScript.calculate_score(100, 8, true, 180.0, 0.5), 24350)
 
 
 func test_speed_bonus_clamps_to_zero_past_par_time() -> void:
-	# 0 + 50 + 10000 + 0 (300s > 240s par) + 0
-	assert_eq(ScoreManagerScript.calculate_score(0, 1, true, 300.0, 0.0), 10050)
+	# 0 + 0 + 10000 + 0 (300s > 240s par) + 0
+	assert_eq(ScoreManagerScript.calculate_score(0, 1, true, 300.0, 0.0), 10000)
 
 
 func test_hp_ratio_is_clamped_to_one() -> void:
-	# 0 + 50 + 10000 + 0 + 2000 (ratio 2.0 clamped to 1.0)
-	assert_eq(ScoreManagerScript.calculate_score(0, 1, true, 240.0, 2.0), 12050)
+	# 0 + 0 + 10000 + 0 + 2000 (ratio 2.0 clamped to 1.0)
+	assert_eq(ScoreManagerScript.calculate_score(0, 1, true, 240.0, 2.0), 12000)
 
 
 ## --- Difficulty calibration ---
 
 func test_hard_kills_score_more_than_medium() -> void:
-	# 100 kills * 100 pts * 1.3 = 13000, + 1 level * 50
-	assert_eq(ScoreManagerScript.calculate_score(100, 1, false, -1.0, 0.0, 1.3), 13050)
+	# 100 kills * 100 pts * 1.3 = 13000, level 1 scores nothing
+	assert_eq(ScoreManagerScript.calculate_score(100, 1, false, -1.0, 0.0, 1.3), 13000)
 
 
 func test_easy_kills_score_less_than_medium() -> void:
-	# 100 kills * 100 pts * 0.75 = 7500, + 1 level * 50
-	assert_eq(ScoreManagerScript.calculate_score(100, 1, false, -1.0, 0.0, 0.75), 7550)
+	# 100 kills * 100 pts * 0.75 = 7500, level 1 scores nothing
+	assert_eq(ScoreManagerScript.calculate_score(100, 1, false, -1.0, 0.0, 0.75), 7500)
 
 
 func test_default_multiplier_keeps_medium_scoring() -> void:
@@ -75,8 +80,8 @@ func test_game_ended_applies_current_difficulty() -> void:
 		manager._on_enemy_killed(null, Vector2.ZERO)
 	manager._on_game_ended("death")
 	GameManager.difficulty = prev
-	# 10 kills * 100 * 1.3 = 1300 + level 1 * 50
-	assert_eq(int(manager.last_result.score), 1350)
+	# 10 kills * 100 * 1.3 = 1300, level 1 scores nothing
+	assert_eq(int(manager.last_result.score), 1300)
 
 
 func test_breakdown_kill_line_matches_hard_scoring() -> void:

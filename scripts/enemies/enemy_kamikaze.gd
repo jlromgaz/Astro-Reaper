@@ -44,7 +44,6 @@ func _setup_damage_area() -> void:
 	area.collision_mask  = 1
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)
-	collision_mask &= ~1
 
 
 func _on_body_entered(body: Node) -> void:
