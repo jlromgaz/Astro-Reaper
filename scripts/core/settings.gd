@@ -12,6 +12,15 @@ var _language: String = DEFAULT_LANGUAGE
 func _ready() -> void:
 	_load()
 	TranslationServer.set_locale(_language)
+	_adapt_scale()
+
+
+func _adapt_scale() -> void:
+	# On desktop browsers / PC, expand the design space to 1280x720 so UI
+	# proportions feel normal. On mobile, keep the 480x270 design (elements
+	# appear 2.67x larger thanks to the higher scale factor).
+	if not DisplayServer.is_touchscreen_available():
+		get_tree().root.content_scale_size = Vector2i(1280, 720)
 
 
 func get_language() -> String:
