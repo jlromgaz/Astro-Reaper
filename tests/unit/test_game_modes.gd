@@ -59,51 +59,31 @@ func test_classic_boss_trigger_still_works() -> void:
 	assert_true(spawner._boss_spawned, "Classic mode must keep the boss trigger")
 
 
-## --- Two-screen menu flow ---
+## --- Single-page menu: Arcade Endless only ---
 
 func test_menu_starts_on_ship_page() -> void:
 	var menu: CanvasLayer = add_child_autofree(MENU_SCENE.instantiate())
 	await get_tree().process_frame
-	assert_eq(menu._page, 0)
 	assert_true(menu.ship_list.visible)
-	assert_false(menu.mode_list.visible)
+	assert_false(menu.mode_list.visible, "Mode selection page was removed — only Arcade Endless remains")
 
 
-func test_enter_on_ship_page_opens_mode_page() -> void:
+func test_prepare_arcade_launch_always_sets_arcade() -> void:
 	var menu: CanvasLayer = add_child_autofree(MENU_SCENE.instantiate())
 	await get_tree().process_frame
-	menu._unhandled_input(_action("ui_accept"))
-	assert_eq(menu._page, 1, "Enter on ship page must advance to mode selection")
-	assert_true(menu.mode_list.visible)
-	assert_false(menu.ship_list.visible)
-
-
-func test_escape_on_mode_page_returns_to_ships() -> void:
-	var menu: CanvasLayer = add_child_autofree(MENU_SCENE.instantiate())
-	await get_tree().process_frame
-	menu._goto_page(1)
-	menu._unhandled_input(_action("ui_cancel"))
-	assert_eq(menu._page, 0, "Escape must return to ship selection")
-
-
-func test_arrows_move_mode_selection() -> void:
-	var menu: CanvasLayer = add_child_autofree(MENU_SCENE.instantiate())
-	await get_tree().process_frame
-	menu._goto_page(1)
-	var before: int = menu._mode_index
-	menu._unhandled_input(_action("ui_down"))
-	assert_eq(menu._mode_index, (before + 1) % menu.MODE_OPTIONS.size())
-
-
-func test_mode_options_cover_all_difficulties_and_arcade() -> void:
-	var menu: CanvasLayer = add_child_autofree(MENU_SCENE.instantiate())
-	await get_tree().process_frame
-	assert_eq(menu.MODE_OPTIONS.size(), 4, "3 classic difficulties + arcade")
-	menu._apply_mode_option(2)  # CLASSIC — HARD
-	assert_eq(GameManager.game_mode, GameManager.GameMode.CLASSIC)
-	assert_eq(GameManager.difficulty, GameManager.Difficulty.HARD)
-	menu._apply_mode_option(3)  # ARCADE
+	GameManager.game_mode = GameManager.GameMode.CLASSIC
+	GameManager.difficulty = GameManager.Difficulty.HARD
+	menu._prepare_arcade_launch()
 	assert_eq(GameManager.game_mode, GameManager.GameMode.ARCADE)
+	assert_eq(GameManager.difficulty, GameManager.Difficulty.MEDIUM)
+
+
+func test_ranking_button_always_opens_arcade_bucket() -> void:
+	var menu: CanvasLayer = add_child_autofree(MENU_SCENE.instantiate())
+	await get_tree().process_frame
+	menu._open_ranking()
+	assert_true(menu.ranking_panel.visible)
+	assert_eq(menu.ranking_panel.MODES[menu.ranking_panel._mode_index], "arcade")
 
 
 ## --- HUD mode label ---

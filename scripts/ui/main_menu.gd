@@ -1,13 +1,6 @@
 extends CanvasLayer
-## Main Menu: two-screen flow. Page 0 selects the ship (up/down + Enter),
-## page 1 picks the game mode from a flat list (up/down + Enter, ESC back).
-
-const MODE_OPTIONS := [
-	{"label": "CLASSIC — EASY", "mode": GameManager.GameMode.CLASSIC, "difficulty": GameManager.Difficulty.EASY},
-	{"label": "CLASSIC — MEDIUM", "mode": GameManager.GameMode.CLASSIC, "difficulty": GameManager.Difficulty.MEDIUM},
-	{"label": "CLASSIC — HARD", "mode": GameManager.GameMode.CLASSIC, "difficulty": GameManager.Difficulty.HARD},
-	{"label": "ARCADE — ENDLESS", "mode": GameManager.GameMode.ARCADE, "difficulty": GameManager.Difficulty.MEDIUM},
-]
+## Main Menu: single ship-select page (up/down + Enter). Only Arcade —
+## Endless is offered; selecting a ship launches straight into it.
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var best_score_label: Label = $VBox/BestScoreLabel
@@ -25,92 +18,28 @@ const MODE_OPTIONS := [
 @onready var start_button: Button = $VBox/StartButton
 @onready var ranking_button: Button = $VBox/RankingBtn
 @onready var ranking_panel: PanelContainer = $RankingPanel
-@onready var _vbox: VBoxContainer = $VBox
 
 var _ships: Array[ShipResource] = []
-var _back_button: Button
 var _selected_index: int = 0
-var _page: int = 0
-var _mode_index: int = 1  # CLASSIC — MEDIUM by default
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_load_ships()
 	_build_ship_buttons()
-	_build_mode_buttons()
 	start_button.text = "CONTINUE"
 	start_button.focus_mode = Control.FOCUS_NONE
-	start_button.pressed.connect(func() -> void: _goto_page(1))
+	start_button.pressed.connect(_launch_game)
 	ranking_button.focus_mode = Control.FOCUS_NONE
 	ranking_button.pressed.connect(_open_ranking)
 	ranking_panel.closed.connect(func() -> void: ranking_panel.hide())
 	_setup_language_row()
-	_build_back_button()
+	mode_list.visible = false
+	mode_hint.visible = false
 	ship_info_panel.visible = false
 	_set_best_score(ScoreManager.get_high_score())
 	if _ships.size() > 0:
 		_select_ship(0)
-	_goto_page(0)
-
-
-func _goto_page(page: int) -> void:
-	_page = page
-	var on_ships := page == 0
-	ship_list.visible = on_ships
-	ship_info_panel.visible = on_ships and _ships.size() > 0
-	subtitle_label.visible = on_ships
-	start_button.visible = on_ships
-	ranking_button.visible = on_ships
-	mode_list.visible = not on_ships
-	mode_hint.visible = not on_ships
-	if _back_button:
-		_back_button.visible = not on_ships
-	if not on_ships:
-		_select_mode_option(_mode_index)
-
-
-func _build_back_button() -> void:
-	_back_button = Button.new()
-	_back_button.text = "< SHIPS"
-	_back_button.custom_minimum_size = Vector2(140, 24)
-	_back_button.add_theme_font_size_override("font_size", 11)
-	_back_button.focus_mode = Control.FOCUS_NONE
-	_back_button.visible = false
-	_back_button.pressed.connect(func() -> void: _goto_page(0))
-	_vbox.add_child(_back_button)
-	_vbox.move_child(_back_button, mode_list.get_index())
-
-
-func _build_mode_buttons() -> void:
-	for child in mode_list.get_children():
-		child.queue_free()
-	for i in range(MODE_OPTIONS.size()):
-		var btn := Button.new()
-		btn.text = MODE_OPTIONS[i].label
-		btn.custom_minimum_size = Vector2(300, 26)
-		btn.add_theme_font_size_override("font_size", 11)
-		btn.focus_mode = Control.FOCUS_NONE
-		btn.pressed.connect(_on_mode_clicked.bind(i))
-		mode_list.add_child(btn)
-
-
-func _on_mode_clicked(index: int) -> void:
-	_select_mode_option(index)
-	_launch_game()
-
-
-func _select_mode_option(index: int) -> void:
-	_mode_index = index
-	for i in range(mode_list.get_child_count()):
-		var btn := mode_list.get_child(i) as Button
-		if btn:
-			btn.add_theme_color_override("font_color", Color.YELLOW if i == index else Color.WHITE)
-
-
-func _apply_mode_option(index: int) -> void:
-	GameManager.game_mode = MODE_OPTIONS[index].mode
-	GameManager.difficulty = MODE_OPTIONS[index].difficulty
 
 
 func _setup_language_row() -> void:
@@ -189,12 +118,7 @@ func _select_ship(index: int) -> void:
 
 
 func _open_ranking() -> void:
-	# Open on the bucket of the currently highlighted mode option.
-	var opt: Dictionary = MODE_OPTIONS[_mode_index]
-	var mode: String = "arcade"
-	if opt.mode == GameManager.GameMode.CLASSIC:
-		mode = "classic-%s" % ["easy", "medium", "hard"][opt.difficulty]
-	ranking_panel.open(mode)
+	ranking_panel.open("arcade")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -204,31 +128,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _ships.is_empty():
 		return
-	if _page == 0:
-		if event.is_action_pressed("ui_down"):
-			_select_ship((_selected_index + 1) % _ships.size())
-		elif event.is_action_pressed("ui_up"):
-			_select_ship((_selected_index - 1 + _ships.size()) % _ships.size())
-		elif event.is_action_pressed("ui_accept"):
-			_goto_page(1)
-	else:
-		if event.is_action_pressed("ui_down"):
-			_select_mode_option((_mode_index + 1) % MODE_OPTIONS.size())
-		elif event.is_action_pressed("ui_up"):
-			_select_mode_option((_mode_index - 1 + MODE_OPTIONS.size()) % MODE_OPTIONS.size())
-		elif event.is_action_pressed("ui_cancel"):
-			_goto_page(0)
-		elif event.is_action_pressed("ui_accept"):
-			_launch_game()
+	if event.is_action_pressed("ui_down"):
+		_select_ship((_selected_index + 1) % _ships.size())
+	elif event.is_action_pressed("ui_up"):
+		_select_ship((_selected_index - 1 + _ships.size()) % _ships.size())
+	elif event.is_action_pressed("ui_accept"):
+		_launch_game()
+
+
+## Pure state setup, kept separate from _launch_game() so tests can verify
+## it without triggering the actual scene change.
+func _prepare_arcade_launch() -> void:
+	GameManager.game_mode = GameManager.GameMode.ARCADE
+	GameManager.difficulty = GameManager.Difficulty.MEDIUM
 
 
 func _launch_game() -> void:
 	if _ships.is_empty():
 		return
-	_apply_mode_option(_mode_index)
+	_prepare_arcade_launch()
 	var ship := _ships[_selected_index]
 	GameManager.select_ship(ship)
-	DebugLog.log_info("MENU", "Starting %s (%s) with ship: %s" % [
-		GameManager.mode_name(), GameManager.difficulty_name(), ship.ship_name
-	])
+	DebugLog.log_info("MENU", "Starting %s with ship: %s" % [GameManager.mode_name(), ship.ship_name])
 	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
