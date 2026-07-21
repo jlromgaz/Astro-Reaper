@@ -35,6 +35,7 @@ func fetch_top(mode: String) -> void:
 func _request(url: String, body: String, callback: Callable) -> void:
 	var req := HTTPRequest.new()
 	req.timeout = REQUEST_TIMEOUT
+	_configure_request(req)
 	add_child(req)
 	req.request_completed.connect(
 		func(result: int, code: int, _headers: PackedStringArray, resp: PackedByteArray) -> void:
@@ -45,6 +46,16 @@ func _request(url: String, body: String, callback: Callable) -> void:
 	if err != OK:
 		callback.call(HTTPRequest.RESULT_CANT_CONNECT, 0, PackedByteArray())
 		req.queue_free()
+
+
+## On the Web export, the browser already transparently decompresses
+## gzip-encoded responses before Godot sees the bytes — Godot's own
+## HTTPRequest then tries to gunzip an already-plain body and fails
+## (RESULT_BODY_DECOMPRESS_FAILED) once Firestore's response is large
+## enough to get gzipped. Disabling gzip acceptance avoids the double
+## decompression on every platform.
+func _configure_request(req: HTTPRequest) -> void:
+	req.accept_gzip = false
 
 
 func _on_submit_done(result: int, code: int, _body: PackedByteArray) -> void:
