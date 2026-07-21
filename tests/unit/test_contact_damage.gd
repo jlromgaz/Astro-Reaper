@@ -1,7 +1,8 @@
 extends GutTest
 ## Tests for contact damage stacking (multi-enemy additive damage).
 ## The player should lose HP from EVERY enemy in contact simultaneously,
-## not just the first one. i-frames only apply to Area2D (bullet) hits.
+## not just the first one. i-frames are per-source: they block the SAME
+## attacker from re-hitting immediately, but never block a DIFFERENT one.
 
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 
@@ -13,7 +14,7 @@ func before_each() -> void:
 	await get_tree().process_frame
 	player.max_hp = 100.0
 	player.current_hp = 100.0
-	player._invincibility_timer = 0.0
+	player._source_cooldowns.clear()
 
 
 ## Two body-contact sources (enemies) must BOTH deal damage in the same
@@ -67,16 +68,28 @@ func test_area_source_blocked_while_iframe_active() -> void:
 	)
 
 
-## After the i-frame expires, Area2D hits should deal damage again.
+## After the SAME source's i-frame expires, it should deal damage again.
 func test_area_iframe_expires_and_damage_resumes() -> void:
+	var bullet := Area2D.new()
+	add_child_autofree(bullet)
+	player.take_damage(10.0, bullet)
+	player._source_cooldowns.erase(bullet)  # manually expire this source's i-frame
+	player.take_damage(10.0, bullet)
+	assert_almost_eq(
+		player.current_hp, 80.0, 0.1,
+		"same source hit again after i-frame expiry must deal damage"
+	)
+
+
+## A different source is never blocked by another source's i-frame.
+func test_different_source_not_blocked_by_others_iframe() -> void:
 	var bullet_a := Area2D.new()
 	var bullet_b := Area2D.new()
 	add_child_autofree(bullet_a)
 	add_child_autofree(bullet_b)
 	player.take_damage(10.0, bullet_a)
-	player._invincibility_timer = 0.0  # manually expire
 	player.take_damage(10.0, bullet_b)
 	assert_almost_eq(
 		player.current_hp, 80.0, 0.1,
-		"area hit after i-frame expiry must deal damage"
+		"a different attacker's hit must never be blocked by another one's i-frame"
 	)

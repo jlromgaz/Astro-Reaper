@@ -81,12 +81,22 @@ func test_take_damage_reduces_hp() -> void:
 
 
 func test_bullet_invincibility_blocks_second_hit() -> void:
-	# i-frames only apply to Area2D (bullet) hits, not body contacts
 	var bullet: Area2D = autofree(Area2D.new())
 	player.take_damage(10.0, bullet)
 	var hp_after_first: float = player.current_hp
 	player.take_damage(10.0, bullet)
 	assert_eq(player.current_hp, hp_after_first, "Second bullet hit inside i-frame window must be blocked")
+
+
+func test_body_contact_invincibility_blocks_second_hit() -> void:
+	# i-frames must apply to ANY damage source, not just Area2D bullets —
+	# otherwise sustained contact with a kamikaze/boss/tank drains HP every
+	# physics frame with zero protection.
+	var enemy_body: CharacterBody2D = autofree(CharacterBody2D.new())
+	player.take_damage(10.0, enemy_body)
+	var hp_after_first: float = player.current_hp
+	player.take_damage(10.0, enemy_body)
+	assert_eq(player.current_hp, hp_after_first, "Second body-contact hit inside i-frame window must be blocked")
 
 
 func test_shield_absorbs_projectile_damage() -> void:
@@ -95,6 +105,17 @@ func test_shield_absorbs_projectile_damage() -> void:
 	player.take_damage(5.0, projectile)
 	assert_eq(player.shield_hp, 15.0)
 	assert_eq(player.current_hp, player.max_hp, "Shield must fully absorb the hit")
+
+
+func test_shield_absorbs_body_contact_damage() -> void:
+	# Shield previously only checked `_source is Area2D`, so melee/contact
+	## damage from kamikazes/bosses/tanks bypassed it entirely.
+	player.add_shield()
+	var enemy_body: CharacterBody2D = autofree(CharacterBody2D.new())
+	player.take_damage(5.0, enemy_body)
+	assert_eq(player.shield_hp, 15.0)
+	assert_eq(player.current_hp, player.max_hp,
+		"Shield must absorb body-contact damage too, not just projectiles")
 
 
 func test_heal_clamps_to_max_hp() -> void:

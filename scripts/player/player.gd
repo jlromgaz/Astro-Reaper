@@ -20,10 +20,11 @@ var _move_input := Vector2.ZERO
 var _weapon_slots: Array[Dictionary] = []
 var _fire_timer: float = 0.0
 var _fire_interval: float = 1.2
-## Body contact hits never set this — each enemy throttles itself via _damage_timer.
-## Area2D (bullet) hits set a brief window to prevent same-bullet double hits.
+## Per-source i-frame: blocks the SAME attacker from re-hitting within the
+## window, but lets multiple simultaneous attackers each land their hit —
+## getting swarmed by 3 enemies must hurt more than being touched by 1.
 const INVINCIBILITY_TIME := 0.15
-var _invincibility_timer: float = 0.0
+var _source_cooldowns: Dictionary = {}
 
 
 func _ready() -> void:
@@ -71,15 +72,18 @@ func _on_game_started() -> void:
 		current_hp = ship_data.base_hp
 	else:
 		current_hp = max_hp
-	_invincibility_timer = 0.0
+	_source_cooldowns.clear()
 	enemies_killed = 0
 
 
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_playing():
 		return
-	if _invincibility_timer > 0:
-		_invincibility_timer -= delta
+	for src in _source_cooldowns.keys():
+		if not is_instance_valid(src) or _source_cooldowns[src] <= delta:
+			_source_cooldowns.erase(src)
+		else:
+			_source_cooldowns[src] -= delta
 	velocity = _move_input * move_speed
 	move_and_slide()
 	_auto_aim()
@@ -260,27 +264,26 @@ func get_weapons_short_list() -> String:
 
 
 func take_damage(amount: float, _source: Node) -> void:
-	if _is_dead or _invincibility_timer > 0:
+	if _is_dead:
 		return
-	
+	if _source and _source_cooldowns.has(_source):
+		return
+
 	var remaining_dmg = amount
 	if has_shield and shield_hp > 0:
-		if _source is Area2D:
-			var absorbed = min(shield_hp, remaining_dmg)
-			shield_hp -= absorbed
-			remaining_dmg -= absorbed
-			DebugLog.log_info("PLAYER", "Shield absorbed %.1f damage. Remaining: %.1f" % [absorbed, shield_hp])
-			if shield_hp <= 0:
-				DebugLog.log_info("PLAYER", "Shield broken!")
-		else:
-			pass
-	
+		var absorbed = min(shield_hp, remaining_dmg)
+		shield_hp -= absorbed
+		remaining_dmg -= absorbed
+		DebugLog.log_info("PLAYER", "Shield absorbed %.1f damage. Remaining: %.1f" % [absorbed, shield_hp])
+		if shield_hp <= 0:
+			DebugLog.log_info("PLAYER", "Shield broken!")
+
 	if remaining_dmg <= 0:
 		return
-		
+
 	current_hp -= remaining_dmg
-	if _source is Area2D:
-		_invincibility_timer = INVINCIBILITY_TIME
+	if _source:
+		_source_cooldowns[_source] = INVINCIBILITY_TIME
 	DebugLog.log_info("COMBAT", "Player[%d] hit: %.1f. HP: %.1f/%.1f" % [get_instance_id(), remaining_dmg, current_hp, max_hp])
 	EventBus.player_hp_changed.emit(current_hp, max_hp)
 	EventBus.player_damaged.emit(remaining_dmg, _source)
