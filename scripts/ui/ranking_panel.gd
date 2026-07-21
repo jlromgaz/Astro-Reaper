@@ -1,19 +1,15 @@
 extends PanelContainer
-## Global per-mode top-10 ranking. Cycles between the four leaderboard
-## buckets with < > buttons and fetches each from the Leaderboard autoload.
+## Global top-10 ranking for Arcade — Endless, the game's only mode.
 ## Builds its UI in code so unit tests can drive populate()/show_error().
 
 signal closed
 
-const MODES: Array[String] = ["classic-easy", "classic-medium", "classic-hard", "arcade"]
+const MODES: Array[String] = ["arcade"]
 const MODE_LABELS := {
-	"classic-easy": "CLASSIC — EASY",
-	"classic-medium": "CLASSIC — MEDIUM",
-	"classic-hard": "CLASSIC — HARD",
 	"arcade": "ARCADE — ENDLESS",
 }
 
-var _mode_index := 1
+var _mode_index := 0
 var _highlight_name := ""
 var _highlight_score := -1
 var _retry_left := 1
@@ -44,6 +40,7 @@ func _ready() -> void:
 	prev_btn.text = "<"
 	prev_btn.custom_minimum_size = Vector2(30, 24)
 	prev_btn.focus_mode = Control.FOCUS_NONE
+	prev_btn.visible = MODES.size() > 1
 	prev_btn.pressed.connect(_on_cycle.bind(-1))
 	mode_row.add_child(prev_btn)
 
@@ -58,6 +55,7 @@ func _ready() -> void:
 	next_btn.text = ">"
 	next_btn.custom_minimum_size = Vector2(30, 24)
 	next_btn.focus_mode = Control.FOCUS_NONE
+	next_btn.visible = MODES.size() > 1
 	next_btn.pressed.connect(_on_cycle.bind(1))
 	mode_row.add_child(next_btn)
 

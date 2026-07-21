@@ -10,6 +10,13 @@ func _make_panel() -> PanelContainer:
 	return panel
 
 
+func _action(name: String) -> InputEventAction:
+	var ev := InputEventAction.new()
+	ev.action = name
+	ev.pressed = true
+	return ev
+
+
 func test_default_name_is_aaa() -> void:
 	var panel := _make_panel()
 	assert_eq(panel.get_player_name(), "AAA")
@@ -47,3 +54,53 @@ func test_ok_emits_submitted_with_name() -> void:
 	watch_signals(panel)
 	panel.submitted.emit(panel.get_player_name())
 	assert_signal_emitted_with_parameters(panel, "submitted", ["CAA"])
+
+
+## --- Keyboard/gamepad navigation (WASD works via the shared ui_* actions) ---
+
+func test_ui_up_cycles_current_slot_letter() -> void:
+	var panel := _make_panel()
+	panel._unhandled_input(_action("ui_up"))
+	assert_eq(panel.get_player_name(), "BAA")
+
+
+func test_ui_down_wraps_current_slot_letter() -> void:
+	var panel := _make_panel()
+	panel._unhandled_input(_action("ui_down"))
+	assert_eq(panel.get_player_name(), "ZAA")
+
+
+func test_ui_right_moves_to_next_slot() -> void:
+	var panel := _make_panel()
+	panel._unhandled_input(_action("ui_right"))
+	panel._unhandled_input(_action("ui_up"))
+	assert_eq(panel.get_player_name(), "ABA", "Right must move focus to the second slot")
+
+
+func test_ui_left_wraps_to_last_slot() -> void:
+	var panel := _make_panel()
+	panel._unhandled_input(_action("ui_left"))
+	panel._unhandled_input(_action("ui_up"))
+	assert_eq(panel.get_player_name(), "AAB", "Left from the first slot must wrap to the last")
+
+
+func test_ui_accept_emits_submitted() -> void:
+	var panel := _make_panel()
+	watch_signals(panel)
+	panel._unhandled_input(_action("ui_accept"))
+	assert_signal_emitted_with_parameters(panel, "submitted", ["AAA"])
+
+
+func test_hidden_panel_ignores_input() -> void:
+	var panel := _make_panel()
+	panel.hide()
+	panel._unhandled_input(_action("ui_up"))
+	assert_eq(panel.get_player_name(), "AAA", "A hidden panel must not react to input")
+
+
+func test_showing_panel_resets_focus_to_first_slot() -> void:
+	var panel := _make_panel()
+	panel._unhandled_input(_action("ui_right"))
+	panel.hide()
+	panel.show()
+	assert_eq(panel._current_slot, 0, "Reopening must reset keyboard focus to the first letter")

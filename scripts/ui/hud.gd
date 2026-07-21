@@ -399,7 +399,6 @@ func _apply_upgrade(upg_type: String) -> void:
 
 
 func _on_game_ended(reason: String) -> void:
-	game_over_panel.show()
 	game_over_title.text = tr("VICTORY!") if reason == "victory" else tr("GAME OVER")
 	var mins: int = int(GameManager.run_time) / 60
 	var secs: int = int(GameManager.run_time) % 60
@@ -422,7 +421,13 @@ func _on_game_ended(reason: String) -> void:
 		_animate_score(ScoreManager.last_result.score, ScoreManager.get_high_score())
 	save_score_btn.visible = not _score_submitted \
 		and int(ScoreManager.last_result.get("score", 0)) > 0
-	play_again_btn.grab_focus()
+	if save_score_btn.visible:
+		# Invite the player to save their initials right away instead of
+		# waiting for a manual button press.
+		name_entry_panel.show()
+	else:
+		game_over_panel.show()
+		play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
 
 

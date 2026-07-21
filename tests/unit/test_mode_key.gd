@@ -31,11 +31,10 @@ func test_arcade_key_ignores_difficulty() -> void:
 	assert_eq(GameManager.mode_key(), "arcade")
 
 
-func test_all_keys_are_ranking_panel_buckets() -> void:
+func test_reachable_mode_key_is_a_ranking_panel_bucket() -> void:
+	# Classic is disabled from the menu (arcade-only now), so its mode_keys
+	# are intentionally absent from the ranking panel's bucket list — only
+	# the one mode actually reachable through the UI needs a bucket.
 	var panel_script := load("res://scripts/ui/ranking_panel.gd")
-	GameManager.game_mode = GameManager.GameMode.CLASSIC
-	for diff in [GameManager.Difficulty.EASY, GameManager.Difficulty.MEDIUM, GameManager.Difficulty.HARD]:
-		GameManager.difficulty = diff
-		assert_has(panel_script.MODES, GameManager.mode_key())
 	GameManager.game_mode = GameManager.GameMode.ARCADE
 	assert_has(panel_script.MODES, GameManager.mode_key())

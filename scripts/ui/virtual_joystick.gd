@@ -5,7 +5,7 @@ extends Control
 signal input_changed(direction: Vector2)
 
 const DEADZONE    := 0.06   # near-instant direction response
-const KNOB_RANGE  := 30.0   # 30 px travel = full speed (was 70)
+const KNOB_RANGE  := 18.0   # 18 px travel = full speed (was 30, then 70) — mobile felt sluggish
 const BASE_RADIUS := 50.0   # visual ring radius
 const KNOB_RADIUS := 18.0   # knob radius
 

@@ -10,9 +10,14 @@ const SLOT_COUNT := 3
 
 var _letters: Array[int] = [0, 0, 0]
 var _labels: Array[Label] = []
+var _current_slot: int = 0
 
 
 func _ready() -> void:
+	visibility_changed.connect(func() -> void:
+		if visible:
+			_select_slot(0)
+	)
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
 	add_child(vbox)
@@ -50,6 +55,31 @@ func _ready() -> void:
 	skip_btn.add_theme_font_size_override("font_size", 12)
 	skip_btn.pressed.connect(func() -> void: skipped.emit())
 	buttons.add_child(skip_btn)
+
+	_select_slot(0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event.is_action_pressed("ui_up"):
+		cycle(_current_slot, 1)
+	elif event.is_action_pressed("ui_down"):
+		cycle(_current_slot, -1)
+	elif event.is_action_pressed("ui_right"):
+		_select_slot((_current_slot + 1) % SLOT_COUNT)
+	elif event.is_action_pressed("ui_left"):
+		_select_slot((_current_slot - 1 + SLOT_COUNT) % SLOT_COUNT)
+	elif event.is_action_pressed("ui_accept"):
+		submitted.emit(get_player_name())
+
+
+func _select_slot(slot: int) -> void:
+	_current_slot = slot
+	for i in range(_labels.size()):
+		_labels[i].add_theme_color_override(
+			"font_color", Palette.UI_ACCENT if i == _current_slot else Palette.UI_TEXT
+		)
 
 
 func _build_slot(slot: int) -> VBoxContainer:

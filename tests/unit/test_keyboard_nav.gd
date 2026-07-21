@@ -83,10 +83,31 @@ func test_focus_works_on_second_level_up() -> void:
 func test_play_again_grabs_focus_on_game_over() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
-	EventBus.game_ended.emit("death")
+	# Call the handler directly (not via EventBus.game_ended) so the real
+	# ScoreManager autoload — also listening on that signal — can't
+	# recompute last_result out from under this test's fixture.
+	ScoreManager.last_result = {}
+	hud._on_game_ended("death")
 	await get_tree().process_frame
 	assert_true(hud.play_again_btn.has_focus(),
 		"Play Again must be focused when the end panel opens")
+
+
+func test_name_entry_auto_opens_when_there_is_a_score_to_save() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	ScoreManager.last_result = {
+		"score": 500, "kills": 3, "level": 2, "victory": false,
+		"time_to_boss": 0.0, "hp_ratio": 0.0, "difficulty": "medium",
+		"mode": "arcade", "run_time": 60.0, "is_high_score": false,
+	}
+	hud._score_submitted = false
+	hud._on_game_ended("death")
+	await get_tree().process_frame
+	assert_true(hud.name_entry_panel.visible,
+		"A run with a savable score must invite initials entry automatically")
+	assert_false(hud.game_over_panel.visible,
+		"The end panel must wait behind name entry until it's submitted or skipped")
 
 
 func test_resume_grabs_focus_on_pause() -> void:

@@ -32,10 +32,14 @@ func test_kamikaze_flies_through_the_horde() -> void:
 		"Kamikaze must collide with nothing — contact is handled by its Area2D")
 
 
-func test_explosion_damage_exceeds_contact_damage() -> void:
+func test_no_lingering_contact_state_that_can_skip_the_explosion() -> void:
+	# Prior bug: a dual-purpose "_damage_timer" could leave a kamikaze
+	# "stuck" in contact, dealing periodic damage forever without ever
+	# exploding — exactly the "pegado, no explota, quita vida" report.
+	# Removed entirely: any live contact must explode immediately.
 	var kamikaze: CharacterBody2D = autofree(KAMIKAZE_SCENE.instantiate())
-	assert_gt(kamikaze.EXPLOSION_DAMAGE, kamikaze.DAMAGE,
-		"Kamikaze explosion must hurt more than a regular contact tick")
+	assert_false("_damage_timer" in kamikaze, "no timer-gated contact damage — contact always explodes")
+	assert_false("_player_in_contact" in kamikaze, "no lingering contact state — contact always explodes")
 
 
 func test_contact_deals_explosion_damage_and_self_destructs() -> void:

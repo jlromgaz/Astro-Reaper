@@ -3,7 +3,6 @@ extends CharacterBody2D
 
 const SPEED            := 120.0
 const HP               := 8.0
-const DAMAGE           := 8.0
 const EXPLOSION_DAMAGE := 14.0
 const XP_VALUE         := 1
 
@@ -14,9 +13,7 @@ var max_hp: float     = HP
 var move_speed: float = SPEED
 
 var _player: Node2D
-var _damage_timer      := 0.0
-var _player_in_contact := false
-var _is_dying          := false   # guard against double-death
+var _is_dying := false   # guard against double-death
 
 
 func apply_difficulty_scale(p_scale: float) -> void:
@@ -43,28 +40,16 @@ func _setup_damage_area() -> void:
 	area.collision_layer = 0
 	area.collision_mask  = 1
 	area.body_entered.connect(_on_body_entered)
-	area.body_exited.connect(_on_body_exited)
 
 
 func _on_body_entered(body: Node) -> void:
 	if _is_dying:
 		return
 	if body.is_in_group("player"):
-		_player_in_contact = true
-		_player            = body
-		velocity           = Vector2.ZERO   # freeze — prevents drilling into ship
-		if _damage_timer <= 0.0:
-			_player.take_damage(EXPLOSION_DAMAGE, self)
-			_damage_timer = 0.5
-			_explode()
-		else:
-			DebugLog.log_warn("ENEMY", "Kamikaze body_entered but damage_timer=%.2f — skipping explode" % _damage_timer)
-
-
-func _on_body_exited(body: Node) -> void:
-	if body.is_in_group("player"):
-		_player_in_contact = false
-		_damage_timer      = 0.0
+		_player  = body
+		velocity = Vector2.ZERO   # freeze — prevents drilling into ship
+		_player.take_damage(EXPLOSION_DAMAGE, self)
+		_explode()
 
 
 func _explode() -> void:
@@ -81,17 +66,9 @@ func _find_player() -> void:
 		_player = get_parent().get_node_or_null("Player")
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if _is_dying or not _player or not GameManager.is_playing():
 		return
-
-	if _player_in_contact:
-		_damage_timer -= delta
-		if _damage_timer <= 0.0:
-			if _player.has_method("take_damage"):
-				_player.take_damage(DAMAGE, self)
-			_damage_timer = 0.5
-		return   # don't keep moving into the player
 
 	var dir: Vector2 = (_player.global_position - global_position).normalized()
 	velocity = dir * move_speed
