@@ -104,3 +104,15 @@ func test_showing_panel_resets_focus_to_first_slot() -> void:
 	panel.hide()
 	panel.show()
 	assert_eq(panel._current_slot, 0, "Reopening must reset keyboard focus to the first letter")
+
+
+## --- Regression: double score submission ---
+## OK/SKIP could receive engine focus like any Button. If focused, Godot's
+## own BaseButton also activates on ui_accept — on top of the panel's own
+## _unhandled_input handling of the same event — emitting `submitted` twice
+## for a single Enter press (reported as scores being saved twice).
+func test_ok_and_skip_buttons_never_take_focus() -> void:
+	var panel := _make_panel()
+	for child in panel.find_children("*", "Button", true, false):
+		assert_eq(child.focus_mode, Control.FOCUS_NONE,
+			"Button '%s' must not accept focus — keyboard input is handled explicitly" % child.text)

@@ -16,10 +16,14 @@ var _player: Node2D
 var _is_dying := false   # guard against double-death
 
 
+const MAX_SPEED_MULT := 1.8
+
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp     = HP * p_scale
 	current_hp = max_hp
-	move_speed = SPEED * (1.0 + (p_scale - 1.0) * 0.3)
+	# Capped so a long, escalated run makes kamikazes tougher but never
+	# outright unreactable — HP can climb freely, speed cannot.
+	move_speed = SPEED * clampf(1.0 + (p_scale - 1.0) * 0.15, 1.0, MAX_SPEED_MULT)
 	DebugLog.log_info("ENEMY", "Kamikaze scaled to %.1f HP, %.1f spd" % [max_hp, move_speed])
 
 

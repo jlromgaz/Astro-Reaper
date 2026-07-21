@@ -17,7 +17,11 @@ var _boss_spawned: bool = false
 # Arcade recurring wave boss: reuses enemy_boss.tscn but never ends the run.
 const ARCADE_BOSS_INTERVAL := 120.0
 const ARCADE_BOSS_SCALE_STEP := 0.6
-const WAVE_BOSS_DIFFICULTY_MULT := 1.5
+const WAVE_BOSS_DIFFICULTY_MULT := 1.2
+# Ceiling on global_difficulty_mult so the compounding per-kill bump ramps
+# the run up meaningfully without individual enemy formulas blowing up
+# (e.g. kamikazes felt "insane" once combined scale hit ~9x after 2 kills).
+const GLOBAL_DIFFICULTY_CAP := 4.0
 var _arcade_boss_timer: float = 0.0
 var _arcade_boss_wave: int = 0
 
@@ -77,7 +81,8 @@ func _on_difficulty_bump() -> void:
 func _on_wave_boss_defeated() -> void:
 	# Multiplicative, not additive: each kill compounds on the last so the
 	# run ramps much faster from the first boss onward instead of plateauing.
-	global_difficulty_mult *= WAVE_BOSS_DIFFICULTY_MULT
+	# Capped so a long run keeps escalating meaningfully without runaway.
+	global_difficulty_mult = minf(global_difficulty_mult * WAVE_BOSS_DIFFICULTY_MULT, GLOBAL_DIFFICULTY_CAP)
 	DebugLog.log_info("SPAWNER", "Wave boss defeated → global_mult=%.2f" % global_difficulty_mult)
 
 

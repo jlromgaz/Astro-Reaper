@@ -122,3 +122,16 @@ func test_wave_boss_defeats_compound_difficulty() -> void:
 	var expected: float = start * pow(spawner.WAVE_BOSS_DIFFICULTY_MULT, 3)
 	assert_almost_eq(spawner.global_difficulty_mult, expected, 0.001,
 		"repeated wave boss kills must compound, ramping much faster over time")
+
+
+func test_global_difficulty_is_capped_after_many_wave_boss_kills() -> void:
+	# Reported bug: kamikazes went "insane" right after clearing a wave
+	# boss — uncapped ~1.5x-per-kill compounding could reach ~9x total
+	# scale within 2 kills, blowing up per-enemy formulas that assume a
+	# modest range. A hard ceiling keeps the ramp meaningful but sane.
+	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
+	await get_tree().process_frame
+	for i in range(20):
+		EventBus.wave_boss_defeated.emit()
+	assert_almost_eq(spawner.global_difficulty_mult, spawner.GLOBAL_DIFFICULTY_CAP, 0.001,
+		"global difficulty must never run away unbounded, however many wave bosses are killed")

@@ -46,6 +46,7 @@ func _ready() -> void:
 	ok_btn.text = "OK"
 	ok_btn.custom_minimum_size = Vector2(80, 26)
 	ok_btn.add_theme_font_size_override("font_size", 12)
+	ok_btn.focus_mode = Control.FOCUS_NONE
 	ok_btn.pressed.connect(func() -> void: submitted.emit(get_player_name()))
 	buttons.add_child(ok_btn)
 
@@ -53,6 +54,7 @@ func _ready() -> void:
 	skip_btn.text = tr("SKIP")
 	skip_btn.custom_minimum_size = Vector2(80, 26)
 	skip_btn.add_theme_font_size_override("font_size", 12)
+	skip_btn.focus_mode = Control.FOCUS_NONE
 	skip_btn.pressed.connect(func() -> void: skipped.emit())
 	buttons.add_child(skip_btn)
 

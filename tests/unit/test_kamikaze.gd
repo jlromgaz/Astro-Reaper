@@ -105,3 +105,14 @@ func test_contact_explosion_spawns_flash() -> void:
 		if child is Node2D and child.has_method("_draw") and "scale_mult" in child:
 			found_flash = true
 	assert_true(found_flash, "Explosion flash (intercept_flash-style) must be spawned")
+
+
+## --- Balance: speed must never run away, however high difficulty climbs ---
+
+func test_speed_scale_is_capped_at_high_difficulty() -> void:
+	# Reported bug: after 2 wave-boss kills, combined difficulty scale could
+	# reach ~9x, tripling kamikaze speed and making them feel "insane".
+	var kamikaze: CharacterBody2D = autofree(KAMIKAZE_SCENE.instantiate())
+	kamikaze.apply_difficulty_scale(9.0)
+	assert_lt(kamikaze.move_speed, kamikaze.SPEED * 2.0,
+		"kamikaze speed must stay well short of double base speed even at extreme difficulty")
