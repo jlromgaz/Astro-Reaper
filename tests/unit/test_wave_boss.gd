@@ -106,5 +106,19 @@ func test_wave_boss_defeat_bumps_global_difficulty() -> void:
 	await get_tree().process_frame
 	var before: float = spawner.global_difficulty_mult
 	EventBus.wave_boss_defeated.emit()
-	assert_gt(spawner.global_difficulty_mult, before,
-		"defeating a wave boss must raise difficulty for everything spawned after")
+	assert_almost_eq(
+		spawner.global_difficulty_mult, before * spawner.WAVE_BOSS_DIFFICULTY_MULT, 0.001,
+		"a wave boss kill must multiply difficulty, not just add a flat amount"
+	)
+
+
+func test_wave_boss_defeats_compound_difficulty() -> void:
+	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
+	await get_tree().process_frame
+	var start: float = spawner.global_difficulty_mult
+	EventBus.wave_boss_defeated.emit()
+	EventBus.wave_boss_defeated.emit()
+	EventBus.wave_boss_defeated.emit()
+	var expected: float = start * pow(spawner.WAVE_BOSS_DIFFICULTY_MULT, 3)
+	assert_almost_eq(spawner.global_difficulty_mult, expected, 0.001,
+		"repeated wave boss kills must compound, ramping much faster over time")
