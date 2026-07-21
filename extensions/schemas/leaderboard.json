@@ -1,0 +1,7 @@
+{
+  "fields": [
+    { "name": "name", "type": "string" },
+    { "name": "score", "type": "number" },
+    { "name": "mode", "type": "string" }
+  ]
+}

@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "astro-reaper-e71f6"
+  },
+  "targets": {},
+  "etags": {
+    "astro-reaper-e71f6": {
+      "extensionInstances": {
+        "firestore-bigquery-export": "49dddebe6020b01b4f3a8c9357d8b398ebf0df7457263af299aa829a8692e5b7"
+      }
+    }
   }
 }
