@@ -10,21 +10,54 @@ func _make_panel() -> PanelContainer:
 	return panel
 
 
+## Grid layout: 1 header row (COLUMN_HEADERS.size() cells) + 1 row per entry.
+func _row_texts(panel: PanelContainer, row_index: int) -> Array[String]:
+	var cols: int = panel.COLUMN_HEADERS.size()
+	var start: int = cols + row_index * cols
+	var out: Array[String] = []
+	for i in range(cols):
+		out.append(panel._grid.get_child(start + i).text)
+	return out
+
+
 func test_populate_lists_rows_in_order() -> void:
 	var panel := _make_panel()
 	panel.populate([
 		{"name": "ACE", "score": 2950},
 		{"name": "BOB", "score": 100},
 	])
-	var text: String = panel._list.text
-	assert_string_contains(text, "1. ACE  2950")
-	assert_string_contains(text, "2. BOB  100")
+	assert_true(panel._grid.visible)
+	assert_false(panel._list.visible)
+	assert_eq(_row_texts(panel, 0).slice(0, 3), ["1", "ACE", "2950"])
+	assert_eq(_row_texts(panel, 1).slice(0, 3), ["2", "BOB", "100"])
+
+
+func test_populate_shows_run_stat_columns() -> void:
+	var panel := _make_panel()
+	panel.populate([
+		{"name": "ACE", "score": 2950, "ship": "stellar", "run_time": 187.0, "kills": 42, "level": 9},
+	])
+	assert_eq(_row_texts(panel, 0), ["1", "ACE", "2950", "STE", "3:07", "42", "9"])
+
+
+func test_populate_shows_placeholder_for_missing_run_stats() -> void:
+	# Historical entries recorded before this feature carry none of these
+	# fields — must show a clear placeholder, not a misleading zero.
+	var panel := _make_panel()
+	panel.populate([{"name": "OLD", "score": 100}])
+	var cells: Array[String] = _row_texts(panel, 0)
+	assert_eq(cells[3], panel.NO_DATA)
+	assert_eq(cells[4], panel.NO_DATA)
+	assert_eq(cells[5], panel.NO_DATA)
+	assert_eq(cells[6], panel.NO_DATA)
 
 
 func test_populate_empty_shows_empty_message() -> void:
 	var panel := _make_panel()
 	panel.populate([])
 	assert_eq(panel._list.text, tr("RANKING_EMPTY"))
+	assert_true(panel._list.visible)
+	assert_false(panel._grid.visible)
 
 
 func test_highlight_marks_own_entry() -> void:
@@ -35,9 +68,12 @@ func test_highlight_marks_own_entry() -> void:
 		{"name": "ACE", "score": 2950},
 		{"name": "ACE", "score": 50},
 	])
-	var lines: PackedStringArray = panel._list.text.split("\n")
-	assert_string_contains(lines[0], "<")
-	assert_false(lines[1].contains("<"), "same name, other score must not highlight")
+	var cols: int = panel.COLUMN_HEADERS.size()
+	var first_cell: Label = panel._grid.get_child(cols)
+	var second_row_cell: Label = panel._grid.get_child(cols * 2)
+	assert_eq(first_cell.get_theme_color("font_color"), Palette.UI_ACCENT)
+	assert_eq(second_row_cell.get_theme_color("font_color"), Palette.UI_TEXT,
+		"same name, other score must not highlight")
 
 
 func test_fetch_failure_retries_once_then_shows_code() -> void:

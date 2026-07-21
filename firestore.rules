@@ -5,7 +5,11 @@ service cloud.firestore {
     // score, nobody can edit or delete existing entries.
     match /scores/{entry} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['name', 'score', 'mode'])
+      // ship/run_time/kills/level are optional (but type/bounds-checked when
+      // present) so an in-flight client/rules deploy mismatch never breaks
+      // score submission — only name/score/mode are truly required.
+      allow create: if request.resource.data.keys().hasOnly(
+          ['name', 'score', 'mode', 'ship', 'run_time', 'kills', 'level'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 1
         && request.resource.data.name.size() <= 8
@@ -13,7 +17,18 @@ service cloud.firestore {
         && request.resource.data.score >= 0
         && request.resource.data.score <= 9999999
         && request.resource.data.mode is string
-        && request.resource.data.mode.size() <= 24;
+        && request.resource.data.mode.size() <= 24
+        && (!('ship' in request.resource.data)
+          || (request.resource.data.ship is string && request.resource.data.ship.size() <= 24))
+        && (!('run_time' in request.resource.data)
+          || (request.resource.data.run_time is number
+            && request.resource.data.run_time >= 0 && request.resource.data.run_time <= 86400))
+        && (!('kills' in request.resource.data)
+          || (request.resource.data.kills is int
+            && request.resource.data.kills >= 0 && request.resource.data.kills <= 999999))
+        && (!('level' in request.resource.data)
+          || (request.resource.data.level is int
+            && request.resource.data.level >= 0 && request.resource.data.level <= 9999));
       allow update, delete: if false;
     }
   }

@@ -444,7 +444,11 @@ func _on_name_submitted(player_name: String) -> void:
 	ranking_panel.open(GameManager.mode_key(), player_name,
 		int(ScoreManager.last_result.get("score", 0)), false)
 	Leaderboard.submit_score(player_name,
-		int(ScoreManager.last_result.get("score", 0)), GameManager.mode_key())
+		int(ScoreManager.last_result.get("score", 0)), GameManager.mode_key(),
+		str(ScoreManager.last_result.get("ship_id", "")),
+		float(ScoreManager.last_result.get("run_time", 0.0)),
+		int(ScoreManager.last_result.get("kills", 0)),
+		int(ScoreManager.last_result.get("level", 0)))
 
 
 func _on_submit_finished(ok: bool) -> void:

@@ -4,13 +4,20 @@ extends RefCounted
 ## parses responses. No I/O — fully unit-testable.
 
 
-static func build_submit_body(player_name: String, score: int, mode: String) -> Dictionary:
+static func build_submit_body(
+	player_name: String, score: int, mode: String,
+	ship: String, run_time: float, kills: int, level: int
+) -> Dictionary:
 	# Firestore REST encodes integers as strings inside integerValue.
 	return {
 		"fields": {
 			"name": {"stringValue": player_name},
 			"score": {"integerValue": str(score)},
 			"mode": {"stringValue": mode},
+			"ship": {"stringValue": ship},
+			"run_time": {"doubleValue": run_time},
+			"kills": {"integerValue": str(kills)},
+			"level": {"integerValue": str(level)},
 		}
 	}
 
@@ -44,8 +51,19 @@ static func parse_top_response(rows: Array) -> Array[Dictionary]:
 		var fields: Dictionary = row["document"].get("fields", {})
 		var name_field: Dictionary = fields.get("name", {})
 		var score_field: Dictionary = fields.get("score", {})
-		out.append({
+		var entry := {
 			"name": str(name_field.get("stringValue", "???")),
 			"score": int(str(score_field.get("integerValue", "0"))),
-		})
+		}
+		# Older entries predate these fields — omit rather than fake a zero,
+		# so the UI can tell "absent" from a genuine 0.
+		if fields.has("ship"):
+			entry["ship"] = str(fields["ship"].get("stringValue", ""))
+		if fields.has("run_time"):
+			entry["run_time"] = float(fields["run_time"].get("doubleValue", 0.0))
+		if fields.has("kills"):
+			entry["kills"] = int(str(fields["kills"].get("integerValue", "0")))
+		if fields.has("level"):
+			entry["level"] = int(str(fields["level"].get("integerValue", "0")))
+		out.append(entry)
 	return out

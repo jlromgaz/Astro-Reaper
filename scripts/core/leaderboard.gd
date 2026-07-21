@@ -22,8 +22,13 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
-func submit_score(player_name: String, score: int, mode: String) -> void:
-	var body := JSON.stringify(LeaderboardCodec.build_submit_body(player_name, score, mode))
+func submit_score(
+	player_name: String, score: int, mode: String,
+	ship: String, run_time: float, kills: int, level: int
+) -> void:
+	var body := JSON.stringify(
+		LeaderboardCodec.build_submit_body(player_name, score, mode, ship, run_time, kills, level)
+	)
 	_request("%s/scores?key=%s" % [_base_url, API_KEY], body, _on_submit_done)
 
 
