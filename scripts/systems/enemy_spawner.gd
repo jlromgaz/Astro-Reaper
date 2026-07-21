@@ -14,6 +14,12 @@ const PRESSURE_THRESHOLD := 30.0
 const PRESSURE_SPAWN_MULT := 1.3
 var _boss_spawned: bool = false
 
+# Arcade recurring wave boss: reuses enemy_boss.tscn but never ends the run.
+const ARCADE_BOSS_INTERVAL := 120.0
+const ARCADE_BOSS_SCALE_STEP := 0.6
+var _arcade_boss_timer: float = 0.0
+var _arcade_boss_wave: int = 0
+
 # Comet spawning
 var _comet_timer: float = 0.0
 var _comet_interval: float = 30.0
@@ -59,11 +65,17 @@ func _ready() -> void:
 	EventBus.difficulty_bump.connect(_on_difficulty_bump)
 	EventBus.player_damaged.connect(_on_player_damaged)
 	EventBus.enemy_killed.connect(_on_enemy_killed_drop)
+	EventBus.wave_boss_defeated.connect(_on_wave_boss_defeated)
 
 
 func _on_difficulty_bump() -> void:
 	global_difficulty_mult += 0.05
 	DebugLog.log_info("SPAWNER", "Difficulty bump → global_mult=%.2f" % global_difficulty_mult)
+
+
+func _on_wave_boss_defeated() -> void:
+	global_difficulty_mult += 0.3
+	DebugLog.log_info("SPAWNER", "Wave boss defeated → global_mult=%.2f" % global_difficulty_mult)
 
 
 func _on_player_damaged(_amount: float, _source: Node) -> void:
@@ -132,6 +144,7 @@ func _process(delta: float) -> void:
 		return
 	_undamaged_streak += delta
 	_try_spawn_boss()
+	_try_spawn_arcade_wave_boss(delta)
 	_try_spawn_comet(delta)
 	_try_spawn_chest(delta)
 	_try_spawn_demon_icon(delta)
@@ -241,6 +254,40 @@ func _try_spawn_boss() -> void:
 	boss.global_position = _player.global_position + offset
 	_world.add_child(boss)
 	DebugLog.log_info("SPAWN", "Boss spawned at %s" % boss.global_position)
+	EventBus.enemy_spawned.emit(boss)
+	EventBus.boss_spawned.emit(boss)
+
+
+func _try_spawn_arcade_wave_boss(delta: float) -> void:
+	if GameManager.game_mode != GameManager.GameMode.ARCADE:
+		return
+	_arcade_boss_timer += delta
+	if _arcade_boss_timer < ARCADE_BOSS_INTERVAL:
+		return
+	_arcade_boss_timer = 0.0
+	_spawn_arcade_wave_boss()
+
+
+func _spawn_arcade_wave_boss() -> void:
+	_arcade_boss_wave += 1
+	if not _world or not _player:
+		DebugLog.log_warn("SPAWNER", "_spawn_arcade_wave_boss: world or player not set — skipping")
+		return
+	var boss: CharacterBody2D = _enemy_boss.instantiate() as CharacterBody2D
+	if boss.has_method("set_final"):
+		boss.set_final(false)
+	var offset: Vector2 = Vector2(250, 0)
+	if randi() % 2 == 0:
+		offset.x = -offset.x
+	boss.global_position = _player.global_position + offset
+	_world.add_child(boss)
+	var wave_scale: float = (1.0 + _arcade_boss_wave * ARCADE_BOSS_SCALE_STEP) * global_difficulty_mult
+	if boss.has_method("apply_difficulty_scale"):
+		boss.apply_difficulty_scale(wave_scale)
+	DebugLog.log_info(
+		"SPAWN",
+		"Arcade wave boss #%d spawned at %s (scale=%.2f)" % [_arcade_boss_wave, boss.global_position, wave_scale]
+	)
 	EventBus.enemy_spawned.emit(boss)
 	EventBus.boss_spawned.emit(boss)
 

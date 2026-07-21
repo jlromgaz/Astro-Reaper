@@ -29,6 +29,7 @@ signal wave_started(wave: int)
 signal wave_ended(wave: int)
 signal boss_spawned(boss: Node2D)
 signal boss_defeated
+signal wave_boss_defeated
 signal victory
 
 signal difficulty_bump

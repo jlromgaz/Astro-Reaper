@@ -9,15 +9,28 @@ const XP_VALUE := 20
 
 var current_hp: float = HP
 var max_hp: float = HP
+var damage: float = DAMAGE
+var spray_damage: float = SPRAY_DAMAGE
+var pulse_damage: float = PULSE_DAMAGE
 var _player: Node2D
+var _is_final: bool = true
 
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var hp_label: Label = $HealthBar/HPLabel
 
 
+## Recurring Arcade wave bosses call set_final(false) so their death
+## escalates difficulty instead of ending the run (see enemy_spawner.gd).
+func set_final(value: bool) -> void:
+	_is_final = value
+
+
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
+	damage = DAMAGE * p_scale
+	spray_damage = SPRAY_DAMAGE * p_scale
+	pulse_damage = PULSE_DAMAGE * p_scale
 	if is_inside_tree() and health_bar:
 		health_bar.max_value = max_hp
 		health_bar.value = current_hp
@@ -89,7 +102,7 @@ func _physics_process(delta: float) -> void:
 	if get_slide_collision_count() > 0:
 		var col: KinematicCollision2D = get_slide_collision(0)
 		if col.get_collider().is_in_group("player"):
-			col.get_collider().take_damage(DAMAGE, self)
+			col.get_collider().take_damage(damage, self)
 
 
 func _do_spray() -> void:
@@ -99,12 +112,12 @@ func _do_spray() -> void:
 	var spread_step: float = deg_to_rad(20.0)
 	var start_angle: float = -spread_step * (SPRAY_COUNT / 2.0 - 0.5)
 	for i in range(SPRAY_COUNT):
-		_spawn_bullet(to_player.rotated(start_angle + i * spread_step), SPRAY_DAMAGE)
+		_spawn_bullet(to_player.rotated(start_angle + i * spread_step), spray_damage)
 
 
 func _do_pulse() -> void:
 	for i in range(PULSE_COUNT):
-		_spawn_bullet(Vector2.RIGHT.rotated(TAU / PULSE_COUNT * i), PULSE_DAMAGE)
+		_spawn_bullet(Vector2.RIGHT.rotated(TAU / PULSE_COUNT * i), pulse_damage)
 
 
 func _start_spray_attack() -> void:
@@ -144,7 +157,7 @@ func _check_charge_collision() -> void:
 	for i in range(get_slide_collision_count()):
 		var col: KinematicCollision2D = get_slide_collision(i)
 		if col.get_collider().is_in_group("player"):
-			col.get_collider().take_damage(DAMAGE * 1.5, self)
+			col.get_collider().take_damage(damage * 1.5, self)
 
 
 func take_damage(amount: float) -> void:
@@ -162,7 +175,10 @@ func _die() -> void:
 	_spawn_xp()
 	DebugLog.log_info("COMBAT", "Boss killed at %s" % global_position)
 	EventBus.enemy_killed.emit(self, global_position)
-	EventBus.boss_defeated.emit()
+	if _is_final:
+		EventBus.boss_defeated.emit()
+	else:
+		EventBus.wave_boss_defeated.emit()
 	queue_free()
 
 
