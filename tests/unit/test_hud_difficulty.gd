@@ -108,8 +108,37 @@ func test_health_upgrades_use_health_color() -> void:
 ## --- end-game screen ---
 
 func test_game_over_panel_visible_on_player_died() -> void:
+	# player.gd's real _die() always emits BOTH signals back to back —
+	# game_ended is what actually decides which panel to show.
+	ScoreManager.last_result = {}
 	EventBus.player_died.emit()
-	assert_true(hud.game_over_panel.visible, "Game over panel must appear when player dies")
+	EventBus.game_ended.emit("death")
+	assert_true(hud.game_over_panel.visible, "Game over panel must appear when there is no score to save")
+
+
+## Regression: hud used to react to player_died on its own (_show_game_over),
+## racing ahead of ScoreManager's game_ended-driven score computation with
+## stale/empty data — this caused the game-over panel and the name-entry
+## panel to both end up visible at once, and left play_again_btn focused
+## underneath name entry (reported as scores being saved twice).
+func test_player_died_alone_shows_no_panel_prematurely() -> void:
+	EventBus.player_died.emit()
+	assert_false(hud.game_over_panel.visible, "player_died alone must not show any end-of-run panel")
+	assert_false(hud.name_entry_panel.visible, "player_died alone must not show any end-of-run panel")
+
+
+func test_full_death_sequence_shows_name_entry_not_game_over_behind_it() -> void:
+	# Real ScoreManager (an autoload) also listens to game_ended and
+	# recomputes last_result from its own kill counter — so, unlike other
+	# tests, we can't just preset last_result and expect it to stick. Give
+	# it a real kill instead so the score is genuinely nonzero.
+	hud._score_submitted = false
+	EventBus.enemy_killed.emit(null, Vector2.ZERO)
+	EventBus.player_died.emit()
+	EventBus.game_ended.emit("death")
+	assert_true(hud.name_entry_panel.visible, "Name entry must show when there is a score to save")
+	assert_false(hud.game_over_panel.visible,
+		"Game over panel must not remain visible behind name entry")
 
 
 func test_death_title_on_game_ended_death() -> void:
@@ -137,7 +166,9 @@ func test_summary_includes_chosen_upgrades() -> void:
 
 
 func test_game_over_panel_fits_inside_viewport() -> void:
+	ScoreManager.last_result = {}
 	EventBus.player_died.emit()
+	EventBus.game_ended.emit("death")
 	await get_tree().process_frame
 	var rect: Rect2 = hud.game_over_panel.get_global_rect()
 	var vp: Rect2 = Rect2(Vector2.ZERO, hud.game_over_panel.get_viewport_rect().size)

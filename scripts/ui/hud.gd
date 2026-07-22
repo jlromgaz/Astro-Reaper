@@ -200,8 +200,12 @@ func _on_player_damaged(amount: float, _source: Node) -> void:
 
 
 func _on_player_died() -> void:
+	# Only update the HP display here. player.gd's _die() always follows this
+	# signal immediately with GameManager.end_game(), whose game_ended is the
+	# sole trigger for the end-of-run panels — reacting to player_died too
+	# used to race ahead with a stale/empty score and show the wrong panel
+	# (or both at once), which is how the score got submitted twice.
 	_update_hp()
-	_show_game_over()
 
 
 func _on_hp_changed(current: float, max_v: float) -> void:
@@ -447,8 +451,10 @@ func _on_game_ended(reason: String) -> void:
 	if save_score_btn.visible:
 		# Invite the player to save their initials right away instead of
 		# waiting for a manual button press.
+		game_over_panel.hide()
 		name_entry_panel.show()
 	else:
+		name_entry_panel.hide()
 		game_over_panel.show()
 		play_again_btn.grab_focus()
 	DebugLog.log_info("GAME", "Game ended. Total kills: %d" % kills)
@@ -506,10 +512,6 @@ func _set_displayed_score(value: int, best: int) -> void:
 	game_over_summary.text = _summary_base + "\n%s: %d | %s: %d" % [
 		tr("SCORE"), value, tr("BEST"), best
 	]
-
-
-func _show_game_over(reason: String = "death") -> void:
-	_on_game_ended(reason)
 
 
 func _on_restart() -> void:
