@@ -11,12 +11,41 @@ func before_each() -> void:
 	await get_tree().process_frame
 
 
+func after_each() -> void:
+	# _on_level_up() emits player_leveled_up, which GameManager listens to
+	# and uses to set run_level/pause the tree — must not leak between tests.
+	get_tree().paused = false
+	GameManager.run_level = 1
+	GameManager.current_state = GameManager.State.MENU
+
+
 ## --- difficulty_bump wiring ---
 
 func test_difficulty_bump_emitted_on_upgrade_selection() -> void:
 	watch_signals(EventBus)
 	hud._on_upgrade_selected({"name": "Heal", "type": "heal", "is_weapon": false})
 	assert_signal_emitted(EventBus, "difficulty_bump")
+
+
+## --- XP curve: increments must grow, not stay flat ---
+
+func test_xp_requirement_increments_keep_growing() -> void:
+	hud._on_level_up(2)
+	var req_2: int = hud._xp_to_level
+	hud._on_level_up(3)
+	var req_3: int = hud._xp_to_level
+	hud._on_level_up(4)
+	var req_4: int = hud._xp_to_level
+	var step_2_3: int = req_3 - req_2
+	var step_3_4: int = req_4 - req_3
+	assert_gt(step_3_4, step_2_3, "each level's XP requirement must grow by more than the last")
+
+
+func test_xp_requirement_is_much_steeper_than_old_linear_curve() -> void:
+	# Old curve was 5 + level*3 -> only 35 XP needed at level 10.
+	hud._on_level_up(10)
+	assert_gt(hud._xp_to_level, 100,
+		"leveling up must be meaningfully harder late-run than the old linear curve")
 
 
 func test_upgrade_history_grows_on_each_selection() -> void:
@@ -49,6 +78,28 @@ func test_stat_upgrades_use_stat_color() -> void:
 	assert_eq(hud._upgrade_color(_upgrade("projectile", false)), Palette.UPGRADE_STAT)
 
 
+## --- Risky overclock: +5% difficulty upgrade ---
+
+func test_difficulty_upgrade_uses_risk_color() -> void:
+	assert_eq(hud._upgrade_color(_upgrade("stat_difficulty", false)), Palette.UPGRADE_RISK)
+
+
+func test_difficulty_upgrade_is_in_the_pool() -> void:
+	var found := false
+	for u in hud._upgrade_pool:
+		if u.type == "stat_difficulty":
+			found = true
+	assert_true(found, "the risky-overclock upgrade must be offerable on level-up")
+
+
+func test_selecting_difficulty_upgrade_emits_player_increased_difficulty() -> void:
+	var player: CharacterBody2D = autofree(CharacterBody2D.new())
+	hud._player = player
+	watch_signals(EventBus)
+	hud._apply_upgrade("stat_difficulty")
+	assert_signal_emitted(EventBus, "player_increased_difficulty")
+
+
 func test_health_upgrades_use_health_color() -> void:
 	assert_eq(hud._upgrade_color(_upgrade("heal", false)), Palette.HEALTH)
 	assert_eq(hud._upgrade_color(_upgrade("stat_max_hp", false)), Palette.HEALTH)
@@ -69,6 +120,11 @@ func test_death_title_on_game_ended_death() -> void:
 func test_victory_title_on_game_ended_victory() -> void:
 	EventBus.game_ended.emit("victory")
 	assert_eq(hud.game_over_title.text, "VICTORY!")
+
+
+func test_run_ended_title_on_voluntary_quit() -> void:
+	EventBus.game_ended.emit("quit")
+	assert_eq(hud.game_over_title.text, "RUN ENDED")
 
 
 func test_summary_includes_chosen_upgrades() -> void:

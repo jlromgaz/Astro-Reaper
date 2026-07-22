@@ -1,6 +1,6 @@
 extends GutTest
-## Tests for the upgrade chest: random pickup that opens the FULL upgrade
-## catalog and applies the chosen upgrade three times.
+## Tests for the upgrade chest: random pickup that opens a weapons-only
+## choice and applies the chosen upgrade three times.
 
 const CHEST_SCENE := preload("res://scenes/world/chest.tscn")
 const HUD_SCENE := preload("res://scenes/ui/hud.tscn")
@@ -50,7 +50,7 @@ func test_full_chain_chest_touch_offers_upgrades_while_playing() -> void:
 	await get_tree().process_frame
 	assert_true(get_tree().paused, "Chest must pause the run")
 	assert_true(hud.level_up_panel.visible, "Chest MUST offer the upgrade choice")
-	assert_gt(hud.upgrade_buttons.get_child_count(), 3, "Full catalog expected")
+	assert_gt(hud.upgrade_buttons.get_child_count(), 3, "Weapons-only catalog expected")
 
 
 func test_chest_opened_outside_gameplay_does_not_pause() -> void:
@@ -82,16 +82,41 @@ func test_full_catalog_panel_fits_inside_viewport() -> void:
 		"Full-catalog panel %s must fit inside viewport %s" % [rect, vp])
 
 
-func test_chest_shows_full_catalog_with_x3() -> void:
+func test_chest_shows_weapons_only_with_x3() -> void:
 	GameManager.current_state = GameManager.State.PLAYING
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
 	EventBus.chest_opened.emit()
 	await get_tree().process_frame
 	assert_true(hud.level_up_panel.visible)
-	assert_eq(hud.upgrade_buttons.get_child_count(), hud._upgrade_pool.size(),
-		"Chest must offer the FULL upgrade catalog")
+	var weapon_count: int = 0
+	for u in hud._upgrade_pool:
+		if u.is_weapon:
+			weapon_count += 1
+	assert_eq(hud.upgrade_buttons.get_child_count(), weapon_count,
+		"Chest must offer weapons only, not the full catalog")
+	assert_lt(weapon_count, hud._upgrade_pool.size(),
+		"sanity check: some non-weapon upgrades must exist so this test is meaningful")
 	assert_eq(hud._pending_multiplier, 3, "Chest upgrades apply x3")
+
+
+func test_chest_options_are_all_weapons() -> void:
+	GameManager.current_state = GameManager.State.PLAYING
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	EventBus.chest_opened.emit()
+	await get_tree().process_frame
+	for btn in hud.upgrade_buttons.get_children():
+		assert_eq(btn.get_theme_color("font_color"), Palette.UPGRADE_WEAPON,
+			"Every chest option must be weapon-colored — no stat/heal upgrades")
+
+
+## --- Rarity ---
+
+func test_chest_spawn_interval_increased_for_rarity() -> void:
+	const SPAWNER_SCRIPT := preload("res://scripts/systems/enemy_spawner.gd")
+	assert_gt(SPAWNER_SCRIPT.CHEST_MIN_INTERVAL, 45.0, "chests must be rarer than before")
+	assert_gt(SPAWNER_SCRIPT.CHEST_MAX_INTERVAL, 80.0, "chests must be rarer than before")
 
 
 ## --- x3 application ---

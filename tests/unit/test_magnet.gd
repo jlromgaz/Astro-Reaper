@@ -59,3 +59,8 @@ func test_magnet_is_a_pickup_layer_node() -> void:
 	assert_eq(magnet.collision_layer, 16)
 	assert_eq(magnet.collision_mask, 1)
 	assert_false(magnet.is_in_group("enemies"))
+
+
+func test_magnet_drop_chance_reduced_for_rarity() -> void:
+	const SPAWNER_SCRIPT := preload("res://scripts/systems/enemy_spawner.gd")
+	assert_lt(SPAWNER_SCRIPT.MAGNET_DROP_CHANCE, 0.015, "magnets must be rarer than before")

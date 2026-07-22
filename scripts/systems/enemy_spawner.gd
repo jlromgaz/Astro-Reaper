@@ -35,16 +35,19 @@ var _comet_scene: PackedScene
 # Chest spawning (rarer than comets)
 var _chest_timer: float = 0.0
 var _chest_interval: float = 60.0
-const CHEST_MIN_INTERVAL := 45.0
-const CHEST_MAX_INTERVAL := 80.0
+const CHEST_MIN_INTERVAL := 90.0
+const CHEST_MAX_INTERVAL := 160.0
 var _chest_scene: PackedScene
 
-# Demon icon spawning (summonable mini-boss)
+# Demon icon spawning (summonable mini-boss) — each summon is tougher.
 var _demon_timer: float = 0.0
 var _demon_interval: float = 70.0
 const DEMON_MIN_INTERVAL := 50.0
 const DEMON_MAX_INTERVAL := 90.0
+const DEMON_SCALE_STEP := 0.4
+const DEMON_SCALE_CAP := 5.0
 var _demon_scene: PackedScene
+var _demon_summon_count: int = 0
 
 var _enemy_drone: PackedScene
 var _enemy_kamikaze: PackedScene
@@ -71,6 +74,7 @@ func _ready() -> void:
 	EventBus.player_damaged.connect(_on_player_damaged)
 	EventBus.enemy_killed.connect(_on_enemy_killed_drop)
 	EventBus.wave_boss_defeated.connect(_on_wave_boss_defeated)
+	EventBus.player_increased_difficulty.connect(_on_player_increased_difficulty)
 
 
 func _on_difficulty_bump() -> void:
@@ -83,6 +87,11 @@ func _on_wave_boss_defeated() -> void:
 	# run ramps much faster from the first boss onward instead of plateauing.
 	# Capped so a long run keeps escalating meaningfully without runaway.
 	global_difficulty_mult = minf(global_difficulty_mult * WAVE_BOSS_DIFFICULTY_MULT, GLOBAL_DIFFICULTY_CAP)
+
+
+func _on_player_increased_difficulty() -> void:
+	global_difficulty_mult = minf(global_difficulty_mult * 1.05, GLOBAL_DIFFICULTY_CAP)
+	DebugLog.log_info("SPAWNER", "Player chose risky overclock → global_mult=%.2f" % global_difficulty_mult)
 	DebugLog.log_info("SPAWNER", "Wave boss defeated → global_mult=%.2f" % global_difficulty_mult)
 
 
@@ -206,7 +215,7 @@ func _spawn_chest() -> void:
 	DebugLog.log_info("SPAWN", "Chest spawned at %s" % chest.global_position)
 
 
-const MAGNET_DROP_CHANCE := 0.015
+const MAGNET_DROP_CHANCE := 0.006
 var _magnet_scene: PackedScene = preload("res://scenes/pickups/pickup_magnet.tscn")
 
 
@@ -234,12 +243,16 @@ func _try_spawn_demon_icon(delta: float) -> void:
 
 
 func _spawn_demon_icon() -> void:
+	_demon_summon_count += 1
 	if not _world or not _player:
 		DebugLog.log_warn("SPAWNER", "_spawn_demon_icon: world or player not set — skipping")
 		return
 	var icon: Area2D = _demon_scene.instantiate()
 	var offset: Vector2 = Vector2(randf_range(200, 320), 0).rotated(randf() * TAU)
 	icon.global_position = _player.global_position + offset
+	if icon.has_method("set_miniboss_scale"):
+		var scale: float = minf(1.0 + (_demon_summon_count - 1) * DEMON_SCALE_STEP, DEMON_SCALE_CAP)
+		icon.set_miniboss_scale(scale)
 	_world.add_child(icon)
 	DebugLog.log_info("SPAWN", "Demon icon spawned at %s" % icon.global_position)
 

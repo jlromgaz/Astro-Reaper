@@ -3,8 +3,8 @@ extends CharacterBody2D
 ## When killed, triggers victory.
 
 const SPEED := 25.0
-const HP := 500.0
-const DAMAGE := 12.0
+const HP := 750.0
+const DAMAGE := 16.0
 const XP_VALUE := 20
 
 var current_hp: float = HP
@@ -41,8 +41,8 @@ const CHARGE_DURATION    := 0.5
 const PRE_ATTACK_DELAY   := 0.4
 const SPRAY_COOLDOWN     := 5.0
 const PULSE_COOLDOWN     := 8.0
-const SPRAY_DAMAGE       := 6.0
-const PULSE_DAMAGE       := 4.0
+const SPRAY_DAMAGE       := 9.0
+const PULSE_DAMAGE       := 6.0
 const BULLET_SPEED       := 160.0
 const SPRAY_COUNT        := 6
 const PULSE_COUNT        := 8

@@ -37,6 +37,7 @@ const REROLLS_PER_RUN := 2
 
 var _chosen_upgrades: Array[String] = []
 var _upgrade_pool: Array[UpgradeData] = []
+var _active_pool: Array[UpgradeData] = []
 var _pending_multiplier: int = 1
 var _rerolls_left: int = REROLLS_PER_RUN
 var _last_option_count: int = 3
@@ -62,7 +63,7 @@ func _ready() -> void:
 	pause_panel.visible = false
 	pause_btn.pressed.connect(_on_pause_toggle)
 	resume_btn.pressed.connect(_on_pause_toggle)
-	pause_quit_btn.pressed.connect(_on_restart)
+	pause_quit_btn.pressed.connect(_on_pause_quit)
 	if debug_panel.visible:
 		share_log_btn.pressed.connect(_on_share_log)
 	EventBus.player_spawned.connect(_on_player_spawned)
@@ -88,6 +89,7 @@ func _load_upgrade_pool() -> Array[UpgradeData]:
 		preload("res://data/upgrades/upgrade_blaster.tres"),
 		preload("res://data/upgrades/upgrade_damage.tres"),
 		preload("res://data/upgrades/upgrade_fire_rate.tres"),
+		preload("res://data/upgrades/upgrade_hard_mode.tres"),
 		preload("res://data/upgrades/upgrade_heal.tres"),
 		preload("res://data/upgrades/upgrade_laser.tres"),
 		preload("res://data/upgrades/upgrade_max_hp.tres"),
@@ -247,7 +249,7 @@ func _update_xp_bar() -> void:
 func _on_level_up(new_level: int) -> void:
 	_xp_current -= _xp_to_level
 	_level = new_level
-	_xp_to_level = 5 + (_level * 3) # Scaling XP curve
+	_xp_to_level = 5 + (_level * _level * 2) # Quadratic — increments must keep growing, not stay flat
 	_update_xp_bar()
 	EventBus.player_leveled_up.emit(_level)
 	_show_upgrade_selection()
@@ -269,7 +271,16 @@ func _on_chest_opened() -> void:
 	# Only show if the bonus pause actually engaged (GameManager runs first)
 	if GameManager.current_state != GameManager.State.PAUSED_LEVEL_UP:
 		return
-	_show_upgrade_selection(_upgrade_pool.size(), 3)
+	var weapons: Array[UpgradeData] = _weapon_pool()
+	_show_upgrade_selection(weapons.size(), 3, weapons)
+
+
+func _weapon_pool() -> Array[UpgradeData]:
+	var out: Array[UpgradeData] = []
+	for u in _upgrade_pool:
+		if u.is_weapon:
+			out.append(u)
+	return out
 
 
 func _on_comet_bonus() -> void:
@@ -278,7 +289,9 @@ func _on_comet_bonus() -> void:
 	_show_upgrade_selection()
 
 
-func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void:
+func _show_upgrade_selection(
+	option_count: int = 3, multiplier: int = 1, pool_override: Array[UpgradeData] = []
+) -> void:
 	_pending_multiplier = multiplier
 	for child in upgrade_buttons.get_children():
 		# remove_child now so get_child(0) below is a FRESH button —
@@ -288,7 +301,8 @@ func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void
 
 	level_up_panel.show()
 
-	var pool := _upgrade_pool.duplicate()
+	_active_pool = pool_override if not pool_override.is_empty() else _upgrade_pool
+	var pool := _active_pool.duplicate()
 	pool.shuffle()
 	var selected: Array = pool.slice(0, option_count)
 
@@ -306,9 +320,9 @@ func _show_upgrade_selection(option_count: int = 3, multiplier: int = 1) -> void
 		upgrade_buttons.add_child(btn)
 
 	_last_option_count = option_count
-	# Rerolling a full-catalog (chest) offer is pointless — only offer it
-	# when some options are hidden.
-	if _rerolls_left > 0 and option_count < _upgrade_pool.size():
+	# Rerolling a full-catalog (or full weapon-catalog) offer is pointless —
+	# only offer it when some options from the active pool are hidden.
+	if _rerolls_left > 0 and option_count < _active_pool.size():
 		var reroll_btn := Button.new()
 		reroll_btn.text = "%s (%d)" % [tr("REROLL"), _rerolls_left]
 		reroll_btn.add_theme_color_override("font_color", Palette.UI_ACCENT)
@@ -324,9 +338,11 @@ func _on_reroll() -> void:
 	if _rerolls_left <= 0:
 		return
 	_rerolls_left -= 1
-	_show_upgrade_selection(_last_option_count, _pending_multiplier)
+	_show_upgrade_selection(_last_option_count, _pending_multiplier, _active_pool)
 
 func _upgrade_color(opt: UpgradeData) -> Color:
+	if opt.type == "stat_difficulty":
+		return Palette.UPGRADE_RISK
 	if opt.type in ["heal", "stat_max_hp"]:
 		return Palette.HEALTH
 	if opt.is_weapon:
@@ -396,10 +412,17 @@ func _apply_upgrade(upg_type: String) -> void:
 		"stat_size":
 			_player.projectile_size_mult *= 1.1
 			_player.damage_mult *= 1.05
+		"stat_difficulty":
+			EventBus.player_increased_difficulty.emit()
 
 
 func _on_game_ended(reason: String) -> void:
-	game_over_title.text = tr("VICTORY!") if reason == "victory" else tr("GAME OVER")
+	if reason == "victory":
+		game_over_title.text = tr("VICTORY!")
+	elif reason == "quit":
+		game_over_title.text = tr("RUN ENDED")
+	else:
+		game_over_title.text = tr("GAME OVER")
 	var mins: int = int(GameManager.run_time) / 60
 	var secs: int = int(GameManager.run_time) % 60
 	var kills := 0
@@ -492,6 +515,13 @@ func _show_game_over(reason: String = "death") -> void:
 func _on_restart() -> void:
 	GameManager.go_to_menu()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+
+## Ending the run early must still offer to save the score reached so far,
+## instead of silently discarding it (the old pause_quit_btn behavior).
+func _on_pause_quit() -> void:
+	pause_panel.hide()
+	GameManager.end_game("quit")
 
 
 func _on_play_again() -> void:

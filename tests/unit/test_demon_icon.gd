@@ -56,7 +56,7 @@ func test_player_touch_summons_one_miniboss_and_consumes_icon() -> void:
 	assert_signal_emitted(EventBus, "enemy_spawned")
 
 
-func test_summoned_miniboss_keeps_fixed_200_hp() -> void:
+func test_summoned_miniboss_keeps_200_hp_at_default_scale() -> void:
 	var parts: Array = await _make_icon_in_container()
 	var icon: Area2D = parts[0]
 	var container: Node2D = parts[1]
@@ -68,7 +68,24 @@ func test_summoned_miniboss_keeps_fixed_200_hp() -> void:
 	for child in container.get_children():
 		if child.is_in_group("miniboss"):
 			assert_eq(child.current_hp, 200.0,
-				"Summoned mini-boss must keep its fixed 200 HP (no difficulty scaling)")
+				"An icon with the default (first-summon) scale must keep the base 200 HP")
+
+
+## Repeated summons must escalate — see enemy_spawner._spawn_demon_icon().
+func test_scaled_icon_summons_a_tougher_miniboss() -> void:
+	var parts: Array = await _make_icon_in_container()
+	var icon: Area2D = parts[0]
+	var container: Node2D = parts[1]
+	var player := Node2D.new()
+	player.add_to_group("player")
+	container.add_child(player)
+	icon.set_miniboss_scale(2.0)
+	icon._on_body_entered(player)
+	await get_tree().process_frame
+	for child in container.get_children():
+		if child.is_in_group("miniboss"):
+			assert_eq(child.max_hp, 400.0, "A scaled icon must summon a tougher mini-boss")
+			assert_gt(child.damage, 10.0, "A scaled icon must also make the mini-boss hit harder")
 
 
 func test_non_player_body_is_ignored() -> void:

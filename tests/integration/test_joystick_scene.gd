@@ -35,15 +35,17 @@ func test_joystick_base_and_knob_hidden_at_start() -> void:
 	assert_false(knob.visible, "Knob must be hidden at rest")
 
 
-func test_show_at_reveals_base_centered_at_touch() -> void:
+func test_show_at_positions_base_without_revealing_it() -> void:
+	# By request: steering must work fully, but the two rings must never
+	# actually render on screen, even while actively dragging.
 	var js: Control = add_child_autofree(load("res://scenes/ui/virtual_joystick.tscn").instantiate())
 	await get_tree().process_frame
 	js._show_at(Vector2(300.0, 400.0))
 	var base: Control = js.get_node("Base")
-	assert_true(base.visible, "Base must be visible after show_at")
+	assert_false(base.visible, "Base must stay invisible even while dragging")
 	var base_center := base.position + base.size / 2.0
-	assert_almost_eq(base_center.x, 300.0, 1.0, "Base centered at touch X")
-	assert_almost_eq(base_center.y, 400.0, 1.0, "Base centered at touch Y")
+	assert_almost_eq(base_center.x, 300.0, 1.0, "Base still centered at touch X (positioning logic unchanged)")
+	assert_almost_eq(base_center.y, 400.0, 1.0, "Base still centered at touch Y (positioning logic unchanged)")
 
 
 func test_hide_conceals_both_rings() -> void:

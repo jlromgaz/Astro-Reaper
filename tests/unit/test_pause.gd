@@ -47,7 +47,19 @@ func test_hud_pause_buttons_are_wired() -> void:
 	await get_tree().process_frame
 	assert_true(hud.pause_btn.pressed.is_connected(hud._on_pause_toggle))
 	assert_true(hud.resume_btn.pressed.is_connected(hud._on_pause_toggle))
-	assert_true(hud.pause_quit_btn.pressed.is_connected(hud._on_restart))
+	assert_true(hud.pause_quit_btn.pressed.is_connected(hud._on_pause_quit))
+
+
+## --- Voluntary end-run (was a silent abandon-without-saving quit) ---
+
+func test_pause_quit_ends_the_run_instead_of_silently_abandoning() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	GameManager.current_state = GameManager.State.PAUSED
+	watch_signals(EventBus)
+	hud._on_pause_quit()
+	assert_signal_emitted_with_parameters(EventBus, "game_ended", ["quit"])
+	assert_false(hud.pause_panel.visible, "Pause panel must close when ending the run")
 
 
 func test_pause_toggle_shows_and_hides_panel() -> void:

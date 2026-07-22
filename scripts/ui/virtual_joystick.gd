@@ -85,10 +85,9 @@ func _show_at(local_pos: Vector2) -> void:
 	_base_center = local_pos
 	_base.set_size(Vector2(BASE_RADIUS * 2.0, BASE_RADIUS * 2.0))
 	_base.position = local_pos - Vector2(BASE_RADIUS, BASE_RADIUS)
-	_base.visible = true
 	_knob.set_size(Vector2(KNOB_RADIUS * 2.0, KNOB_RADIUS * 2.0))
 	_knob.position = local_pos - Vector2(KNOB_RADIUS, KNOB_RADIUS)
-	_knob.visible = true
+	# Steering still works fully — the two rings just never render, by request.
 	input_changed.emit(Vector2.ZERO)
 
 

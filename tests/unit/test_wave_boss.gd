@@ -135,3 +135,48 @@ func test_global_difficulty_is_capped_after_many_wave_boss_kills() -> void:
 		EventBus.wave_boss_defeated.emit()
 	assert_almost_eq(spawner.global_difficulty_mult, spawner.GLOBAL_DIFFICULTY_CAP, 0.001,
 		"global difficulty must never run away unbounded, however many wave bosses are killed")
+
+
+## --- Demon icon: each summon must be tougher than the last ---
+
+func test_repeated_demon_icon_spawns_scale_up() -> void:
+	var parts: Array = await _make_spawner_with_world()
+	var spawner: Node = parts[0]
+	var world: Node2D = parts[1]
+	var player: Node2D = parts[2]
+	spawner._spawn_demon_icon()
+	await get_tree().process_frame
+	var first_icon: Node = null
+	for c in world.get_children():
+		if c != player and c.is_in_group("demon_icons"):
+			first_icon = c
+	spawner._spawn_demon_icon()
+	await get_tree().process_frame
+	var second_icon: Node = null
+	for c in world.get_children():
+		if c != player and c != first_icon and c.is_in_group("demon_icons"):
+			second_icon = c
+	assert_not_null(first_icon)
+	assert_not_null(second_icon)
+	assert_gt(second_icon._miniboss_scale, first_icon._miniboss_scale,
+		"each demon icon spawned must summon a tougher mini-boss than the last")
+
+
+## --- Player-chosen "risky overclock" difficulty upgrade ---
+
+func test_player_increased_difficulty_bumps_global_mult_by_5_percent() -> void:
+	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
+	await get_tree().process_frame
+	var before: float = spawner.global_difficulty_mult
+	EventBus.player_increased_difficulty.emit()
+	assert_almost_eq(spawner.global_difficulty_mult, before * 1.05, 0.001,
+		"choosing the risky-overclock upgrade must raise difficulty by 5%")
+
+
+func test_player_increased_difficulty_respects_the_cap() -> void:
+	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
+	await get_tree().process_frame
+	for i in range(50):
+		EventBus.player_increased_difficulty.emit()
+	assert_almost_eq(spawner.global_difficulty_mult, spawner.GLOBAL_DIFFICULTY_CAP, 0.001,
+		"repeated overclock picks must never exceed the global difficulty ceiling")

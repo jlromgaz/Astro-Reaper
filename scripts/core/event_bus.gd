@@ -35,3 +35,6 @@ signal victory
 signal difficulty_bump
 signal comet_bonus
 signal chest_opened
+## The player deliberately chose the "risky overclock" upgrade — bump
+## enemy_spawner.global_difficulty_mult by 5% for a harder, higher-value run.
+signal player_increased_difficulty

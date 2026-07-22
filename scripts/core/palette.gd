@@ -37,6 +37,7 @@ const EXPLOSION := Color(1.00, 0.60, 0.20)
 # UI
 const UPGRADE_WEAPON := Color(0.35, 0.90, 1.00)
 const UPGRADE_STAT := Color(1.00, 0.80, 0.30)
+const UPGRADE_RISK := Color(1.00, 0.20, 0.20)
 const UI_TEXT := Color(0.90, 0.95, 1.00)
 const UI_ACCENT := Color(0.20, 0.80, 1.00)
 const UI_HP := Color(0.95, 0.25, 0.35)

@@ -4,6 +4,16 @@ extends GutTest
 const BOSS_SCENE := preload("res://scenes/enemies/enemy_boss.tscn")
 
 
+## --- Balance: the final boss must be a real threat ---
+
+func test_final_boss_base_stats_increased() -> void:
+	var boss: CharacterBody2D = autofree(BOSS_SCENE.instantiate())
+	assert_gt(boss.HP, 500.0, "final boss HP must be tougher than before")
+	assert_gt(boss.DAMAGE, 12.0, "final boss contact damage must hit harder than before")
+	assert_gt(boss.SPRAY_DAMAGE, 6.0, "final boss spray damage must hit harder than before")
+	assert_gt(boss.PULSE_DAMAGE, 4.0, "final boss pulse damage must hit harder than before")
+
+
 func _make_boss_with_player() -> Array:
 	var container := Node2D.new()
 	add_child_autofree(container)

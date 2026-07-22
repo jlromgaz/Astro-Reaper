@@ -12,6 +12,7 @@ const XP_SCATTER_RADIUS := 30.0
 
 var current_hp: float = HP
 var max_hp: float = HP
+var damage: float = DAMAGE
 var _player: Node2D
 
 @onready var health_bar: ProgressBar = $HealthBar
@@ -21,6 +22,7 @@ var _player: Node2D
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
+	damage = DAMAGE * p_scale
 	if is_inside_tree() and health_bar:
 		health_bar.max_value = max_hp
 		health_bar.value = current_hp
@@ -52,7 +54,7 @@ func _physics_process(_delta: float) -> void:
 	if get_slide_collision_count() > 0:
 		var col: KinematicCollision2D = get_slide_collision(0)
 		if col.get_collider().is_in_group("player"):
-			col.get_collider().take_damage(DAMAGE, self)
+			col.get_collider().take_damage(damage, self)
 
 
 func take_damage(amount: float) -> void:
