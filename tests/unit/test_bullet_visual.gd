@@ -40,3 +40,33 @@ func test_default_dimensions_follow_style() -> void:
 	var bolt := _make_visual(BulletVisual.Style.BOLT)
 	var beam := _make_visual(BulletVisual.Style.BEAM)
 	assert_gt(beam.length, bolt.length, "Beam must be longer than bolt by default")
+
+
+## --- Performance: BOLT (the most common bullet) has no animation, so it
+## must not redraw every single frame — see test_enemy_visual.gd for the
+## same optimization on the enemy side (mobile stutter with many on-screen).
+
+func test_bolt_does_not_need_continuous_redraw() -> void:
+	var visual := _make_visual(BulletVisual.Style.BOLT)
+	assert_false(visual._needs_continuous_redraw(),
+		"Bolt is a static shape with no pulse/flicker — no per-frame redraw needed")
+
+
+func test_beam_needs_continuous_redraw_for_pulse() -> void:
+	var visual := _make_visual(BulletVisual.Style.BEAM)
+	assert_true(visual._needs_continuous_redraw())
+
+
+func test_missile_needs_continuous_redraw_for_flame_flicker() -> void:
+	var visual := _make_visual(BulletVisual.Style.MISSILE)
+	assert_true(visual._needs_continuous_redraw())
+
+
+func test_orb_needs_continuous_redraw_for_pulse() -> void:
+	var visual := _make_visual(BulletVisual.Style.ORB)
+	assert_true(visual._needs_continuous_redraw())
+
+
+func test_mine_needs_continuous_redraw_for_pulse() -> void:
+	var visual := _make_visual(BulletVisual.Style.MINE)
+	assert_true(visual._needs_continuous_redraw())

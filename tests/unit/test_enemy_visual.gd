@@ -70,3 +70,56 @@ func test_non_directional_shape_keeps_rotation() -> void:
 	for i in range(60):
 		pair[1]._process(1.0 / 60.0)
 	assert_eq(pair[1].rotation, 0.0, "Circle visual must never rotate")
+
+
+## --- Performance: static shapes must not redraw every single frame ---
+## Mobile playtest reported stutter with many enemies on screen — most of
+## the per-frame cost was unconditional queue_redraw() rebuilding vector
+## art every frame even for enemies whose drawn output never changes.
+
+func test_static_chaser_does_not_need_continuous_redraw() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.CIRCLE, EnemyVisual.ColorClass.CHASER)
+	assert_false(pair[1]._needs_continuous_redraw(),
+		"A plain circle chaser (e.g. drone) has nothing animating — no per-frame redraw needed")
+
+
+func test_static_ranged_does_not_need_continuous_redraw() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.DIAMOND, EnemyVisual.ColorClass.RANGED)
+	assert_false(pair[1]._needs_continuous_redraw())
+
+
+func test_hexagon_needs_continuous_redraw_for_rotation() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.HEXAGON, EnemyVisual.ColorClass.CHASER)
+	assert_true(pair[1]._needs_continuous_redraw(), "Hexagon spins continuously — needs per-frame redraw")
+
+
+func test_boss_needs_continuous_redraw_for_rotating_rings() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.BOSS, EnemyVisual.ColorClass.BOSS)
+	assert_true(pair[1]._needs_continuous_redraw())
+
+
+func test_fast_directional_shape_needs_continuous_redraw_for_trail() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.TRIANGLE, EnemyVisual.ColorClass.FAST)
+	assert_true(pair[1]._needs_continuous_redraw(), "Fast + directional gets a flickering trail")
+
+
+func test_directional_but_not_fast_does_not_need_continuous_redraw() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.TRIANGLE, EnemyVisual.ColorClass.CHASER)
+	assert_false(pair[1]._needs_continuous_redraw(),
+		"Directional shape without the FAST class has no trail — static otherwise")
+
+
+func test_telegraphing_needs_continuous_redraw_for_color_pulse() -> void:
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.CIRCLE, EnemyVisual.ColorClass.CHASER)
+	pair[1].start_telegraph(1.0)
+	assert_true(pair[1]._needs_continuous_redraw(), "Telegraph color pulse needs per-frame redraw")
+
+
+func test_flash_transition_triggers_one_redraw_without_continuous_state() -> void:
+	# Flash itself is a flat color for its whole duration — no continuous
+	# animation needed, but _process must still redraw once when it ends
+	# to clear the flash color back to normal.
+	var pair := _make_parent_with_visual(EnemyVisual.ShapeType.CIRCLE, EnemyVisual.ColorClass.CHASER)
+	pair[1]._flash_timer = 0.05
+	assert_false(pair[1]._needs_continuous_redraw(),
+		"A flat flash color needs no continuous redraw by itself")

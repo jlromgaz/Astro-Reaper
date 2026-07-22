@@ -34,11 +34,21 @@ func _ready() -> void:
 		length = DEFAULTS[style]["length"]
 	if width <= 0.0:
 		width = DEFAULTS[style]["width"]
+	queue_redraw()  # initial draw — BOLT (static) won't get another one
+
+
+## BOLT is a flat, unanimated shape — no reason to rebuild its vector art
+## every frame. Every other style pulses/flickers continuously and still
+## needs it. BOLT is the default weapon's bullet, so this is the highest-
+## traffic case (many on screen at once — a real mobile stutter source).
+func _needs_continuous_redraw() -> bool:
+	return style != Style.BOLT
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	queue_redraw()
+	if _needs_continuous_redraw():
+		queue_redraw()
 
 
 func _draw() -> void:

@@ -27,6 +27,7 @@ var _time := 0.0
 func _ready() -> void:
 	body_color = _resolve_color(color_class)
 	EventBus.enemy_damaged.connect(_on_enemy_damaged)
+	queue_redraw()  # initial draw — static shapes won't get another one
 
 
 func _resolve_color(cls: ColorClass) -> Color:
@@ -42,20 +43,37 @@ func _resolve_color(cls: ColorClass) -> Color:
 func _on_enemy_damaged(enemy: Node, _amount: float) -> void:
 	if enemy == get_parent():
 		_flash_timer = FLASH_DURATION
+		queue_redraw()
 
 
 func start_telegraph(duration: float) -> void:
 	_telegraph_timer = duration
+	queue_redraw()
+
+
+## Most enemies (plain chasers/ranged) draw a fixed shape with no per-frame
+## animation — redrawing them every frame just burns CPU rebuilding the same
+## vector art (a real mobile stutter source with many enemies on screen).
+## Only shapes with continuous motion (spin, flicker, telegraph pulse) need it.
+func _needs_continuous_redraw() -> bool:
+	if _telegraph_timer > 0.0:
+		return true
+	if color_class == ColorClass.FAST and shape_type in DIRECTIONAL_SHAPES:
+		return true
+	return shape_type == ShapeType.HEXAGON or shape_type == ShapeType.BOSS
 
 
 func _process(delta: float) -> void:
 	_time += delta
+	var flash_was_active := _flash_timer > 0.0
 	if _flash_timer > 0.0:
 		_flash_timer -= delta
 	if _telegraph_timer > 0.0:
 		_telegraph_timer -= delta
 	_orient_to_velocity()
-	queue_redraw()
+	var flash_just_ended := flash_was_active and _flash_timer <= 0.0
+	if _needs_continuous_redraw() or flash_just_ended:
+		queue_redraw()
 
 
 func _orient_to_velocity() -> void:
