@@ -82,6 +82,33 @@ func test_unlock_audio_respects_disabled_music() -> void:
 	assert_false(m._music_player.playing, "Music must not start playing if disabled before unlock")
 
 
+## --- SFX mute toggle (independent from music) ---
+
+func test_sfx_enabled_by_default() -> void:
+	var m := _make_manager()
+	assert_true(m._sfx_enabled, "SFX must play by default")
+
+
+func test_disabling_sfx_sets_the_flag() -> void:
+	var m := _make_manager()
+	m.set_sfx_enabled(false)
+	assert_false(m._sfx_enabled)
+
+
+func test_play_beep_does_nothing_when_sfx_disabled() -> void:
+	var m := _make_manager()
+	m._unlock_audio()
+	m.set_sfx_enabled(false)
+	m._play_beep(440.0, 0.05)
+	assert_true(true, "playing a beep while SFX is disabled must not crash")
+
+
+func test_music_and_sfx_are_independent_toggles() -> void:
+	var m := _make_manager()
+	m.set_sfx_enabled(false)
+	assert_true(m._music_enabled, "disabling SFX must not affect music")
+
+
 ## --- Method existence ---
 
 func test_play_enemy_hit_exists() -> void:

@@ -21,6 +21,8 @@ extends CanvasLayer
 
 var _ships: Array[ShipResource] = []
 var _selected_index: int = 0
+var _global_best_score: int = -1
+var _global_best_name: String = ""
 
 
 func _ready() -> void:
@@ -37,7 +39,12 @@ func _ready() -> void:
 	mode_list.visible = false
 	mode_hint.visible = false
 	ship_info_panel.visible = false
-	_set_best_score(ScoreManager.get_high_score())
+	# BEST must reflect the actual global leaderboard, not the local
+	# per-device high score — a run that was never saved must never show
+	# up here, since that's exactly what it wouldn't show in the ranking.
+	best_score_label.visible = false
+	Leaderboard.top_fetched.connect(_on_global_best_fetched)
+	Leaderboard.fetch_top("arcade")
 	if _ships.size() > 0:
 		_select_ship(0)
 
@@ -55,7 +62,8 @@ func _setup_language_row() -> void:
 func _on_language_selected(code: String) -> void:
 	Settings.set_language(code)
 	_highlight_language(code)
-	_set_best_score(ScoreManager.get_high_score())  # refresh composed text
+	if _global_best_score > 0:
+		_set_best_score(_global_best_score, _global_best_name)  # refresh composed text
 
 
 func _highlight_language(code: String) -> void:
@@ -64,9 +72,17 @@ func _highlight_language(code: String) -> void:
 		btn.add_theme_color_override("font_color", Color.YELLOW if active else Color.WHITE)
 
 
-func _set_best_score(high: int) -> void:
-	best_score_label.visible = high > 0
-	best_score_label.text = "%s: %d" % [tr("BEST"), high]
+func _on_global_best_fetched(ok: bool, rows: Array) -> void:
+	if not ok or rows.is_empty():
+		return
+	_global_best_score = int(rows[0].get("score", 0))
+	_global_best_name = str(rows[0].get("name", "???"))
+	_set_best_score(_global_best_score, _global_best_name)
+
+
+func _set_best_score(score: int, entry_name: String) -> void:
+	best_score_label.visible = score > 0
+	best_score_label.text = "%s: %d (%s)" % [tr("BEST"), score, entry_name]
 
 
 func _load_ships() -> void:

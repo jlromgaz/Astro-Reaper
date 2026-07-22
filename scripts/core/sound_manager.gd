@@ -15,6 +15,7 @@ var _beep_cache: Dictionary = {}
 var _hit_cooldown: float = 0.0  # rate-limit enemy_hit to prevent audio stacking
 var _audio_unlocked := false  # web browsers block audio until first user gesture
 var _music_enabled := true
+var _sfx_enabled := true
 
 
 func _ready() -> void:
@@ -73,6 +74,11 @@ func set_music_enabled(enabled: bool) -> void:
 		_music_player.stream_paused = true
 
 
+## Toggled from the in-game SFX button (persisted via Settings).
+func set_sfx_enabled(enabled: bool) -> void:
+	_sfx_enabled = enabled
+
+
 func _process(delta: float) -> void:
 	if _hit_cooldown > 0.0:
 		_hit_cooldown -= delta
@@ -126,7 +132,7 @@ func play_xp_ping() -> void:
 
 
 func _play_beep(freq: float, duration: float) -> void:
-	if not _audio_unlocked or not _sfx_playback:
+	if not _audio_unlocked or not _sfx_playback or not _sfx_enabled:
 		return
 	_sfx_playback.play_stream(_get_beep(freq, duration))
 

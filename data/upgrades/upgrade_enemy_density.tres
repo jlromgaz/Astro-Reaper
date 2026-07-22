@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1_script")
-id = "hard_mode"
-display_name = "Risky Overclock +5%"
-type = "stat_difficulty"
+id = "enemy_density"
+display_name = "+5% More Enemies"
+type = "stat_enemy_density"
 is_weapon = false
-description = "Increase overall difficulty by 5%. Tougher enemies, no going back."
+description = "5% more enemies spawn. They are not tougher, just more frequent."

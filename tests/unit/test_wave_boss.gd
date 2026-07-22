@@ -162,21 +162,32 @@ func test_repeated_demon_icon_spawns_scale_up() -> void:
 		"each demon icon spawned must summon a tougher mini-boss than the last")
 
 
-## --- Player-chosen "risky overclock" difficulty upgrade ---
+## --- Player-chosen "+5% More Enemies" upgrade ---
+## Must raise spawn frequency ONLY — never enemy HP/damage/toughness.
 
-func test_player_increased_difficulty_bumps_global_mult_by_5_percent() -> void:
+func test_player_increased_enemy_density_bumps_density_by_5_percent() -> void:
+	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
+	await get_tree().process_frame
+	var before: float = spawner.enemy_density_mult
+	EventBus.player_increased_enemy_density.emit()
+	assert_almost_eq(spawner.enemy_density_mult, before * 1.05, 0.001,
+		"choosing the upgrade must raise enemy spawn density by 5%")
+
+
+func test_player_increased_enemy_density_never_touches_difficulty() -> void:
 	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
 	await get_tree().process_frame
 	var before: float = spawner.global_difficulty_mult
-	EventBus.player_increased_difficulty.emit()
-	assert_almost_eq(spawner.global_difficulty_mult, before * 1.05, 0.001,
-		"choosing the risky-overclock upgrade must raise difficulty by 5%")
+	for i in range(10):
+		EventBus.player_increased_enemy_density.emit()
+	assert_almost_eq(spawner.global_difficulty_mult, before, 0.001,
+		"this upgrade must never make individual enemies tougher, only more frequent")
 
 
-func test_player_increased_difficulty_respects_the_cap() -> void:
+func test_enemy_density_shortens_spawn_interval() -> void:
 	var spawner: Node = add_child_autofree(SPAWNER_SCRIPT.new())
 	await get_tree().process_frame
-	for i in range(50):
-		EventBus.player_increased_difficulty.emit()
-	assert_almost_eq(spawner.global_difficulty_mult, spawner.GLOBAL_DIFFICULTY_CAP, 0.001,
-		"repeated overclock picks must never exceed the global difficulty ceiling")
+	var interval_before: float = spawner._get_spawn_interval()
+	spawner.enemy_density_mult = 2.0
+	assert_lt(spawner._get_spawn_interval(), interval_before,
+		"higher enemy density must shorten the spawn interval (more enemies)")

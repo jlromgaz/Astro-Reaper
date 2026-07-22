@@ -262,16 +262,6 @@ script = ExtResource("3_name_entry")
 
 [node name="RankingPanel" parent="." instance=ExtResource("4_ranking")]
 
-[node name="MusicBtn" type="Button" parent="."]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -92.0
-offset_top = 6.0
-offset_right = -52.0
-offset_bottom = 34.0
-text = "M"
-
 [node name="PauseBtn" type="Button" parent="."]
 anchors_preset = 1
 anchor_left = 1.0
@@ -290,9 +280,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -120.0
-offset_top = -80.0
+offset_top = -110.0
 offset_right = 120.0
-offset_bottom = 80.0
+offset_bottom = 110.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="PausePanel"]
@@ -307,6 +297,14 @@ horizontal_alignment = 1
 [node name="ResumeBtn" type="Button" parent="PausePanel/VBox"]
 layout_mode = 2
 text = "Resume"
+
+[node name="MusicToggleBtn" type="Button" parent="PausePanel/VBox"]
+layout_mode = 2
+text = "MUSIC: ON"
+
+[node name="SfxToggleBtn" type="Button" parent="PausePanel/VBox"]
+layout_mode = 2
+text = "SFX: ON"
 
 [node name="QuitBtn" type="Button" parent="PausePanel/VBox"]
 layout_mode = 2

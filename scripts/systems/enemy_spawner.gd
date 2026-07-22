@@ -5,6 +5,9 @@ var _player: Node2D
 var _world: Node2D
 var _spawn_timer: float = 0.0
 var global_difficulty_mult: float = 1.0
+## Spawn-frequency-only multiplier — never feeds enemy HP/damage scaling.
+## Bumped by the "+5% More Enemies" upgrade.
+var enemy_density_mult: float = 1.0
 var _undamaged_streak: float = 0.0
 const BASE_SPAWN_INTERVAL := 2.0
 const MIN_SPAWN_INTERVAL := 0.3
@@ -74,7 +77,7 @@ func _ready() -> void:
 	EventBus.player_damaged.connect(_on_player_damaged)
 	EventBus.enemy_killed.connect(_on_enemy_killed_drop)
 	EventBus.wave_boss_defeated.connect(_on_wave_boss_defeated)
-	EventBus.player_increased_difficulty.connect(_on_player_increased_difficulty)
+	EventBus.player_increased_enemy_density.connect(_on_player_increased_enemy_density)
 
 
 func _on_difficulty_bump() -> void:
@@ -89,10 +92,9 @@ func _on_wave_boss_defeated() -> void:
 	global_difficulty_mult = minf(global_difficulty_mult * WAVE_BOSS_DIFFICULTY_MULT, GLOBAL_DIFFICULTY_CAP)
 
 
-func _on_player_increased_difficulty() -> void:
-	global_difficulty_mult = minf(global_difficulty_mult * 1.05, GLOBAL_DIFFICULTY_CAP)
-	DebugLog.log_info("SPAWNER", "Player chose risky overclock → global_mult=%.2f" % global_difficulty_mult)
-	DebugLog.log_info("SPAWNER", "Wave boss defeated → global_mult=%.2f" % global_difficulty_mult)
+func _on_player_increased_enemy_density() -> void:
+	enemy_density_mult *= 1.05
+	DebugLog.log_info("SPAWNER", "Player chose +5%% more enemies → density_mult=%.2f" % enemy_density_mult)
 
 
 func _on_player_damaged(_amount: float, _source: Node) -> void:
@@ -115,7 +117,7 @@ func _get_spawn_interval() -> float:
 	scale_factor = clampf(scale_factor, 0.1, 1.0)
 	var pressure_mult: float = PRESSURE_SPAWN_MULT if _undamaged_streak > PRESSURE_THRESHOLD else 1.0
 	return clampf(
-		(BASE_SPAWN_INTERVAL * scale_factor) / (global_difficulty_mult * pressure_mult),
+		(BASE_SPAWN_INTERVAL * scale_factor) / (global_difficulty_mult * pressure_mult * enemy_density_mult),
 		MIN_SPAWN_INTERVAL,
 		BASE_SPAWN_INTERVAL
 	)

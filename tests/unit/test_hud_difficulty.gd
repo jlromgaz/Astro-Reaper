@@ -78,26 +78,26 @@ func test_stat_upgrades_use_stat_color() -> void:
 	assert_eq(hud._upgrade_color(_upgrade("projectile", false)), Palette.UPGRADE_STAT)
 
 
-## --- Risky overclock: +5% difficulty upgrade ---
+## --- "+5% More Enemies" upgrade (more spawns, not tougher ones) ---
 
-func test_difficulty_upgrade_uses_risk_color() -> void:
-	assert_eq(hud._upgrade_color(_upgrade("stat_difficulty", false)), Palette.UPGRADE_RISK)
+func test_enemy_density_upgrade_uses_risk_color() -> void:
+	assert_eq(hud._upgrade_color(_upgrade("stat_enemy_density", false)), Palette.UPGRADE_RISK)
 
 
-func test_difficulty_upgrade_is_in_the_pool() -> void:
+func test_enemy_density_upgrade_is_in_the_pool() -> void:
 	var found := false
 	for u in hud._upgrade_pool:
-		if u.type == "stat_difficulty":
+		if u.type == "stat_enemy_density":
 			found = true
-	assert_true(found, "the risky-overclock upgrade must be offerable on level-up")
+	assert_true(found, "the +5% More Enemies upgrade must be offerable on level-up")
 
 
-func test_selecting_difficulty_upgrade_emits_player_increased_difficulty() -> void:
+func test_selecting_enemy_density_upgrade_emits_player_increased_enemy_density() -> void:
 	var player: CharacterBody2D = autofree(CharacterBody2D.new())
 	hud._player = player
 	watch_signals(EventBus)
-	hud._apply_upgrade("stat_difficulty")
-	assert_signal_emitted(EventBus, "player_increased_difficulty")
+	hud._apply_upgrade("stat_enemy_density")
+	assert_signal_emitted(EventBus, "player_increased_enemy_density")
 
 
 func test_health_upgrades_use_health_color() -> void:

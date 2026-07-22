@@ -18,7 +18,8 @@ extends CanvasLayer
 @onready var name_entry_panel: PanelContainer = $NameEntryPanel
 @onready var ranking_panel: PanelContainer = $RankingPanel
 @onready var score_label: Label = $ScoreLabel
-@onready var music_btn: Button = $MusicBtn
+@onready var music_toggle_btn: Button = $PausePanel/VBox/MusicToggleBtn
+@onready var sfx_toggle_btn: Button = $PausePanel/VBox/SfxToggleBtn
 @onready var pause_btn: Button = $PauseBtn
 @onready var pause_panel: PanelContainer = $PausePanel
 @onready var resume_btn: Button = $PausePanel/VBox/ResumeBtn
@@ -63,9 +64,11 @@ func _ready() -> void:
 	Leaderboard.submit_finished.connect(_on_submit_finished)
 	pause_panel.visible = false
 	pause_btn.pressed.connect(_on_pause_toggle)
-	music_btn.pressed.connect(_on_music_toggle)
-	music_btn.focus_mode = Control.FOCUS_NONE
-	_update_music_button()
+	music_toggle_btn.pressed.connect(_on_music_toggle)
+	music_toggle_btn.focus_mode = Control.FOCUS_NONE
+	sfx_toggle_btn.pressed.connect(_on_sfx_toggle)
+	sfx_toggle_btn.focus_mode = Control.FOCUS_NONE
+	_update_audio_toggle_buttons()
 	resume_btn.pressed.connect(_on_pause_toggle)
 	pause_quit_btn.pressed.connect(_on_pause_quit)
 	if debug_panel.visible:
@@ -92,8 +95,8 @@ func _load_upgrade_pool() -> Array[UpgradeData]:
 		preload("res://data/upgrades/upgrade_aura.tres"),
 		preload("res://data/upgrades/upgrade_blaster.tres"),
 		preload("res://data/upgrades/upgrade_damage.tres"),
+		preload("res://data/upgrades/upgrade_enemy_density.tres"),
 		preload("res://data/upgrades/upgrade_fire_rate.tres"),
-		preload("res://data/upgrades/upgrade_hard_mode.tres"),
 		preload("res://data/upgrades/upgrade_heal.tres"),
 		preload("res://data/upgrades/upgrade_laser.tres"),
 		preload("res://data/upgrades/upgrade_max_hp.tres"),
@@ -350,7 +353,7 @@ func _on_reroll() -> void:
 	_show_upgrade_selection(_last_option_count, _pending_multiplier, _active_pool)
 
 func _upgrade_color(opt: UpgradeData) -> Color:
-	if opt.type == "stat_difficulty":
+	if opt.type == "stat_enemy_density":
 		return Palette.UPGRADE_RISK
 	if opt.type in ["heal", "stat_max_hp"]:
 		return Palette.HEALTH
@@ -421,8 +424,8 @@ func _apply_upgrade(upg_type: String) -> void:
 		"stat_size":
 			_player.projectile_size_mult *= 1.1
 			_player.damage_mult *= 1.05
-		"stat_difficulty":
-			EventBus.player_increased_difficulty.emit()
+		"stat_enemy_density":
+			EventBus.player_increased_enemy_density.emit()
 
 
 func _on_game_ended(reason: String) -> void:
@@ -545,13 +548,17 @@ func _on_pause_toggle() -> void:
 
 func _on_music_toggle() -> void:
 	Settings.set_music_enabled(not Settings.get_music_enabled())
-	_update_music_button()
+	_update_audio_toggle_buttons()
 
 
-func _update_music_button() -> void:
-	music_btn.add_theme_color_override(
-		"font_color", Palette.UI_ACCENT if Settings.get_music_enabled() else Palette.UI_TEXT
-	)
+func _on_sfx_toggle() -> void:
+	Settings.set_sfx_enabled(not Settings.get_sfx_enabled())
+	_update_audio_toggle_buttons()
+
+
+func _update_audio_toggle_buttons() -> void:
+	music_toggle_btn.text = "MUSIC: %s" % (tr("ON") if Settings.get_music_enabled() else tr("OFF"))
+	sfx_toggle_btn.text = "SFX: %s" % (tr("ON") if Settings.get_sfx_enabled() else tr("OFF"))
 
 
 func _unhandled_input(event: InputEvent) -> void:

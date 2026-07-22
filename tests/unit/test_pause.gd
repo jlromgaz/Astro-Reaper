@@ -72,15 +72,22 @@ func test_pause_toggle_shows_and_hides_panel() -> void:
 	assert_false(hud.pause_panel.visible, "Panel must hide when resuming")
 
 
-## --- Music mute button (top-right, next to pause) ---
+## --- Music/SFX mute toggles (inside the pause panel) ---
 
-func test_music_button_is_wired() -> void:
+func after_each_audio() -> void:
+	Settings.set_music_enabled(true)
+	Settings.set_sfx_enabled(true)
+
+
+func test_music_and_sfx_toggle_buttons_are_wired() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
-	assert_true(hud.music_btn.pressed.is_connected(hud._on_music_toggle))
+	assert_true(hud.music_toggle_btn.pressed.is_connected(hud._on_music_toggle))
+	assert_true(hud.sfx_toggle_btn.pressed.is_connected(hud._on_sfx_toggle))
+	after_each_audio()
 
 
-func test_music_button_toggles_settings_and_sound_manager() -> void:
+func test_music_toggle_button_flips_settings_and_sound_manager() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
 	Settings.set_music_enabled(true)
@@ -89,16 +96,36 @@ func test_music_button_toggles_settings_and_sound_manager() -> void:
 	assert_false(SoundManager._music_enabled)
 	hud._on_music_toggle()
 	assert_true(Settings.get_music_enabled(), "Second press must re-enable music")
-	Settings.set_music_enabled(true)  # restore default for other tests
+	after_each_audio()
 
 
-func test_music_button_color_reflects_state() -> void:
+func test_sfx_toggle_button_flips_settings_and_sound_manager() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	Settings.set_sfx_enabled(true)
+	hud._on_sfx_toggle()
+	assert_false(Settings.get_sfx_enabled(), "First press must disable SFX")
+	assert_false(SoundManager._sfx_enabled)
+	hud._on_sfx_toggle()
+	assert_true(Settings.get_sfx_enabled(), "Second press must re-enable SFX")
+	after_each_audio()
+
+
+func test_music_and_sfx_toggles_are_independent() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	hud._on_music_toggle()
+	assert_false(Settings.get_music_enabled())
+	assert_true(Settings.get_sfx_enabled(), "Toggling music must not affect SFX")
+	after_each_audio()
+
+
+func test_audio_toggle_button_labels_reflect_state() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
 	Settings.set_music_enabled(true)
-	hud._update_music_button()
-	assert_eq(hud.music_btn.get_theme_color("font_color"), Palette.UI_ACCENT, "ON must use the accent color")
-	Settings.set_music_enabled(false)
-	hud._update_music_button()
-	assert_eq(hud.music_btn.get_theme_color("font_color"), Palette.UI_TEXT, "OFF must use the dim color")
-	Settings.set_music_enabled(true)  # restore default for other tests
+	Settings.set_sfx_enabled(false)
+	hud._update_audio_toggle_buttons()
+	assert_string_contains(hud.music_toggle_btn.text, "ON")
+	assert_string_contains(hud.sfx_toggle_btn.text, "OFF")
+	after_each_audio()
