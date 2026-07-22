@@ -62,6 +62,10 @@ func _unlock_audio() -> void:
 
 
 ## Toggled from the in-game music button (persisted via Settings).
+## Uses stop()/play() rather than stream_paused: the latter proved
+## unreliable for silencing a looping stream on the Web export (reported —
+## toggling music off had no effect). stop()/play() unambiguously starts
+## and stops the source regardless of platform audio-backend quirks.
 func set_music_enabled(enabled: bool) -> void:
 	_music_enabled = enabled
 	if not _music_player.stream:
@@ -69,9 +73,8 @@ func set_music_enabled(enabled: bool) -> void:
 	if enabled:
 		if _audio_unlocked and not _music_player.playing:
 			_music_player.play()
-		_music_player.stream_paused = false
 	else:
-		_music_player.stream_paused = true
+		_music_player.stop()
 
 
 ## Toggled from the in-game SFX button (persisted via Settings).

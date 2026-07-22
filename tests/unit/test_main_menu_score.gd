@@ -14,6 +14,13 @@ var menu: CanvasLayer
 
 func before_each() -> void:
 	menu = add_child_autofree(MENU_SCENE.instantiate())
+	# _ready() already fired a REAL Leaderboard.fetch_top("arcade") and
+	# connected _on_global_best_fetched, synchronously, before this line —
+	# disconnect immediately (before any await gives the real async
+	# response a chance to land) so only a test's own deliberate call
+	# ever reaches it.
+	if Leaderboard.top_fetched.is_connected(menu._on_global_best_fetched):
+		Leaderboard.top_fetched.disconnect(menu._on_global_best_fetched)
 	await get_tree().process_frame
 
 

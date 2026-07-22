@@ -55,12 +55,15 @@ func test_music_enabled_by_default() -> void:
 	assert_true(m._music_enabled, "Music must play by default")
 
 
-func test_disabling_music_pauses_the_player() -> void:
+func test_disabling_music_stops_the_player() -> void:
+	# stream_paused proved unreliable for a looping stream on the Web export
+	# (reported: no way to actually silence the music) — stop() is the
+	# unambiguous, platform-independent way to guarantee silence.
 	var m := _make_manager()
 	m._audio_unlocked = true
 	m._music_player.play()
 	m.set_music_enabled(false)
-	assert_true(m._music_player.stream_paused, "Disabling music must pause the player")
+	assert_false(m._music_player.playing, "Disabling music must actually stop playback")
 	assert_false(m._music_enabled)
 
 
@@ -70,7 +73,7 @@ func test_enabling_music_resumes_the_player() -> void:
 	m._music_player.play()
 	m.set_music_enabled(false)
 	m.set_music_enabled(true)
-	assert_false(m._music_player.stream_paused, "Re-enabling music must resume playback")
+	assert_true(m._music_player.playing, "Re-enabling music must resume playback")
 	assert_true(m._music_enabled)
 
 
