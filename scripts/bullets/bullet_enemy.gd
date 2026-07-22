@@ -1,9 +1,15 @@
 extends Area2D
 ## Enemy projectile. Hits player.
+## A miss must not fly forever — no lifetime here meant missed shots
+## accumulated without bound over a long run (screen "full of enemy
+## missiles" plus a real perf cost, since ORB bullets redraw every frame).
+
+const LIFETIME := 5.0
 
 var damage: float = 4.0
 var speed: float = 180.0
 var _direction := Vector2.RIGHT
+var _lifetime_left: float = LIFETIME
 
 
 func setup(dmg: float, spd: float, dir: Vector2) -> void:
@@ -18,6 +24,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_lifetime_left -= delta
+	if _lifetime_left <= 0.0:
+		queue_free()
+		return
 	position += _direction * speed * delta
 
 

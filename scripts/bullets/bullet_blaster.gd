@@ -1,10 +1,15 @@
 extends Area2D
 ## Player blaster projectile.
+## A miss must not fly forever — see bullet_missile.gd's LIFETIME pattern,
+## which this mirrors to avoid unbounded accumulation over a long run.
+
+const LIFETIME := 4.0
 
 var damage: float = 10.0
 var speed: float = 300.0
 var _direction := Vector2.RIGHT
 var _owner_ship: Node2D
+var _lifetime_left: float = LIFETIME
 
 func setup(dmg: float, spd: float, owner_ship: Node2D) -> void:
 	damage = dmg
@@ -18,6 +23,10 @@ func setup(dmg: float, spd: float, owner_ship: Node2D) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_lifetime_left -= delta
+	if _lifetime_left <= 0.0:
+		queue_free()
+		return
 	position += _direction * speed * delta
 
 
