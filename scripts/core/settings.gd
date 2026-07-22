@@ -3,15 +3,18 @@ extends Node
 ## English is the default; the menu selector calls set_language().
 
 const DEFAULT_LANGUAGE := "en"
+const DEFAULT_MUSIC_ENABLED := true
 
 var save_path: String = "user://settings.json"
 
 var _language: String = DEFAULT_LANGUAGE
+var _music_enabled: bool = DEFAULT_MUSIC_ENABLED
 
 
 func _ready() -> void:
 	_load()
 	TranslationServer.set_locale(_language)
+	SoundManager.set_music_enabled(_music_enabled)
 	_adapt_scale()
 
 
@@ -34,6 +37,17 @@ func set_language(code: String) -> void:
 	DebugLog.log_info("SETTINGS", "Language set to %s" % code)
 
 
+func get_music_enabled() -> bool:
+	return _music_enabled
+
+
+func set_music_enabled(enabled: bool) -> void:
+	_music_enabled = enabled
+	SoundManager.set_music_enabled(enabled)
+	_save()
+	DebugLog.log_info("SETTINGS", "Music enabled: %s" % enabled)
+
+
 func _load() -> void:
 	if not FileAccess.file_exists(save_path):
 		return
@@ -43,6 +57,7 @@ func _load() -> void:
 	var json := JSON.new()
 	if json.parse(f.get_as_text()) == OK and json.data is Dictionary:
 		_language = str(json.data.get("language", DEFAULT_LANGUAGE))
+		_music_enabled = bool(json.data.get("music_enabled", DEFAULT_MUSIC_ENABLED))
 
 
 func _save() -> void:
@@ -50,4 +65,4 @@ func _save() -> void:
 	if not f:
 		DebugLog.log_error("SETTINGS", "Could not write %s" % save_path)
 		return
-	f.store_string(JSON.stringify({"language": _language}))
+	f.store_string(JSON.stringify({"language": _language, "music_enabled": _music_enabled}))

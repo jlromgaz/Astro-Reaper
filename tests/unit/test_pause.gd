@@ -70,3 +70,35 @@ func test_pause_toggle_shows_and_hides_panel() -> void:
 	assert_true(hud.pause_panel.visible, "Panel must show when pausing")
 	hud._on_pause_toggle()
 	assert_false(hud.pause_panel.visible, "Panel must hide when resuming")
+
+
+## --- Music mute button (top-right, next to pause) ---
+
+func test_music_button_is_wired() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	assert_true(hud.music_btn.pressed.is_connected(hud._on_music_toggle))
+
+
+func test_music_button_toggles_settings_and_sound_manager() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	Settings.set_music_enabled(true)
+	hud._on_music_toggle()
+	assert_false(Settings.get_music_enabled(), "First press must disable music")
+	assert_false(SoundManager._music_enabled)
+	hud._on_music_toggle()
+	assert_true(Settings.get_music_enabled(), "Second press must re-enable music")
+	Settings.set_music_enabled(true)  # restore default for other tests
+
+
+func test_music_button_color_reflects_state() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	Settings.set_music_enabled(true)
+	hud._update_music_button()
+	assert_eq(hud.music_btn.get_theme_color("font_color"), Palette.UI_ACCENT, "ON must use the accent color")
+	Settings.set_music_enabled(false)
+	hud._update_music_button()
+	assert_eq(hud.music_btn.get_theme_color("font_color"), Palette.UI_TEXT, "OFF must use the dim color")
+	Settings.set_music_enabled(true)  # restore default for other tests

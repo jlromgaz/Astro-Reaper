@@ -262,6 +262,16 @@ script = ExtResource("3_name_entry")
 
 [node name="RankingPanel" parent="." instance=ExtResource("4_ranking")]
 
+[node name="MusicBtn" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -92.0
+offset_top = 6.0
+offset_right = -52.0
+offset_bottom = 34.0
+text = "M"
+
 [node name="PauseBtn" type="Button" parent="."]
 anchors_preset = 1
 anchor_left = 1.0

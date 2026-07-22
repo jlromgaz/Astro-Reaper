@@ -14,6 +14,7 @@ var _music_player: AudioStreamPlayer
 var _beep_cache: Dictionary = {}
 var _hit_cooldown: float = 0.0  # rate-limit enemy_hit to prevent audio stacking
 var _audio_unlocked := false  # web browsers block audio until first user gesture
+var _music_enabled := true
 
 
 func _ready() -> void:
@@ -55,8 +56,21 @@ func _unlock_audio() -> void:
 	_audio_unlocked = true
 	_sfx_player.play()
 	_sfx_playback = _sfx_player.get_stream_playback()
-	if _music_player.stream:
+	if _music_player.stream and _music_enabled:
 		_music_player.play()
+
+
+## Toggled from the in-game music button (persisted via Settings).
+func set_music_enabled(enabled: bool) -> void:
+	_music_enabled = enabled
+	if not _music_player.stream:
+		return
+	if enabled:
+		if _audio_unlocked and not _music_player.playing:
+			_music_player.play()
+		_music_player.stream_paused = false
+	else:
+		_music_player.stream_paused = true
 
 
 func _process(delta: float) -> void:

@@ -52,8 +52,17 @@ func test_missile_scales_with_owner_mult() -> void:
 		"Missiles must grow with the owner's size multiplier")
 
 
-func test_size_upgrade_resource_exists_in_pool() -> void:
+func test_size_upgrade_resource_exists() -> void:
+	# The resource and its mechanic (this whole file) are kept working —
+	# only the offer pool excludes it for now, pending a rework.
 	var res: UpgradeData = load("res://data/upgrades/upgrade_size.tres")
 	assert_not_null(res)
 	assert_eq(res.type, "stat_size")
 	assert_false(res.is_weapon, "Size is a stat upgrade (amber), not a weapon")
+
+
+func test_size_upgrade_is_disabled_from_the_offer_pool() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
+	for u in hud._upgrade_pool:
+		assert_ne(u.type, "stat_size", "Size upgrade must not be offered while disabled")

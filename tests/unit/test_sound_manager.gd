@@ -48,6 +48,40 @@ func test_music_stream_loops() -> void:
 	assert_gt(music.loop_end, 0)
 
 
+## --- Music mute toggle ---
+
+func test_music_enabled_by_default() -> void:
+	var m := _make_manager()
+	assert_true(m._music_enabled, "Music must play by default")
+
+
+func test_disabling_music_pauses_the_player() -> void:
+	var m := _make_manager()
+	m._audio_unlocked = true
+	m._music_player.play()
+	m.set_music_enabled(false)
+	assert_true(m._music_player.stream_paused, "Disabling music must pause the player")
+	assert_false(m._music_enabled)
+
+
+func test_enabling_music_resumes_the_player() -> void:
+	var m := _make_manager()
+	m._audio_unlocked = true
+	m._music_player.play()
+	m.set_music_enabled(false)
+	m.set_music_enabled(true)
+	assert_false(m._music_player.stream_paused, "Re-enabling music must resume playback")
+	assert_true(m._music_enabled)
+
+
+func test_unlock_audio_respects_disabled_music() -> void:
+	var m := _make_manager()
+	m._audio_unlocked = false
+	m.set_music_enabled(false)
+	m._unlock_audio()
+	assert_false(m._music_player.playing, "Music must not start playing if disabled before unlock")
+
+
 ## --- Method existence ---
 
 func test_play_enemy_hit_exists() -> void:

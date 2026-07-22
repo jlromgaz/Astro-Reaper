@@ -18,6 +18,7 @@ extends CanvasLayer
 @onready var name_entry_panel: PanelContainer = $NameEntryPanel
 @onready var ranking_panel: PanelContainer = $RankingPanel
 @onready var score_label: Label = $ScoreLabel
+@onready var music_btn: Button = $MusicBtn
 @onready var pause_btn: Button = $PauseBtn
 @onready var pause_panel: PanelContainer = $PausePanel
 @onready var resume_btn: Button = $PausePanel/VBox/ResumeBtn
@@ -62,6 +63,9 @@ func _ready() -> void:
 	Leaderboard.submit_finished.connect(_on_submit_finished)
 	pause_panel.visible = false
 	pause_btn.pressed.connect(_on_pause_toggle)
+	music_btn.pressed.connect(_on_music_toggle)
+	music_btn.focus_mode = Control.FOCUS_NONE
+	_update_music_button()
 	resume_btn.pressed.connect(_on_pause_toggle)
 	pause_quit_btn.pressed.connect(_on_pause_quit)
 	if debug_panel.visible:
@@ -98,7 +102,8 @@ func _load_upgrade_pool() -> Array[UpgradeData]:
 		preload("res://data/upgrades/upgrade_orbitals.tres"),
 		preload("res://data/upgrades/upgrade_projectile.tres"),
 		preload("res://data/upgrades/upgrade_shield.tres"),
-		preload("res://data/upgrades/upgrade_size.tres"),
+		# upgrade_size.tres: temporarily disabled — not feeling right yet,
+		# revisit later. Resource and mechanic are untouched.
 		preload("res://data/upgrades/upgrade_speed.tres"),
 	]
 	var pool: Array[UpgradeData] = []
@@ -536,6 +541,17 @@ func _on_pause_toggle() -> void:
 	pause_panel.visible = GameManager.current_state == GameManager.State.PAUSED
 	if pause_panel.visible:
 		resume_btn.grab_focus()
+
+
+func _on_music_toggle() -> void:
+	Settings.set_music_enabled(not Settings.get_music_enabled())
+	_update_music_button()
+
+
+func _update_music_button() -> void:
+	music_btn.add_theme_color_override(
+		"font_color", Palette.UI_ACCENT if Settings.get_music_enabled() else Palette.UI_TEXT
+	)
 
 
 func _unhandled_input(event: InputEvent) -> void:
