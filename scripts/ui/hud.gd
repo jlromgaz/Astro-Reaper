@@ -433,6 +433,8 @@ func _on_game_ended(reason: String) -> void:
 		game_over_title.text = tr("VICTORY!")
 	elif reason == "quit":
 		game_over_title.text = tr("RUN ENDED")
+	elif reason == "time_up":
+		game_over_title.text = tr("TIME_UP")
 	else:
 		game_over_title.text = tr("GAME OVER")
 	var mins: int = int(GameManager.run_time) / 60

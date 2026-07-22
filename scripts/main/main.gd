@@ -64,21 +64,32 @@ func _add_spawner_script() -> void:
 		_spawner_script.set_world(game_world)
 
 
+var _keyboard_was_active := false
+
+
 func _process(_delta: float) -> void:
 	if player:
 		$GameWorld/Camera2D.global_position = player.global_position
-	# Keyboard fallback for desktop testing (disabled on mobile)
-	if OS.get_name() != "Android" and OS.get_name() != "iOS":
-		var key_input: Vector2 = Vector2.ZERO
-		if Input.is_action_pressed("move_right"):
-			key_input.x += 1
-		if Input.is_action_pressed("move_left"):
-			key_input.x -= 1
-		if Input.is_action_pressed("move_down"):
-			key_input.y += 1
-		if Input.is_action_pressed("move_up"):
-			key_input.y -= 1
+	# Keyboard writes ONLY while keys are held (plus one zero on release so
+	# the ship stops on desktop). An OS.get_name() platform check used to
+	# gate this, but a phone browser reports "Web" — the idle keyboard then
+	# stomped set_move_input(ZERO) over the joystick every frame, so ships
+	# only moved while the finger was actively dragging.
+	var key_input: Vector2 = Vector2.ZERO
+	if Input.is_action_pressed("move_right"):
+		key_input.x += 1
+	if Input.is_action_pressed("move_left"):
+		key_input.x -= 1
+	if Input.is_action_pressed("move_down"):
+		key_input.y += 1
+	if Input.is_action_pressed("move_up"):
+		key_input.y -= 1
+	if key_input != Vector2.ZERO:
 		player.set_move_input(key_input.normalized())
+		_keyboard_was_active = true
+	elif _keyboard_was_active:
+		player.set_move_input(Vector2.ZERO)
+		_keyboard_was_active = false
 
 
 func _on_joystick_input(direction: Vector2) -> void:

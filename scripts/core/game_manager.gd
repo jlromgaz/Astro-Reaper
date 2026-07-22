@@ -14,6 +14,11 @@ var selected_ship: ShipResource = null
 var game_mode: GameMode = GameMode.CLASSIC
 var difficulty: Difficulty = Difficulty.MEDIUM
 
+## Overtime after the FIRST wave-boss kill: the run auto-ends ("time_up",
+## score still savable) this many seconds later. Caps the infinite god-run.
+const ARCADE_OVERTIME_LIMIT := 600.0
+var _time_limit: float = -1.0
+
 
 func get_difficulty_mult() -> float:
 	match difficulty:
@@ -46,6 +51,7 @@ func _ready() -> void:
 	EventBus.player_leveled_up.connect(_on_player_leveled_up)
 	EventBus.upgrade_selected.connect(_on_upgrade_selected)
 	EventBus.boss_defeated.connect(_on_boss_defeated)
+	EventBus.wave_boss_defeated.connect(_on_wave_boss_defeated_overtime)
 	EventBus.comet_bonus.connect(_on_bonus_pause)
 	EventBus.chest_opened.connect(_on_bonus_pause)
 
@@ -59,8 +65,15 @@ func start_game() -> void:
 	current_state = State.PLAYING
 	run_time = 0.0
 	run_level = 1
+	_time_limit = -1.0
 	DebugLog.log_info("GAME", "Game started")
 	EventBus.game_started.emit()
+
+
+func _on_wave_boss_defeated_overtime() -> void:
+	if _time_limit < 0.0:
+		_time_limit = run_time + ARCADE_OVERTIME_LIMIT
+		DebugLog.log_info("GAME", "Overtime armed — run ends at %.0fs" % _time_limit)
 
 
 func end_game(reason: String = "death") -> void:
@@ -99,6 +112,8 @@ func go_to_menu() -> void:
 func _process(delta: float) -> void:
 	if current_state == State.PLAYING:
 		run_time += delta
+		if _time_limit > 0.0 and run_time >= _time_limit:
+			end_game("time_up")
 
 
 func is_playing() -> bool:
