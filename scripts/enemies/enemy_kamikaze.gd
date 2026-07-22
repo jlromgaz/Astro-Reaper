@@ -1,10 +1,14 @@
 extends CharacterBody2D
 ## Fast kamikaze - charges straight at player, explodes on contact.
 
-const SPEED            := 120.0
+const SPEED            := 75.0   # clearly outrunnable at start (player base: 120)
 const HP               := 8.0
 const EXPLOSION_DAMAGE := 14.0
 const XP_VALUE         := 1
+## Frame-checked backstop: the Area2D's body_entered is a one-shot edge
+## event — if it is ever missed, this per-frame distance check still
+## detonates the kamikaze, so it can never sit glued to the hull.
+const DETONATION_RANGE := 16.0
 
 const _FLASH_SCRIPT := preload("res://scripts/fx/intercept_flash.gd")
 
@@ -47,13 +51,20 @@ func _setup_damage_area() -> void:
 
 
 func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("player"):
+		_player = body
+		_detonate()
+
+
+## Single detonation path shared by the area signal and the per-frame
+## proximity backstop in _physics_process.
+func _detonate() -> void:
 	if _is_dying:
 		return
-	if body.is_in_group("player"):
-		_player  = body
-		velocity = Vector2.ZERO   # freeze — prevents drilling into ship
+	velocity = Vector2.ZERO   # freeze — prevents drilling into ship
+	if _player and _player.has_method("take_damage"):
 		_player.take_damage(EXPLOSION_DAMAGE, self)
-		_explode()
+	_explode()
 
 
 func _explode() -> void:
@@ -72,6 +83,10 @@ func _find_player() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if _is_dying or not _player or not GameManager.is_playing():
+		return
+
+	if global_position.distance_to(_player.global_position) <= DETONATION_RANGE:
+		_detonate()
 		return
 
 	var dir: Vector2 = (_player.global_position - global_position).normalized()

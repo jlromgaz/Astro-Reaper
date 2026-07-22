@@ -1,10 +1,11 @@
 extends CharacterBody2D
 ## Interceptor - extremely fast elite enemy spawning in Final Wave.
 
-const SPEED := 140.0 # Reduced from 180
+const SPEED := 110.0 # just below the player's 120 — barely outrunnable
 const HP := 12.0 # Fragile
 const DAMAGE := 5.0 # Repeat damage every 0.5s makes it deadly
 const XP_VALUE := 2
+const MAX_SPEED_MULT := 1.5
 
 var current_hp: float = HP
 var max_hp: float = HP
@@ -16,7 +17,9 @@ var _player_in_contact := false
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
-	move_speed = SPEED * (1.0 + (p_scale - 1.0) * 0.3)
+	# Capped — an uncapped ramp let interceptors reach 4x the player's
+	# speed late-run, overtaking the ship and sitting inside it.
+	move_speed = SPEED * clampf(1.0 + (p_scale - 1.0) * 0.15, 1.0, MAX_SPEED_MULT)
 
 func _ready() -> void:
 	add_to_group("enemies")

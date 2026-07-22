@@ -116,3 +116,50 @@ func test_speed_scale_is_capped_at_high_difficulty() -> void:
 	kamikaze.apply_difficulty_scale(9.0)
 	assert_lt(kamikaze.move_speed, kamikaze.SPEED * 2.0,
 		"kamikaze speed must stay well short of double base speed even at extreme difficulty")
+
+
+func test_base_speed_is_clearly_slower_than_the_player() -> void:
+	# Playtest: kamikazes at 120 matched the player's base speed exactly —
+	# an unavoidable homing missile. They must START clearly outrunnable
+	# and only creep up with difficulty.
+	var kamikaze: CharacterBody2D = autofree(KAMIKAZE_SCENE.instantiate())
+	assert_lt(kamikaze.SPEED, 100.0, "base kamikaze speed must be well below the player's 120")
+
+
+func test_unscaled_kamikaze_moves_at_base_speed() -> void:
+	var kamikaze: CharacterBody2D = autofree(KAMIKAZE_SCENE.instantiate())
+	kamikaze.apply_difficulty_scale(1.0)
+	assert_eq(kamikaze.move_speed, kamikaze.SPEED, "scale 1.0 must not speed the kamikaze up")
+
+
+## --- Proximity failsafe: a kamikaze can NEVER sit glued to the ship ---
+## The Area2D's body_entered is a one-shot edge event; if it is ever missed
+## (engine timing, pause races), the old code had no second chance and the
+## kamikaze sat on the hull forever — the repeated "pegado, no explota"
+## report. The failsafe re-checks distance every physics frame.
+
+func test_proximity_failsafe_detonates_even_without_area_signal() -> void:
+	var parts: Array = await _make_kamikaze_and_player()
+	var kamikaze: CharacterBody2D = parts[0]
+	var player: CharacterBody2D = parts[1]
+	kamikaze.global_position = Vector2.ZERO
+	player.global_position = Vector2(kamikaze.DETONATION_RANGE - 2.0, 0)
+	GameManager.current_state = GameManager.State.PLAYING
+	kamikaze._physics_process(1.0 / 60.0)  # direct call — no Area2D involved
+	GameManager.current_state = GameManager.State.MENU
+	assert_eq(player.damage_taken, kamikaze.EXPLOSION_DAMAGE,
+		"a kamikaze within detonation range must explode via the frame check alone")
+	assert_true(kamikaze.is_queued_for_deletion(), "the failsafe must consume the kamikaze")
+
+
+func test_failsafe_does_not_detonate_out_of_range() -> void:
+	var parts: Array = await _make_kamikaze_and_player()
+	var kamikaze: CharacterBody2D = parts[0]
+	var player: CharacterBody2D = parts[1]
+	kamikaze.global_position = Vector2.ZERO
+	player.global_position = Vector2(200, 0)
+	GameManager.current_state = GameManager.State.PLAYING
+	kamikaze._physics_process(1.0 / 60.0)
+	GameManager.current_state = GameManager.State.MENU
+	assert_eq(player.damage_taken, 0.0, "no detonation while still far from the ship")
+	assert_false(kamikaze.is_queued_for_deletion())

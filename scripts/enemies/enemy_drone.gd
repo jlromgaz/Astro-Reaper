@@ -14,10 +14,13 @@ var _damage_timer := 0.0
 var _player_in_contact := false
 
 
+const MAX_SPEED_MULT := 1.8
+
 func apply_difficulty_scale(p_scale: float) -> void:
 	max_hp = HP * p_scale
 	current_hp = max_hp
-	move_speed = SPEED * (1.0 + (p_scale - 1.0) * 0.3)
+	# Capped like the kamikaze/interceptor — speed must never run away.
+	move_speed = SPEED * clampf(1.0 + (p_scale - 1.0) * 0.3, 1.0, MAX_SPEED_MULT)
 	DebugLog.log_info("ENEMY", "Drone scaled to %.1f HP, %.1f spd" % [max_hp, move_speed])
 
 
