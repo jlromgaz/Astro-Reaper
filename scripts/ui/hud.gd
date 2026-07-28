@@ -18,7 +18,8 @@ extends CanvasLayer
 @onready var name_entry_panel: PanelContainer = $NameEntryPanel
 @onready var ranking_panel: PanelContainer = $RankingPanel
 @onready var score_label: Label = $ScoreLabel
-@onready var music_toggle_btn: Button = $PausePanel/VBox/MusicToggleBtn
+@onready var music_volume_slider: HSlider = $PausePanel/VBox/MusicVolumeRow/MusicVolumeSlider
+@onready var music_volume_label: Label = $PausePanel/VBox/MusicVolumeRow/MusicVolumeLabel
 @onready var sfx_toggle_btn: Button = $PausePanel/VBox/SfxToggleBtn
 @onready var pause_btn: Button = $PauseBtn
 @onready var pause_panel: PanelContainer = $PausePanel
@@ -64,8 +65,8 @@ func _ready() -> void:
 	Leaderboard.submit_finished.connect(_on_submit_finished)
 	pause_panel.visible = false
 	pause_btn.pressed.connect(_on_pause_toggle)
-	music_toggle_btn.pressed.connect(_on_music_toggle)
-	music_toggle_btn.focus_mode = Control.FOCUS_NONE
+	music_volume_slider.value_changed.connect(_on_music_volume_changed)
+	music_volume_slider.focus_mode = Control.FOCUS_NONE
 	sfx_toggle_btn.pressed.connect(_on_sfx_toggle)
 	sfx_toggle_btn.focus_mode = Control.FOCUS_NONE
 	_update_audio_toggle_buttons()
@@ -548,9 +549,9 @@ func _on_pause_toggle() -> void:
 		resume_btn.grab_focus()
 
 
-func _on_music_toggle() -> void:
-	Settings.set_music_enabled(not Settings.get_music_enabled())
-	_update_audio_toggle_buttons()
+func _on_music_volume_changed(value: float) -> void:
+	Settings.set_music_volume(value)
+	music_volume_label.text = "%d%%" % int(round(value))
 
 
 func _on_sfx_toggle() -> void:
@@ -559,7 +560,9 @@ func _on_sfx_toggle() -> void:
 
 
 func _update_audio_toggle_buttons() -> void:
-	music_toggle_btn.text = "MUSIC: %s" % (tr("ON") if Settings.get_music_enabled() else tr("OFF"))
+	var vol := Settings.get_music_volume()
+	music_volume_slider.set_value_no_signal(vol)
+	music_volume_label.text = "%d%%" % int(round(vol))
 	sfx_toggle_btn.text = "SFX: %s" % (tr("ON") if Settings.get_sfx_enabled() else tr("OFF"))
 
 

@@ -298,9 +298,26 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "Resume"
 
-[node name="MusicToggleBtn" type="Button" parent="PausePanel/VBox"]
+[node name="MusicVolumeRow" type="HBoxContainer" parent="PausePanel/VBox"]
 layout_mode = 2
-text = "MUSIC: ON"
+
+[node name="MusicVolumeTitle" type="Label" parent="PausePanel/VBox/MusicVolumeRow"]
+layout_mode = 2
+text = "MUSIC"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="PausePanel/VBox/MusicVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0
+max_value = 100
+step = 1
+value = 100
+
+[node name="MusicVolumeLabel" type="Label" parent="PausePanel/VBox/MusicVolumeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+horizontal_alignment = 2
+text = "100%"
 
 [node name="SfxToggleBtn" type="Button" parent="PausePanel/VBox"]
 layout_mode = 2

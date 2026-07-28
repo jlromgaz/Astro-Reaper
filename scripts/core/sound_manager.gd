@@ -14,7 +14,7 @@ var _music_player: AudioStreamPlayer
 var _beep_cache: Dictionary = {}
 var _hit_cooldown: float = 0.0  # rate-limit enemy_hit to prevent audio stacking
 var _audio_unlocked := false  # web browsers block audio until first user gesture
-var _music_enabled := true
+var _music_volume: float = 100.0
 var _sfx_enabled := true
 
 
@@ -32,7 +32,7 @@ func _ready() -> void:
 		music.loop_begin = 0
 		music.loop_end = music.data.size() / 2  # 16-bit mono: 2 bytes per frame
 		_music_player.stream = music
-	_music_player.volume_db = MUSIC_DB
+	_music_player.volume_db = MUSIC_DB + linear_to_db(_music_volume / 100.0)
 	add_child(_music_player)
 
 	EventBus.enemy_damaged.connect(func(_e, _a): play_enemy_hit())
@@ -57,24 +57,25 @@ func _unlock_audio() -> void:
 	_audio_unlocked = true
 	_sfx_player.play()
 	_sfx_playback = _sfx_player.get_stream_playback()
-	if _music_player.stream and _music_enabled:
+	if _music_player.stream and _music_volume > 0.0:
 		_music_player.play()
 
 
-## Toggled from the in-game music button (persisted via Settings).
-## Uses stop()/play() rather than stream_paused: the latter proved
-## unreliable for silencing a looping stream on the Web export (reported —
-## toggling music off had no effect). stop()/play() unambiguously starts
-## and stops the source regardless of platform audio-backend quirks.
-func set_music_enabled(enabled: bool) -> void:
-	_music_enabled = enabled
+## Volume slider in the pause menu (persisted via Settings), 0-100.
+## 100% preserves the pre-slider baseline loudness (MUSIC_DB); dropping
+## the slider scales dB down via linear_to_db. At 0% we still call stop()
+## rather than relying on -INF dB alone — same Web-export-safe pattern as
+## the old on/off toggle (stream_paused was unreliable there).
+func set_music_volume(percent: float) -> void:
+	_music_volume = clampf(percent, 0.0, 100.0)
 	if not _music_player.stream:
 		return
-	if enabled:
-		if _audio_unlocked and not _music_player.playing:
-			_music_player.play()
-	else:
+	if _music_volume <= 0.0:
 		_music_player.stop()
+		return
+	_music_player.volume_db = MUSIC_DB + linear_to_db(_music_volume / 100.0)
+	if _audio_unlocked and not _music_player.playing:
+		_music_player.play()
 
 
 ## Toggled from the in-game SFX button (persisted via Settings).

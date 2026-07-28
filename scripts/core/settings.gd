@@ -3,20 +3,20 @@ extends Node
 ## English is the default; the menu selector calls set_language().
 
 const DEFAULT_LANGUAGE := "en"
-const DEFAULT_MUSIC_ENABLED := true
+const DEFAULT_MUSIC_VOLUME := 100.0
 const DEFAULT_SFX_ENABLED := true
 
 var save_path: String = "user://settings.json"
 
 var _language: String = DEFAULT_LANGUAGE
-var _music_enabled: bool = DEFAULT_MUSIC_ENABLED
+var _music_volume: float = DEFAULT_MUSIC_VOLUME
 var _sfx_enabled: bool = DEFAULT_SFX_ENABLED
 
 
 func _ready() -> void:
 	_load()
 	TranslationServer.set_locale(_language)
-	SoundManager.set_music_enabled(_music_enabled)
+	SoundManager.set_music_volume(_music_volume)
 	SoundManager.set_sfx_enabled(_sfx_enabled)
 	_adapt_scale()
 
@@ -40,15 +40,15 @@ func set_language(code: String) -> void:
 	DebugLog.log_info("SETTINGS", "Language set to %s" % code)
 
 
-func get_music_enabled() -> bool:
-	return _music_enabled
+func get_music_volume() -> float:
+	return _music_volume
 
 
-func set_music_enabled(enabled: bool) -> void:
-	_music_enabled = enabled
-	SoundManager.set_music_enabled(enabled)
+func set_music_volume(percent: float) -> void:
+	_music_volume = clampf(percent, 0.0, 100.0)
+	SoundManager.set_music_volume(_music_volume)
 	_save()
-	DebugLog.log_info("SETTINGS", "Music enabled: %s" % enabled)
+	DebugLog.log_info("SETTINGS", "Music volume set to %.0f%%" % _music_volume)
 
 
 func get_sfx_enabled() -> bool:
@@ -71,7 +71,7 @@ func _load() -> void:
 	var json := JSON.new()
 	if json.parse(f.get_as_text()) == OK and json.data is Dictionary:
 		_language = str(json.data.get("language", DEFAULT_LANGUAGE))
-		_music_enabled = bool(json.data.get("music_enabled", DEFAULT_MUSIC_ENABLED))
+		_music_volume = float(json.data.get("music_volume", DEFAULT_MUSIC_VOLUME))
 		_sfx_enabled = bool(json.data.get("sfx_enabled", DEFAULT_SFX_ENABLED))
 
 
@@ -82,6 +82,6 @@ func _save() -> void:
 		return
 	f.store_string(JSON.stringify({
 		"language": _language,
-		"music_enabled": _music_enabled,
+		"music_volume": _music_volume,
 		"sfx_enabled": _sfx_enabled,
 	}))

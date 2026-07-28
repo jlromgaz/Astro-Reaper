@@ -48,41 +48,52 @@ func test_music_stream_loops() -> void:
 	assert_gt(music.loop_end, 0)
 
 
-## --- Music mute toggle ---
+## --- Music volume slider ---
 
-func test_music_enabled_by_default() -> void:
+func test_music_volume_defaults_to_100() -> void:
 	var m := _make_manager()
-	assert_true(m._music_enabled, "Music must play by default")
+	assert_eq(m._music_volume, 100.0, "Music must default to full volume")
 
 
-func test_disabling_music_stops_the_player() -> void:
+func test_setting_music_volume_to_zero_stops_the_player() -> void:
 	# stream_paused proved unreliable for a looping stream on the Web export
 	# (reported: no way to actually silence the music) — stop() is the
 	# unambiguous, platform-independent way to guarantee silence.
 	var m := _make_manager()
 	m._audio_unlocked = true
 	m._music_player.play()
-	m.set_music_enabled(false)
-	assert_false(m._music_player.playing, "Disabling music must actually stop playback")
-	assert_false(m._music_enabled)
+	m.set_music_volume(0.0)
+	assert_false(m._music_player.playing, "0% volume must actually stop playback")
+	assert_eq(m._music_volume, 0.0)
 
 
-func test_enabling_music_resumes_the_player() -> void:
+func test_raising_music_volume_from_zero_resumes_the_player() -> void:
 	var m := _make_manager()
 	m._audio_unlocked = true
 	m._music_player.play()
-	m.set_music_enabled(false)
-	m.set_music_enabled(true)
-	assert_true(m._music_player.playing, "Re-enabling music must resume playback")
-	assert_true(m._music_enabled)
+	m.set_music_volume(0.0)
+	m.set_music_volume(75.0)
+	assert_true(m._music_player.playing, "Raising volume above 0 must resume playback")
+	assert_eq(m._music_volume, 75.0)
 
 
-func test_unlock_audio_respects_disabled_music() -> void:
+func test_unlock_audio_respects_zero_music_volume() -> void:
 	var m := _make_manager()
 	m._audio_unlocked = false
-	m.set_music_enabled(false)
+	m.set_music_volume(0.0)
 	m._unlock_audio()
-	assert_false(m._music_player.playing, "Music must not start playing if disabled before unlock")
+	assert_false(m._music_player.playing, "Music must not start playing if volume is 0 before unlock")
+
+
+func test_music_volume_maps_to_expected_db() -> void:
+	# 100% must preserve today's baseline loudness (MUSIC_DB), not jump to 0dB.
+	var m := _make_manager()
+	m.set_music_volume(100.0)
+	assert_almost_eq(m._music_player.volume_db, m.MUSIC_DB, 0.001,
+		"100% must match the pre-slider baseline dB")
+	m.set_music_volume(50.0)
+	var expected: float = m.MUSIC_DB + linear_to_db(0.5)
+	assert_almost_eq(m._music_player.volume_db, expected, 0.001)
 
 
 ## --- SFX mute toggle (independent from music) ---
@@ -109,7 +120,7 @@ func test_play_beep_does_nothing_when_sfx_disabled() -> void:
 func test_music_and_sfx_are_independent_toggles() -> void:
 	var m := _make_manager()
 	m.set_sfx_enabled(false)
-	assert_true(m._music_enabled, "disabling SFX must not affect music")
+	assert_eq(m._music_volume, 100.0, "disabling SFX must not affect music volume")
 
 
 ## --- Method existence ---

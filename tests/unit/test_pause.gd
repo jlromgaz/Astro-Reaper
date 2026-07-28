@@ -75,27 +75,30 @@ func test_pause_toggle_shows_and_hides_panel() -> void:
 ## --- Music/SFX mute toggles (inside the pause panel) ---
 
 func after_each_audio() -> void:
-	Settings.set_music_enabled(true)
+	Settings.set_music_volume(100.0)
 	Settings.set_sfx_enabled(true)
 
 
-func test_music_and_sfx_toggle_buttons_are_wired() -> void:
+func test_music_volume_slider_is_wired() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
-	assert_true(hud.music_toggle_btn.pressed.is_connected(hud._on_music_toggle))
+	assert_true(hud.music_volume_slider.value_changed.is_connected(hud._on_music_volume_changed))
+	after_each_audio()
+
+
+func test_sfx_toggle_button_is_wired() -> void:
+	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
+	await get_tree().process_frame
 	assert_true(hud.sfx_toggle_btn.pressed.is_connected(hud._on_sfx_toggle))
 	after_each_audio()
 
 
-func test_music_toggle_button_flips_settings_and_sound_manager() -> void:
+func test_music_volume_slider_updates_settings_and_sound_manager() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
-	Settings.set_music_enabled(true)
-	hud._on_music_toggle()
-	assert_false(Settings.get_music_enabled(), "First press must disable music")
-	assert_false(SoundManager._music_enabled)
-	hud._on_music_toggle()
-	assert_true(Settings.get_music_enabled(), "Second press must re-enable music")
+	hud._on_music_volume_changed(30.0)
+	assert_eq(Settings.get_music_volume(), 30.0, "Slider changes must update Settings")
+	assert_eq(SoundManager._music_volume, 30.0)
 	after_each_audio()
 
 
@@ -111,21 +114,22 @@ func test_sfx_toggle_button_flips_settings_and_sound_manager() -> void:
 	after_each_audio()
 
 
-func test_music_and_sfx_toggles_are_independent() -> void:
+func test_music_volume_and_sfx_toggle_are_independent() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
-	hud._on_music_toggle()
-	assert_false(Settings.get_music_enabled())
-	assert_true(Settings.get_sfx_enabled(), "Toggling music must not affect SFX")
+	hud._on_music_volume_changed(0.0)
+	assert_eq(Settings.get_music_volume(), 0.0)
+	assert_true(Settings.get_sfx_enabled(), "Changing music volume must not affect SFX")
 	after_each_audio()
 
 
-func test_audio_toggle_button_labels_reflect_state() -> void:
+func test_audio_controls_reflect_state() -> void:
 	var hud: CanvasLayer = add_child_autofree(HUD_SCENE.instantiate())
 	await get_tree().process_frame
-	Settings.set_music_enabled(true)
+	Settings.set_music_volume(75.0)
 	Settings.set_sfx_enabled(false)
 	hud._update_audio_toggle_buttons()
-	assert_string_contains(hud.music_toggle_btn.text, "ON")
+	assert_eq(hud.music_volume_slider.value, 75.0)
+	assert_eq(hud.music_volume_label.text, "75%")
 	assert_string_contains(hud.sfx_toggle_btn.text, "OFF")
 	after_each_audio()
